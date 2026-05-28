@@ -57,7 +57,8 @@ def login():
         elif id_rol == 2:
             return redirect('/modulo-entrenador')
         else:
-            return "<h1>Bienvenido Administrador</h1><p>Esta ruta está lista para conectarse a su respectivo módulo en el futuro.</p>"
+            # Ahora Python buscará la plantilla del menú del administrador
+            return render_template('dashboard_admin.html')
     else:
         # Si los datos no coinciden, mostramos un mensaje simple de error
         return "<h3>Usuario o contraseña incorrectos.</h3><p>Por favor, regresa al navegador e intenta de nuevo.</p>"
