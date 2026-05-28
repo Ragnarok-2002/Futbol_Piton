@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Escuela de Fútbol</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Configuración oficial de los colores del sistema de diseño
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'negro-carbon': '#1A1A1A',
+                        'gris-carbon': '#252525',
+                        'naranja-fuego': '#E65100',
+                        'naranja-suave': '#FFF3E0',
+                        'blanco-humo': '#F5F5F5',
+                        'amarillo-volt': '#EEFF41',
+                        'gris-claro': '#B3B3B3'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Efecto Glassmorphism obligatorio del PDF */
+        .glass-effect {
+            background: rgba(37, 37, 37, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-negro-carbon via-negro-carbon to-naranja-fuego min-h-screen flex items-center justify-center p-4 font-sans selection:bg-amarillo-volt selection:text-negro-carbon">
+
+    <div class="glass-effect w-full max-w-md p-8 rounded-3xl shadow-2xl transition-all duration-300 hover:border-white/15">
+        
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-naranja-fuego to-orange-700 text-blanco-humo text-3xl font-black mb-3 shadow-lg shadow-naranja-fuego/20">
+                ⚽
+            </div>
+            <h1 class="text-blanco-humo text-3xl font-black tracking-tight mb-1">PANEL DE CONTROL</h1>
+            <p class="text-gris-claro text-sm font-medium">Gestión Deportiva • Escuela de Fútbol</p>
+        </div>
+
+        <form action="/login" method="POST" class="space-y-6">
+            
+            <div class="space-y-2">
+                <label for="username" class="block text-naranja-suave text-xs font-bold tracking-wider uppercase ml-1">Usuario de Acceso</label>
+                <div class="relative">
+                    <input type="text" 
+                           id="username" 
+                           name="username" 
+                           required 
+                           placeholder="Ej: carlos95" 
+                           class="w-full bg-negro-carbon text-blanco-humo placeholder-gris-claro/50 px-4 py-3.5 rounded-2xl border border-white/10 text-sm font-medium transition-all duration-300 focus:outline-none focus:border-amarillo-volt focus:ring-1 focus:ring-amarillo-volt">
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <div class="flex items-center justify-between ml-1">
+                    <label for="password" class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Contraseña</label>
+                </div>
+                <div class="relative">
+                    <input type="password" 
+                           id="password" 
+                           name="password" 
+                           required 
+                           placeholder="••••••••" 
+                           class="w-full bg-negro-carbon text-blanco-humo placeholder-gris-claro/50 px-4 py-3.5 rounded-2xl border border-white/10 text-sm font-medium transition-all duration-300 focus:outline-none focus:border-amarillo-volt focus:ring-1 focus:ring-amarillo-volt">
+                </div>
+            </div>
+
+            <button type="submit" 
+                    class="w-full bg-naranja-fuego text-blanco-humo font-bold text-sm tracking-wide py-4 px-6 rounded-2xl shadow-lg shadow-naranja-fuego/20 transition-all duration-300 hover:bg-orange-700 hover:translate-y-[-2px] hover:shadow-xl hover:shadow-naranja-fuego/30 active:translate-y-[0px] focus:outline-none focus:ring-2 focus:ring-amarillo-volt focus:ring-offset-2 focus:ring-offset-negro-carbon">
+                INGRESAR AL SISTEMA
+            </button>
+        </form>
+
+        <div class="mt-8 pt-6 border-t border-white/5 text-center">
+            <p class="text-gris-claro text-xs">
+                ¿Problemas con tu cuenta? <a href="#" class="text-amarillo-volt hover:underline transition-all duration-300 font-semibold">Contactar al Administrador</a>
+            </p>
+        </div>
+
+    </div>
+
+</body>
+</html>
