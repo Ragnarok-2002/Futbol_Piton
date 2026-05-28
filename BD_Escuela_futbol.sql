@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 28-05-2026 a las 04:28:28
+-- Tiempo de generación: 28-05-2026 a las 15:07:18
 -- Versión del servidor: 10.4.32-MariaDB
--- Versión de PHP: 8.2.12
+-- Versión de PHP: 8.0.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -589,7 +589,7 @@ CREATE TABLE `usuario` (
 --
 
 INSERT INTO `usuario` (`id_usuario`, `id_rol`, `usuario`, `contrasena`, `email`, `estado`) VALUES
-(1, 1, 'sebastian_camargo', 'hashed_pass_SA1', 'sebastian.camargo@escuelaaaa.com', 'activo'),
+(1, 1, 'sebastianADMIN', '1234', 'sebastian.camargo@escuelaaaa.com', 'activo'),
 (2, 1, 'alexander_acevedo', 'hashed_pass_SA2', 'alexander.acevedo@escuelaaaa.com', 'activo'),
 (3, 2, 'admin_escuela', 'hashed_pass_002', 'admin@escuelaaaa.com', 'activo'),
 (4, 3, 'ent_delanteros', 'hashed_pass_003', 'carlos.rios@escuelaaaa.com', 'activo'),
