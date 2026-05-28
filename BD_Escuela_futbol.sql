@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 07-04-2026 a las 06:11:14
+-- Tiempo de generación: 28-05-2026 a las 02:58:21
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Base de datos: `escuela_futbol`
+-- Base de datos: `bd_escuela_futbol`
 --
 
 -- --------------------------------------------------------
@@ -387,7 +387,7 @@ INSERT INTO `ficha_jugador` (`id_jugador`, `id_equipo`, `id_estado`, `posicion`,
 
 CREATE TABLE `jugador` (
   `id_jugador` int(11) NOT NULL,
-  `id_acudiente` int(11) NOT NULL,
+  `id_acudiente` int(11) DEFAULT NULL,
   `id_usuario` int(11) NOT NULL,
   `id_rol` int(11) NOT NULL,
   `nombres` varchar(100) NOT NULL,
