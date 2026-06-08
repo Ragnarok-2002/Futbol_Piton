@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 28-05-2026 a las 15:07:18
+-- Tiempo de generación: 08-06-2026 a las 04:42:59
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.0.30
 
@@ -428,7 +428,10 @@ INSERT INTO `jugador` (`id_jugador`, `id_acudiente`, `id_usuario`, `id_rol`, `no
 (22, 22, 30, 4, 'Simón', 'Cerón Agudelo', '2015-07-25', '3201110022', 'simon.ceron@escuelaaaa.com', '1020001022', '2022-05-15'),
 (23, 23, 31, 4, 'Daniel', 'Acosta Bermúdez', '2014-12-08', '3201110023', 'daniel.acosta@escuelaaaa.com', '1020001023', '2022-05-15'),
 (24, 24, 32, 4, 'Matías', 'Mendoza Cano', '2015-04-17', '3201110024', 'matias.mendoza@escuelaaaa.com', '1020001024', '2022-05-15'),
-(25, 25, 33, 4, 'Kevin', 'Zapata Trujillo', '2014-10-29', '3201110025', 'kevin.zapata@escuelaaaa.com', '1020001025', '2022-05-15');
+(25, 25, 33, 4, 'Kevin', 'Zapata Trujillo', '2014-10-29', '3201110025', 'kevin.zapata@escuelaaaa.com', '1020001025', '2022-05-15'),
+(26, NULL, 59, 4, 'luis', 'prieto', '2001-12-01', '3332224455', 'SENAprieto@CDM.com', '777', '2026-06-07'),
+(27, NULL, 60, 4, 'david', 'cabezas', '2002-12-12', '3332224456', 'SENAcabezas@CDM.com', '999', '2026-06-07'),
+(28, NULL, 61, 4, 'pepe', 'grillo', '2000-01-01', '3332224457', 'grillo@gmail.com', '111', '2026-06-07');
 
 -- --------------------------------------------------------
 
@@ -646,7 +649,10 @@ INSERT INTO `usuario` (`id_usuario`, `id_rol`, `usuario`, `contrasena`, `email`,
 (55, 5, 'acu_022', 'hashed_pass_054', 'madre.ceron@gmail.com', 'activo'),
 (56, 5, 'acu_023', 'hashed_pass_055', 'padre.acosta@gmail.com', 'activo'),
 (57, 5, 'acu_024', 'hashed_pass_056', 'madre.mendoza@gmail.com', 'activo'),
-(58, 5, 'acu_025', 'hashed_pass_057', 'tutor.zapata@gmail.com', 'activo');
+(58, 5, 'acu_025', 'hashed_pass_057', 'tutor.zapata@gmail.com', 'activo'),
+(59, 4, '777', '666', '', 'Activo'),
+(60, 4, '999', '888', '', 'Activo'),
+(61, 4, '111', '222', 'grillo@gmail.com', 'Activo');
 
 --
 -- Índices para tablas volcadas
@@ -747,6 +753,28 @@ ALTER TABLE `subdivisiones`
 ALTER TABLE `usuario`
   ADD PRIMARY KEY (`id_usuario`),
   ADD KEY `id_rol` (`id_rol`);
+
+--
+-- AUTO_INCREMENT de las tablas volcadas
+--
+
+--
+-- AUTO_INCREMENT de la tabla `acudiente`
+--
+ALTER TABLE `acudiente`
+  MODIFY `id_acudiente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+
+--
+-- AUTO_INCREMENT de la tabla `jugador`
+--
+ALTER TABLE `jugador`
+  MODIFY `id_jugador` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+
+--
+-- AUTO_INCREMENT de la tabla `usuario`
+--
+ALTER TABLE `usuario`
+  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
 
 --
 -- Restricciones para tablas volcadas
