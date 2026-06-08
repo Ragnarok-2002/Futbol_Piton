@@ -48,13 +48,15 @@
         <form action="/login" method="POST" class="space-y-6">
             
             <div class="space-y-2">
-                <label for="username" class="block text-naranja-suave text-xs font-bold tracking-wider uppercase ml-1">Usuario de Acceso</label>
+                <label for="username" class="text-naranja-suave text-xs font-bold tracking-wider uppercase block">
+                    Correo Electrónico
+                </label>
                 <div class="relative">
                     <input type="text" 
                            id="username" 
                            name="username" 
                            required 
-                           placeholder="Ej: carlos95" 
+                           placeholder="Ingresa tu correo o usuario" 
                            class="w-full bg-negro-carbon text-blanco-humo placeholder-gris-claro/50 px-4 py-3.5 rounded-2xl border border-white/10 text-sm font-medium transition-all duration-300 focus:outline-none focus:border-amarillo-volt focus:ring-1 focus:ring-amarillo-volt">
                 </div>
             </div>
@@ -79,9 +81,16 @@
             </button>
         </form>
 
-        <div class="mt-8 pt-6 border-t border-white/5 text-center">
+        <div class="mt-8 pt-6 border-t border-white/5 text-center space-y-4">
             <p class="text-gris-claro text-xs">
-                ¿Problemas con tu cuenta? <a href="#" class="text-amarillo-volt hover:underline transition-all duration-300 font-semibold">Contactar al Administrador</a>
+                ¿Aún no haces parte de la escuela?
+            </p>
+            <a href="/registro" class="inline-block w-full py-3 bg-white/5 hover:bg-white/10 text-amarillo-volt font-bold rounded-2xl transition-all duration-300 text-sm border border-white/5 hover:border-amarillo-volt/30 shadow-sm hover:shadow-amarillo-volt/10">
+                REGÍSTRATE AQUÍ
+            </a>
+            
+            <p class="text-gris-claro/50 text-[10px] mt-4">
+                ¿Problemas con tu acceso? Contacta al administrador.
             </p>
         </div>
 
