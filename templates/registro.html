@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Escuela de Fútbol</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'negro-carbon': '#1A1A1A',
+                        'gris-carbon': '#252525',
+                        'naranja-fuego': '#E65100',
+                        'naranja-suave': '#FFF3E0',
+                        'blanco-humo': '#F5F5F5',
+                        'amarillo-volt': '#EEFF41',
+                        'gris-claro': '#B3B3B3'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-effect {
+            background: rgba(37, 37, 37, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        /* Ocultar elementos para las transiciones del modal */
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-negro-carbon via-negro-carbon to-naranja-fuego/10 min-h-screen text-blanco-humo font-sans flex items-center justify-center p-4">
+
+    <div class="glass-effect rounded-3xl p-8 max-w-2xl w-full shadow-2xl relative">
+        
+        <div class="text-center mb-8 border-b border-white/10 pb-6">
+            <h1 class="text-3xl font-black"><span class="text-naranja-fuego">Únete al</span> Equipo</h1>
+            <p class="text-gris-claro text-sm mt-2">Crea tu cuenta como jugador o registra a tu representado.</p>
+        </div>
+
+        <form id="formularioRegistro" action="/registro" method="POST" class="space-y-5">
+            
+            <div class="space-y-2">
+                <label class="text-amarillo-volt text-xs font-bold tracking-wider uppercase">¿Qué rol te vas a asignar?</label>
+                <select id="rol" name="rol" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm focus:border-amarillo-volt focus:ring-1 focus:ring-amarillo-volt outline-none">
+                    <option value="" disabled selected>Selecciona una opción...</option>
+                    <option value="4">Soy Jugador (Independiente)</option>
+                    <option value="5">Soy Acudiente (Padre/Madre/Tutor)</option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="space-y-2">
+                    <label class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Documento</label>
+                    <input type="text" id="documento" name="documento" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Contraseña</label>
+                    <input type="password" id="password" name="password" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="space-y-2">
+                    <label class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Nombres</label>
+                    <input type="text" id="nombres" name="nombres" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Apellidos</label>
+                    <input type="text" id="apellidos" name="apellidos" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div class="space-y-2">
+                    <label class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Teléfono</label>
+                    <input type="text" name="telefono" class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Email</label>
+                    <input type="email" name="email" class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Nacimiento</label>
+                    <input type="date" name="fecha_nacimiento" class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none">
+                </div>
+            </div>
+
+            <div class="pt-4 flex gap-4">
+                <a href="/" class="w-1/3 bg-white/5 hover:bg-white/10 text-center text-blanco-humo font-bold py-4 rounded-2xl transition-all duration-300 text-sm">
+                    VOLVER
+                </a>
+                <button type="button" onclick="mostrarModal()" class="w-2/3 bg-naranja-fuego hover:bg-orange-700 text-blanco-humo font-bold py-4 rounded-2xl shadow-lg transition-all duration-300 hover:translate-y-[-2px] tracking-widest text-sm focus:ring-2 focus:ring-amarillo-volt">
+                    CONTINUAR REGISTRO
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div id="modalConfirmacion" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="glass-effect rounded-3xl p-8 max-w-md w-full shadow-2xl border border-amarillo-volt/30 transform scale-100 transition-all">
+            <div class="text-center mb-6">
+                <div class="text-4xl mb-2">⚠️</div>
+                <h2 class="text-xl font-black text-blanco-humo">Confirmar Datos</h2>
+                <p class="text-gris-claro text-xs mt-1">Por favor, verifica que tu información y rol sean correctos antes de enviar.</p>
+            </div>
+            
+            <div class="bg-negro-carbon/50 rounded-2xl p-5 space-y-3 mb-6 text-sm">
+                <div class="flex justify-between border-b border-white/5 pb-2">
+                    <span class="text-naranja-suave font-bold">Rol:</span>
+                    <span id="resumenRol" class="text-amarillo-volt font-black"></span>
+                </div>
+                <div class="flex justify-between border-b border-white/5 pb-2">
+                    <span class="text-naranja-suave font-bold">Documento:</span>
+                    <span id="resumenDoc" class="text-blanco-humo"></span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-naranja-suave font-bold">Nombre:</span>
+                    <span id="resumenNombre" class="text-blanco-humo text-right"></span>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="cerrarModal()" class="w-1/2 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold text-gris-claro transition-all">
+                    CORREGIR
+                </button>
+                <button onclick="enviarFormulario()" class="w-1/2 py-3 bg-amarillo-volt hover:bg-yellow-400 rounded-xl text-xs font-black text-negro-carbon shadow-lg shadow-amarillo-volt/20 transition-all">
+                    SÍ, REGISTRARME
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function mostrarModal() {
+            // Capturamos los datos del formulario
+            const rolSelect = document.getElementById('rol');
+            const textoRol = rolSelect.options[rolSelect.selectedIndex].text;
+            const doc = document.getElementById('documento').value;
+            const nombres = document.getElementById('nombres').value;
+            const apellidos = document.getElementById('apellidos').value;
+
+            // Validación rápida para no abrir el modal si faltan datos clave
+            if(rolSelect.value === "" || doc === "" || nombres === "") {
+                alert("Por favor, llena los campos obligatorios y selecciona un rol.");
+                return;
+            }
+
+            // Pintamos los datos en el Modal
+            document.getElementById('resumenRol').innerText = textoRol;
+            document.getElementById('resumenDoc').innerText = doc;
+            document.getElementById('resumenNombre').innerText = nombres + " " + apellidos;
+
+            // Mostramos el modal quitando la clase 'hidden'
+            document.getElementById('modalConfirmacion').classList.remove('hidden');
+        }
+
+        function cerrarModal() {
+            // Ocultamos el modal agregando la clase 'hidden'
+            document.getElementById('modalConfirmacion').classList.add('hidden');
+        }
+
+        function enviarFormulario() {
+            // Enviamos el formulario a Python
+            document.getElementById('formularioRegistro').submit();
+        }
+    </script>
+</body>
+</html>
