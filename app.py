@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, session
 import mysql.connector
 
 app = Flask(__name__)
@@ -84,10 +84,8 @@ def login():
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
     
-    # EL TRUCO MAESTRO: Buscamos en la columna 'usuario' O en la columna 'email'
+    # Buscamos en la columna 'usuario' O en la columna 'email'
     query = "SELECT * FROM usuario WHERE (usuario = %s OR email = %s) AND contrasena = %s"
-    
-    # Pasamos 'usuario_ingresado' dos veces porque hay dos %s antes de la contraseña
     cursor.execute(query, (usuario_ingresado, usuario_ingresado, contrasena_ingresada))
     cuenta = cursor.fetchone()
     
@@ -95,16 +93,22 @@ def login():
     conexion.close()
     
     if cuenta:
+        # ¡MAGIA!: Guardamos el ID del usuario en la sesión para saber quién es
+        session['id_usuario'] = cuenta['id_usuario']
+        
         id_rol = cuenta['id_rol']
-        if id_rol == 3:
+        
+        # Redirecciones según el rol exacto
+        if id_rol == 4:
+            return redirect('/dashboard-jugador')
+        elif id_rol == 5: # Asumiendo que 5 es Acudiente
             return redirect('/modulo-acudiente')
-        elif id_rol == 2:
+        elif id_rol == 3: # Asumiendo que 3 es Entrenador
             return redirect('/modulo-entrenador')
         else:
-            return redirect('/dashboard-admin')
+            return redirect('/dashboard-admin') # Administradores
     else:
         return "<h3>Usuario o contraseña incorrectos.</h3><p>Por favor, regresa e intenta de nuevo.</p>"
-
 # ==========================================
 # 4. VISTAS DE LOS DASHBOARDS
 # ==========================================
@@ -112,13 +116,38 @@ def login():
 def dashboard_admin():
     return render_template('dashboard_admin.html')
 
-@app.route('/modulo-acudiente')
-def modulo_acudiente():
-    return "<h1>Módulo del Acudiente</h1>"
-
+# ==========================================
+# MÓDULO: DASHBOARD DEL ENTRENADOR
+# ==========================================
 @app.route('/modulo-entrenador')
-def modulo_entrenador():
-    return "<h1>Módulo del Entrenador</h1>"
+def dashboard_entrenador():
+    # Validación de seguridad: debe tener una sesión activa
+    if 'id_usuario' not in session:
+        return redirect('/')
+        
+    id_usuario_actual = session['id_usuario']
+    
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    
+    # Hacemos el JOIN para traer sus datos de contacto y credenciales
+    query_entrenador = """
+        SELECT e.id_entrenador, e.nombres, e.apellidos, e.telefono,
+               u.usuario AS documento, u.email 
+        FROM entrenador e
+        JOIN usuario u ON e.id_usuario = u.id_usuario
+        WHERE e.id_usuario = %s
+    """
+    cursor.execute(query_entrenador, (id_usuario_actual,))
+    datos_entrenador = cursor.fetchone()
+    
+    cursor.close()
+    conexion.close()
+    
+    if not datos_entrenador:
+        return "Error: No se encontraron los datos de este entrenador en la base de datos."
+        
+    return render_template('dashboard_entrenador.html', entrenador=datos_entrenador)
 
 # ==========================================
 # 5. MÓDULO: MI PERFIL (ADMINISTRADOR)
@@ -184,6 +213,190 @@ def gestion_jugadores():
     conexion.close()
     
     return render_template('gestion_jugadores.html', jugadores=jugadores)
+
+# ==========================================
+# MÓDULO: DASHBOARD DEL JUGADOR
+# ==========================================
+@app.route('/dashboard-jugador')
+def dashboard_jugador():
+    # Si alguien intenta entrar aquí sin iniciar sesión, lo devolvemos al login
+    if 'id_usuario' not in session:
+        return redirect('/')
+        
+    id_usuario_actual = session['id_usuario']
+    
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    
+    # Buscamos los datos personales del jugador usando el ID de su cuenta
+    query = """
+        SELECT nombres, apellidos, documento, email, telefono 
+        FROM jugador 
+        WHERE id_usuario = %s
+    """
+    cursor.execute(query, (id_usuario_actual,))
+    datos_jugador = cursor.fetchone()
+    
+    cursor.close()
+    conexion.close()
+    
+    # Si por alguna razón no encuentra los datos en la tabla jugador
+    if not datos_jugador:
+        return "Error: No se encontraron los datos de este jugador."
+        
+    return render_template('dashboard_jugador.html', jugador=datos_jugador)
+
+# ==========================================
+# MÓDULO: DASHBOARD DEL ACUDIENTE
+# ==========================================
+@app.route('/modulo-acudiente')
+def dashboard_acudiente():
+    if 'id_usuario' not in session:
+        return redirect('/')
+        
+    id_usuario_actual = session['id_usuario']
+    
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    
+    # Hacemos un JOIN con la tabla usuario para traer el email y el documento (que es el nombre de usuario)
+    query_acudiente = """
+        SELECT a.id_acudiente, a.nombre, a.apellido, a.telefono,
+               u.usuario AS documento, u.email 
+        FROM acudiente a
+        JOIN usuario u ON a.id_usuario = u.id_usuario
+        WHERE a.id_usuario = %s
+    """
+    cursor.execute(query_acudiente, (id_usuario_actual,))
+    datos_acudiente = cursor.fetchone()
+    
+    if not datos_acudiente:
+        cursor.close()
+        conexion.close()
+        return "Error: No se encontraron los datos de este acudiente."
+
+    # Buscamos a los jugadores que están a su cargo
+    query_hijos = """
+        SELECT nombres, apellidos, documento, fecha_nacimiento 
+        FROM jugador 
+        WHERE id_acudiente = %s
+    """
+    cursor.execute(query_hijos, (datos_acudiente['id_acudiente'],))
+    jugadores_acargo = cursor.fetchall()
+    
+    cursor.close()
+    conexion.close()
+    
+    return render_template('dashboard_acudiente.html', acudiente=datos_acudiente, hijos=jugadores_acargo)
+
+# ==========================================
+# MÓDULO: GESTIÓN Y VISUALIZACIÓN DE EQUIPOS
+# ==========================================
+@app.route('/equipos')
+def modulo_equipos():
+    if 'id_usuario' not in session:
+        return redirect('/')
+        
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    
+    # 1. Obtenemos el rol para saber si habilitamos la edición
+    cursor.execute("SELECT id_rol FROM usuario WHERE id_usuario = %s", (session['id_usuario'],))
+    usuario = cursor.fetchone()
+    es_entrenador = usuario['id_rol'] in [1, 2, 3] if usuario else False
+    
+    # 2. Traemos todos los equipos para la lista desplegable del modal
+    cursor.execute("SELECT id_equipo, nombre_equipo FROM equipo")
+    lista_equipos = cursor.fetchall()
+    
+    # 3. LA MAGIA: Cambiamos a LEFT JOIN para incluir a los jugadores huérfanos
+    # COALESCE cambia los valores vacíos (NULL) por textos por defecto
+    query = """
+        SELECT 
+            COALESCE(e.id_equipo, 0) AS id_equipo, 
+            COALESCE(e.nombre_equipo, 'Nuevos (Sin Equipo)') AS nombre_equipo,
+            j.id_jugador, j.nombres, j.apellidos,
+            COALESCE(f.posicion, 'Por definir') AS posicion
+        FROM jugador j
+        LEFT JOIN ficha_jugador f ON j.id_jugador = f.id_jugador
+        LEFT JOIN equipo e ON f.id_equipo = e.id_equipo
+        ORDER BY e.id_equipo ASC, f.posicion ASC
+    """
+    cursor.execute(query)
+    resultados = cursor.fetchall()
+    
+    cursor.close()
+    conexion.close()
+    
+    equipos_db = {}
+    for fila in resultados:
+        equipo_nombre = fila['nombre_equipo']
+        if equipo_nombre not in equipos_db:
+            equipos_db[equipo_nombre] = []
+            
+        equipos_db[equipo_nombre].append({
+            "id_jugador": fila['id_jugador'],
+            "id_equipo": fila['id_equipo'],
+            "nombres": fila['nombres'],
+            "apellidos": fila['apellidos'],
+            "posicion": fila['posicion']
+        })
+        
+    return render_template('equipos.html', equipos=equipos_db, es_entrenador=es_entrenador, lista_equipos=lista_equipos)
+
+# ==========================================
+# RUTAS DE ACCIÓN: MOVER Y ELIMINAR JUGADOR
+# ==========================================
+@app.route('/mover-jugador', methods=['POST'])
+def mover_jugador():
+    id_jugador = request.form.get('id_jugador')
+    nuevo_equipo = request.form.get('nuevo_equipo')
+    
+    conexion = obtener_conexion()
+    cursor = conexion.cursor()
+    
+    # Verificamos si el jugador ya tiene una ficha creada o si está en ceros
+    cursor.execute("SELECT id_jugador FROM ficha_jugador WHERE id_jugador = %s", (id_jugador,))
+    tiene_ficha = cursor.fetchone()
+    
+    if tiene_ficha:
+        # Si ya tiene, simplemente lo cambiamos de equipo (UPDATE)
+        cursor.execute("UPDATE ficha_jugador SET id_equipo = %s WHERE id_jugador = %s", (nuevo_equipo, id_jugador))
+    else:
+        # Si es nuevo, le CREAMOS su ficha (INSERT) asignándole estado 1 (Disponible)
+        cursor.execute("""
+            INSERT INTO ficha_jugador (id_jugador, id_equipo, id_estado, posicion, estatura, peso) 
+            VALUES (%s, %s, 1, 'Por definir', 0.00, 0.00)
+        """, (id_jugador, nuevo_equipo))
+        
+    conexion.commit()
+    cursor.close()
+    conexion.close()
+    
+    return redirect('/equipos')
+
+@app.route('/eliminar-jugador', methods=['POST'])
+def eliminar_jugador():
+    id_jugador = request.form.get('id_jugador')
+    
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    
+    cursor.execute("SELECT id_usuario FROM jugador WHERE id_jugador = %s", (id_jugador,))
+    resultado = cursor.fetchone()
+    
+    # Eliminación en cascada segura
+    cursor.execute("DELETE FROM ficha_jugador WHERE id_jugador = %s", (id_jugador,))
+    cursor.execute("DELETE FROM pago WHERE id_jugador = %s", (id_jugador,))
+    cursor.execute("DELETE FROM jugador WHERE id_jugador = %s", (id_jugador,))
+    if resultado:
+        cursor.execute("DELETE FROM usuario WHERE id_usuario = %s", (resultado['id_usuario'],))
+        
+    conexion.commit()
+    cursor.close()
+    conexion.close()
+    
+    return redirect('/equipos')
 
 # ==========================================
 # INICIALIZADOR DEL PROYECTO (¡SIEMPRE AL FINAL!)
