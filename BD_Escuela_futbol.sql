@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 08-06-2026 a las 04:42:59
+-- Tiempo de generación: 09-06-2026 a las 05:59:18
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.0.30
 
@@ -67,7 +67,8 @@ INSERT INTO `acudiente` (`id_acudiente`, `id_usuario`, `id_rol`, `nombre`, `apel
 (22, 55, 5, 'Gloria', 'Cerón', '42345862', '3101234022', 'madre.ceron@gmail.com'),
 (23, 56, 5, 'Ernesto', 'Acosta', '10234773', '3101234023', 'padre.acosta@gmail.com'),
 (24, 57, 5, 'Beatriz', 'Mendoza', '42345884', '3101234024', 'madre.mendoza@gmail.com'),
-(25, 58, 5, 'Raúl', 'Zapata', '10234795', '3101234025', 'tutor.zapata@gmail.com');
+(25, 58, 5, 'Raúl', 'Zapata', '10234795', '3101234025', 'tutor.zapata@gmail.com'),
+(26, 62, 5, 'papa', 'grillo', '', '', '');
 
 -- --------------------------------------------------------
 
@@ -377,7 +378,8 @@ INSERT INTO `ficha_jugador` (`id_jugador`, `id_equipo`, `id_estado`, `posicion`,
 (22, 5, 1, 'Mediocampista', 1.38, 33.00),
 (23, 5, 1, 'Defensa', 1.42, 36.00),
 (24, 5, 1, 'Defensa', 1.41, 35.50),
-(25, 5, 1, 'Portero', 1.45, 38.00);
+(25, 5, 1, 'Portero', 1.45, 38.00),
+(26, 1, 1, 'Por definir', 0.00, 0.00);
 
 -- --------------------------------------------------------
 
@@ -652,7 +654,8 @@ INSERT INTO `usuario` (`id_usuario`, `id_rol`, `usuario`, `contrasena`, `email`,
 (58, 5, 'acu_025', 'hashed_pass_057', 'tutor.zapata@gmail.com', 'activo'),
 (59, 4, '777', '666', '', 'Activo'),
 (60, 4, '999', '888', '', 'Activo'),
-(61, 4, '111', '222', 'grillo@gmail.com', 'Activo');
+(61, 4, '111', '222', 'grillo@gmail.com', 'Activo'),
+(62, 5, '222', '333', 'grilloPA@gmail.com', 'Activo');
 
 --
 -- Índices para tablas volcadas
@@ -762,7 +765,7 @@ ALTER TABLE `usuario`
 -- AUTO_INCREMENT de la tabla `acudiente`
 --
 ALTER TABLE `acudiente`
-  MODIFY `id_acudiente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `id_acudiente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT de la tabla `jugador`
@@ -774,7 +777,7 @@ ALTER TABLE `jugador`
 -- AUTO_INCREMENT de la tabla `usuario`
 --
 ALTER TABLE `usuario`
-  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
+  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
 
 --
 -- Restricciones para tablas volcadas
