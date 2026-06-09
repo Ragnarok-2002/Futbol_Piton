@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipos - Escuela de Fútbol</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'negro-carbon': '#1A1A1A',
+                        'gris-carbon': '#252525',
+                        'naranja-fuego': '#E65100',
+                        'naranja-suave': '#FFF3E0',
+                        'blanco-humo': '#F5F5F5',
+                        'amarillo-volt': '#EEFF41',
+                        'gris-claro': '#B3B3B3'
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.4s ease-out'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-effect {
+            background: rgba(37, 37, 37, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-negro-carbon via-negro-carbon to-naranja-fuego/10 min-h-screen text-blanco-humo p-6 md:p-10 font-sans relative">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="flex justify-between items-center mb-8">
+            <div>
+                <a href="javascript:history.back()" class="text-gris-claro hover:text-amarillo-volt text-sm font-bold transition-colors mb-2 inline-block">← Volver al Panel</a>
+                <h1 class="text-3xl font-black tracking-tight"><span class="text-naranja-fuego">Plantillas y</span> Equipos</h1>
+            </div>
+            {% if es_entrenador %}
+            <button class="bg-naranja-fuego hover:bg-orange-700 text-blanco-humo font-bold py-3 px-6 rounded-2xl shadow-lg transition-all hover:-translate-y-1">
+                + Crear Equipo Nuevo
+            </button>
+            {% endif %}
+        </header>
+
+        <div class="flex flex-wrap gap-4 mb-10 border-b border-white/10 pb-6">
+            {% for nombre_equipo, jugadores in equipos.items() %}
+            <button id="btn-{{ loop.index }}" 
+                    onclick="cambiarEquipo({{ loop.index }})"
+                    class="btn-tab {% if loop.index == 1 %} bg-amarillo-volt text-negro-carbon scale-105 shadow-lg shadow-amarillo-volt/20 {% else %} bg-white/5 text-blanco-humo hover:bg-white/10 {% endif %} font-black py-3 px-6 rounded-2xl transition-all duration-300">
+                {{ nombre_equipo }}
+            </button>
+            {% endfor %}
+        </div>
+
+        <div>
+            {% for nombre_equipo, jugadores in equipos.items() %}
+            <div id="equipo-{{ loop.index }}" class="contenido-equipo {% if loop.index != 1 %} hidden {% endif %} animate-fade-in">
+                
+                <h2 class="text-2xl font-black text-blanco-humo mb-6">{{ nombre_equipo }} <span class="text-sm font-normal text-gris-claro ml-2">({{ jugadores|length }} Jugadores)</span></h2>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {% for jugador in jugadores %}
+                    <div class="glass-effect p-6 rounded-3xl border border-white/5 flex flex-col justify-between items-center text-center hover:border-amarillo-volt/50 transition-all group h-full">
+                        <div class="flex flex-col items-center">
+                            <div class="w-16 h-16 bg-negro-carbon rounded-full flex items-center justify-center text-3xl border border-white/10 mb-4">👕</div>
+                            <h3 class="font-bold text-blanco-humo text-lg leading-tight">{{ jugador.nombres }}</h3>
+                            <h3 class="font-bold text-blanco-humo text-lg leading-tight">{{ jugador.apellidos }}</h3>
+                            <p class="text-xs text-amarillo-volt font-black tracking-widest uppercase mt-3 bg-amarillo-volt/10 px-3 py-1 rounded-lg">
+                                {{ jugador.posicion }}
+                            </p>
+                        </div>
+                        
+                        {% if es_entrenador %}
+                        <div class="mt-6 flex gap-2 w-full pt-4 border-t border-white/10">
+                            <button onclick="abrirModalMover('{{ jugador.id_jugador }}', '{{ jugador.nombres }} {{ jugador.apellidos }}', '{{ jugador.id_equipo }}')" 
+                                    class="flex-1 py-2 bg-white/5 hover:bg-amarillo-volt hover:text-negro-carbon text-xs font-bold rounded-xl transition-all text-gris-claro border border-white/5">
+                                MOVER
+                            </button>
+                            <button onclick="abrirModalEliminar('{{ jugador.id_jugador }}', '{{ jugador.nombres }} {{ jugador.apellidos }}')" 
+                                    class="flex-1 py-2 bg-white/5 hover:bg-red-500 hover:text-white hover:border-red-500 text-xs font-bold rounded-xl transition-all text-gris-claro border border-white/5">
+                                BORRAR
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div id="modalMover" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="glass-effect rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-amarillo-volt/30 transform scale-100 transition-all">
+            <h2 class="text-xl font-black text-blanco-humo mb-1">Transferir Jugador</h2>
+            <p class="text-gris-claro text-xs mb-6">Mover a <span id="nombreJugadorMover" class="text-amarillo-volt font-bold"></span> de equipo.</p>
+            
+            <form action="/mover-jugador" method="POST" class="space-y-4">
+                <input type="hidden" name="id_jugador" id="inputIdJugadorMover">
+                
+                <div class="space-y-2">
+                    <label class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Nuevo Equipo</label>
+                    <select name="nuevo_equipo" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                        {% for eq in lista_equipos %}
+                            <option value="{{ eq.id_equipo }}">{{ eq.nombre_equipo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button type="button" onclick="cerrarModal('modalMover')" class="w-1/2 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold text-gris-claro transition-all">CANCELAR</button>
+                    <button type="submit" class="w-1/2 py-3 bg-amarillo-volt hover:bg-yellow-400 rounded-xl text-xs font-black text-negro-carbon transition-all">CONFIRMAR</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalEliminar" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="glass-effect rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-red-500/30 transform scale-100 transition-all">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">⚠️</div>
+                <h2 class="text-xl font-black text-blanco-humo">¿Eliminar Jugador?</h2>
+                <p class="text-gris-claro text-xs mt-2">Estás a punto de borrar permanentemente a <strong id="nombreJugadorEliminar" class="text-blanco-humo"></strong> de la base de datos.</p>
+            </div>
+            
+            <form action="/eliminar-jugador" method="POST" class="flex gap-3">
+                <input type="hidden" name="id_jugador" id="inputIdJugadorEliminar">
+                <button type="button" onclick="cerrarModal('modalEliminar')" class="w-1/2 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold text-gris-claro transition-all">CANCELAR</button>
+                <button type="submit" class="w-1/2 py-3 bg-red-600 hover:bg-red-700 rounded-xl text-xs font-black text-white shadow-lg shadow-red-600/20 transition-all">SÍ, BORRAR</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function cambiarEquipo(idSeleccionado) {
+            document.querySelectorAll('.contenido-equipo').forEach(div => div.classList.add('hidden'));
+            document.querySelectorAll('.btn-tab').forEach(btn => {
+                btn.classList.remove('bg-amarillo-volt', 'text-negro-carbon', 'scale-105', 'shadow-lg', 'shadow-amarillo-volt/20');
+                btn.classList.add('bg-white/5', 'text-blanco-humo');
+            });
+            document.getElementById('equipo-' + idSeleccionado).classList.remove('hidden');
+            const btnActivo = document.getElementById('btn-' + idSeleccionado);
+            btnActivo.classList.remove('bg-white/5', 'text-blanco-humo');
+            btnActivo.classList.add('bg-amarillo-volt', 'text-negro-carbon', 'scale-105', 'shadow-lg', 'shadow-amarillo-volt/20');
+        }
+
+        function abrirModalMover(idJugador, nombreJugador, idEquipoActual) {
+            document.getElementById('inputIdJugadorMover').value = idJugador;
+            document.getElementById('nombreJugadorMover').innerText = nombreJugador;
+            document.getElementById('modalMover').classList.remove('hidden');
+        }
+
+        function abrirModalEliminar(idJugador, nombreJugador) {
+            document.getElementById('inputIdJugadorEliminar').value = idJugador;
+            document.getElementById('nombreJugadorEliminar').innerText = nombreJugador;
+            document.getElementById('modalEliminar').classList.remove('hidden');
+        }
+
+        function cerrarModal(idModal) {
+            document.getElementById(idModal).classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
