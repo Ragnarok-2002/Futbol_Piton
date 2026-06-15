@@ -90,54 +90,69 @@
         </section>
 
         <h2 class="text-xl font-bold tracking-wide border-b border-white/10 pb-2 mt-8">Panel de Opciones</h2>
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
-            
-            <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-amarillo-volt/50 transition-all duration-300 group flex flex-col justify-between">
-                <div>
-                    <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-amarillo-volt/20 group-hover:scale-110 transition-all mb-4">🫀</div>
-                    <h3 class="font-bold text-lg text-blanco-humo">Fichas Técnicas</h3>
-                    <p class="text-xs text-gris-claro mt-1">Supervisa la información médica y deportiva de tus representados.</p>
+        
+        {% if hijos %}
+            <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
+                <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-amarillo-volt/50 transition-all duration-300 group flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-amarillo-volt/20 group-hover:scale-110 transition-all mb-4">🫀</div>
+                        <h3 class="font-bold text-lg text-blanco-humo">Fichas Técnicas</h3>
+                        <p class="text-xs text-gris-claro mt-1">Supervisa la información médica y deportiva de tus representados.</p>
+                    </div>
+                    <a href="#" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt hover:bg-amarillo-volt hover:text-negro-carbon transition-all duration-300">VER FICHAS</a>
                 </div>
-                <a href="#" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt hover:bg-amarillo-volt hover:text-negro-carbon transition-all duration-300">VER FICHAS</a>
-            </div>
 
-            <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-naranja-fuego/50 transition-all duration-300 group flex flex-col justify-between">
-                <div>
-                    <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-naranja-fuego/20 group-hover:scale-110 transition-all mb-4">🛡️</div>
-                    <h3 class="font-bold text-lg text-blanco-humo">Equipo</h3>
-                    <p class="text-xs text-gris-claro mt-1">Revisa la categoría y compañeros de equipo de tu hijo.</p>
+                <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-naranja-fuego/50 transition-all duration-300 group flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-naranja-fuego/20 group-hover:scale-110 transition-all mb-4">🛡️</div>
+                        <h3 class="font-bold text-lg text-blanco-humo">Equipo</h3>
+                        <p class="text-xs text-gris-claro mt-1">Revisa la categoría y compañeros de equipo de tu hijo.</p>
+                    </div>
+                    <a href="/equipos" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-naranja-fuego hover:bg-naranja-fuego hover:text-blanco-humo transition-all duration-300">VER EQUIPO</a>
                 </div>
-                <a href="/equipos" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-naranja-fuego hover:bg-naranja-fuego hover:text-blanco-humo transition-all duration-300">VER EQUIPO</a>
-            </div>
 
-            <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-amarillo-volt/50 transition-all duration-300 group flex flex-col justify-between">
-                <div>
-                    <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-amarillo-volt/20 group-hover:scale-110 transition-all mb-4">⏱️</div>
-                    <h3 class="font-bold text-lg text-blanco-humo">Entrenamientos</h3>
-                    <p class="text-xs text-gris-claro mt-1">Controla los horarios, lugares de práctica y la asistencia.</p>
+                <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-amarillo-volt/50 transition-all duration-300 group flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-amarillo-volt/20 group-hover:scale-110 transition-all mb-4">⏱️</div>
+                        <h3 class="font-bold text-lg text-blanco-humo">Entrenamientos</h3>
+                        <p class="text-xs text-gris-claro mt-1">Controla los horarios, lugares de práctica y la asistencia.</p>
+                    </div>
+                    <a href="#" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt hover:bg-amarillo-volt hover:text-negro-carbon transition-all duration-300">CRONOGRAMA</a>
                 </div>
-                <a href="#" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt hover:bg-amarillo-volt hover:text-negro-carbon transition-all duration-300">CRONOGRAMA</a>
-            </div>
 
-            <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-naranja-fuego/50 transition-all duration-300 group flex flex-col justify-between">
-                <div>
-                    <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-naranja-fuego/20 group-hover:scale-110 transition-all mb-4">🧾</div>
-                    <h3 class="font-bold text-lg text-blanco-humo">Soportes de Pago</h3>
-                    <p class="text-xs text-gris-claro mt-1">Gestiona las mensualidades y sube los comprobantes de pago.</p>
+                <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-naranja-fuego/50 transition-all duration-300 group flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-naranja-fuego/20 group-hover:scale-110 transition-all mb-4">🧾</div>
+                        <h3 class="font-bold text-lg text-blanco-humo">Soportes de Pago</h3>
+                        <p class="text-xs text-gris-claro mt-1">Gestiona las mensualidades y sube los comprobantes de pago.</p>
+                    </div>
+                    <a href="#" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-naranja-fuego hover:bg-naranja-fuego hover:text-blanco-humo transition-all duration-300">GESTIONAR PAGOS</a>
                 </div>
-                <a href="#" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-naranja-fuego hover:bg-naranja-fuego hover:text-blanco-humo transition-all duration-300">GESTIONAR PAGOS</a>
-            </div>
 
-            <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-amarillo-volt/50 transition-all duration-300 group flex flex-col justify-between">
-                <div>
-                    <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-amarillo-volt/20 group-hover:scale-110 transition-all mb-4">👨‍🏫</div>
-                    <h3 class="font-bold text-lg text-blanco-humo">Cuerpo Técnico</h3>
-                    <p class="text-xs text-gris-claro mt-1">Conoce al entrenador asignado y sus datos de contacto institucionales.</p>
+                <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-amarillo-volt/50 transition-all duration-300 group flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-amarillo-volt/20 group-hover:scale-110 transition-all mb-4">👨‍🏫</div>
+                        <h3 class="font-bold text-lg text-blanco-humo">Cuerpo Técnico</h3>
+                        <p class="text-xs text-gris-claro mt-1">Conoce al entrenador asignado y sus datos de contacto institucionales.</p>
+                    </div>
+                    <a href="#" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt hover:bg-amarillo-volt hover:text-negro-carbon transition-all duration-300">VER PROFESORES</a>
                 </div>
-                <a href="#" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt hover:bg-amarillo-volt hover:text-negro-carbon transition-all duration-300">VER PROFESORES</a>
+            </section>
+        {% else %}
+            <div class="bg-negro-carbon p-8 rounded-3xl border border-red-500/40 text-center mt-4 shadow-2xl shadow-red-500/10 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-red-900/10 to-transparent pointer-events-none"></div>
+                
+                <div class="relative z-10">
+                    <div class="text-5xl mb-4">🔗</div>
+                    <h2 class="text-2xl font-black text-blanco-humo mb-2">Funciones Deshabilitadas</h2>
+                    <p class="text-blanco-humo text-sm max-w-2xl mx-auto leading-relaxed">
+                        Aún no puedes interactuar con el módulo financiero ni ver la información deportiva. 
+                        <br><br>
+                        <span class="text-gris-claro">Para habilitar tus herramientas, el Administrador debe <strong class="text-naranja-fuego">vincular a tus representados</strong> con este perfil.</span>
+                    </p>
+                </div>
             </div>
-
-        </section>
+        {% endif %}
     </main>
 
 </body>
