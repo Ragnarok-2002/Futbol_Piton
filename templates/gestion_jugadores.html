@@ -26,67 +26,108 @@
         .glass-effect {
             background: rgba(37, 37, 37, 0.85);
             backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-negro-carbon via-negro-carbon to-naranja-fuego/10 min-h-screen text-blanco-humo p-8 font-sans">
+<body class="bg-gradient-to-br from-negro-carbon via-negro-carbon to-naranja-fuego/10 min-h-screen text-blanco-humo font-sans flex flex-col md:flex-row">
 
-    <div class="max-w-7xl mx-auto flex justify-between items-center mb-10">
-        <div>
-            <h1 class="text-3xl font-black tracking-tight"><span class="text-naranja-fuego">Gestión de</span> Jugadores</h1>
-            <p class="text-gris-claro text-sm mt-1">Administra los datos personales e inscripciones de la plantilla.</p>
-        </div>
-        <button class="bg-naranja-fuego hover:bg-orange-700 text-blanco-humo font-bold py-3 px-6 rounded-2xl shadow-lg transition-all duration-300 hover:translate-y-[-2px] focus:ring-2 focus:ring-amarillo-volt">
-            + Nuevo Jugador
-        </button>
-    </div>
+    <aside class="w-full md:w-64 bg-gris-carbon/50 border-r border-white/5 flex flex-col justify-between p-6 glass-effect z-10 md:sticky md:top-0 md:h-screen">
+        <div class="space-y-8">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-naranja-fuego flex items-center justify-center text-xl shadow-lg shadow-naranja-fuego/20">⚽</div>
+                <div>
+                    <h2 class="text-sm font-black tracking-wider uppercase">CrackGlow</h2>
+                    <p class="text-xs text-amarillo-volt font-bold">ADMINISTRADOR</p>
+                </div>
+            </div>
 
-    <div class="max-w-7xl mx-auto glass-effect rounded-3xl overflow-hidden shadow-2xl">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-white/5 text-naranja-suave text-xs uppercase tracking-widest border-b border-white/10">
-                        <th class="p-5 font-bold">Doc.</th>
-                        <th class="p-5 font-bold">Jugador</th>
-                        <th class="p-5 font-bold">Contacto</th>
-                        <th class="p-5 font-bold">Fechas (Nacimiento / Registro)</th>
-                        <th class="p-5 font-bold">Acudiente</th>
-                        <th class="p-5 font-bold text-center">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-white/5 text-sm">
-                    {% for jugador in jugadores %}
-                    <tr class="hover:bg-white/5 transition-all duration-300 group">
-                        <td class="p-5 text-gris-claro font-mono text-xs">{{ jugador.documento }}</td>
-                        <td class="p-5 font-bold text-blanco-humo">
-                            {{ jugador.nombres }} {{ jugador.apellidos }}
-                        </td>
-                        <td class="p-5">
-                            <div class="text-blanco-humo">{{ jugador.telefono }}</div>
-                            <div class="text-xs text-gris-claro mt-0.5">{{ jugador.email }}</div>
-                        </td>
-                        <td class="p-5">
-                            <div class="text-blanco-humo">🎂 {{ jugador.fecha_nacimiento }}</div>
-                            <div class="text-xs text-amarillo-volt mt-0.5">📅 {{ jugador.fecha_registro }}</div>
-                        </td>
-                        <td class="p-5">
-                            {% if jugador.nombre_acudiente %}
-                                <span class="text-blanco-humo">{{ jugador.nombre_acudiente }} {{ jugador.apellido_acudiente }}</span>
-                            {% else %}
-                                <span class="text-gris-claro italic bg-white/5 px-3 py-1 rounded-xl text-xs border border-white/5">Independiente (Adulto)</span>
-                            {% endif %}
-                        </td>
-                        <td class="p-5 text-center space-x-2">
-                            <button class="text-gris-claro hover:text-amarillo-volt transition-colors font-bold text-xs uppercase">Editar</button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <nav class="space-y-2 hidden md:block">
+                <a href="/dashboard-admin" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">🏠</span> Inicio
+                </a>
+                <a href="/jugadores" class="flex items-center gap-3 px-4 py-3 bg-naranja-fuego text-blanco-humo font-bold rounded-2xl transition-all duration-300 shadow-lg shadow-naranja-fuego/20">
+                    <span>👥</span> Jugadores
+                </a>
+                <a href="/equipos" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">🛡️</span> Equipos
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">👨‍👩‍👦</span> Acudientes
+                </a>
+                <a href="/entrenadores" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">👨‍🏫</span> Entrenadores
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">📋</span> Asistencias
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">💰</span> Finanzas
+                </a>
+            </nav>
         </div>
-    </div>
+
+        <a href="/" class="hidden md:flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-2xl transition-all duration-300 font-medium mt-10">
+            <span>🚪</span> Cerrar Sesión
+        </a>
+    </aside>
+
+    <main class="flex-1 p-6 md:p-10 space-y-8 overflow-y-auto">
+        <div class="max-w-7xl mx-auto flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-3xl font-black tracking-tight"><span class="text-naranja-fuego">Gestión de</span> Jugadores</h1>
+                <p class="text-gris-claro text-sm mt-1">Administra los datos personales e inscripciones de la plantilla.</p>
+            </div>
+            <button class="bg-naranja-fuego hover:bg-orange-700 text-blanco-humo font-bold py-3 px-6 rounded-2xl shadow-lg transition-all duration-300 hover:-translate-y-1 focus:ring-2 focus:ring-amarillo-volt">
+                + Nuevo Jugador
+            </button>
+        </div>
+
+        <div class="max-w-7xl mx-auto glass-effect rounded-3xl overflow-hidden shadow-2xl">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-white/5 text-naranja-suave text-xs uppercase tracking-widest border-b border-white/10">
+                            <th class="p-5 font-bold">Doc.</th>
+                            <th class="p-5 font-bold">Jugador</th>
+                            <th class="p-5 font-bold">Contacto</th>
+                            <th class="p-5 font-bold">Fechas (Nac. / Reg.)</th>
+                            <th class="p-5 font-bold">Acudiente</th>
+                            <th class="p-5 font-bold text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5 text-sm">
+                        {% for jugador in jugadores %}
+                        <tr class="hover:bg-white/5 transition-all duration-300 group">
+                            <td class="p-5 text-gris-claro font-mono text-xs">{{ jugador.documento }}</td>
+                            <td class="p-5 font-bold text-blanco-humo">
+                                {{ jugador.nombres }} {{ jugador.apellidos }}
+                            </td>
+                            <td class="p-5">
+                                <div class="text-blanco-humo">{{ jugador.telefono }}</div>
+                                <div class="text-xs text-gris-claro mt-0.5">{{ jugador.email }}</div>
+                            </td>
+                            <td class="p-5">
+                                <div class="text-blanco-humo">🎂 {{ jugador.fecha_nacimiento }}</div>
+                                <div class="text-xs text-amarillo-volt mt-0.5">📅 {{ jugador.fecha_registro }}</div>
+                            </td>
+                            <td class="p-5">
+                                {% if jugador.nombre_acudiente %}
+                                    <span class="text-blanco-humo">{{ jugador.nombre_acudiente }} {{ jugador.apellido_acudiente }}</span>
+                                {% else %}
+                                    <span class="text-gris-claro italic bg-white/5 px-3 py-1 rounded-xl text-xs border border-white/5">Independiente (Adulto)</span>
+                                {% endif %}
+                            </td>
+                            <td class="p-5 text-center space-x-2">
+                                <button class="text-gris-claro hover:text-amarillo-volt transition-colors font-bold text-xs uppercase">Editar</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
 
 </body>
 </html>
