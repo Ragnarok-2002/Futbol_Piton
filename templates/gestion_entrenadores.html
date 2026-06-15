@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Entrenadores - Escuela de Fútbol</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'negro-carbon': '#1A1A1A',
+                        'gris-carbon': '#252525',
+                        'naranja-fuego': '#E65100',
+                        'naranja-suave': '#FFF3E0',
+                        'blanco-humo': '#F5F5F5',
+                        'amarillo-volt': '#EEFF41',
+                        'gris-claro': '#B3B3B3'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-effect {
+            background: rgba(37, 37, 37, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-negro-carbon via-negro-carbon to-naranja-fuego/10 min-h-screen text-blanco-humo font-sans flex flex-col md:flex-row">
+
+    <aside class="w-full md:w-64 bg-gris-carbon/50 border-r border-white/5 flex flex-col justify-between p-6 glass-effect z-10 md:sticky md:top-0 md:h-screen">
+        <div class="space-y-8">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-naranja-fuego flex items-center justify-center text-xl shadow-lg shadow-naranja-fuego/20">⚽</div>
+                <div>
+                    <h2 class="text-sm font-black tracking-wider uppercase">CrackGlow</h2>
+                    <p class="text-xs text-amarillo-volt font-bold">ADMINISTRADOR</p>
+                </div>
+            </div>
+
+            <nav class="space-y-2 hidden md:block">
+                <a href="/dashboard-admin" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">🏠</span> Inicio
+                </a>
+                <a href="/jugadores" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">👥</span> Jugadores
+                </a>
+                <a href="/equipos" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">🛡️</span> Equipos
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">👨‍👩‍👦</span> Acudientes
+                </a>
+                <a href="/entrenadores" class="flex items-center gap-3 px-4 py-3 bg-naranja-fuego text-blanco-humo font-bold rounded-2xl transition-all duration-300 shadow-lg shadow-naranja-fuego/20">
+                    <span>👨‍🏫</span> Entrenadores
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">📋</span> Asistencias
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">💰</span> Finanzas
+                </a>
+            </nav>
+        </div>
+
+        <a href="/" class="hidden md:flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-2xl transition-all duration-300 font-medium mt-10">
+            <span>🚪</span> Cerrar Sesión
+        </a>
+    </aside>
+
+    <main class="flex-1 p-6 md:p-10 space-y-8 overflow-y-auto">
+        <div class="max-w-7xl mx-auto flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-3xl font-black tracking-tight"><span class="text-naranja-fuego">Cuerpo</span> Técnico</h1>
+                <p class="text-gris-claro text-sm mt-1">Administra la nómina de profesores y sus especialidades.</p>
+            </div>
+            <button class="bg-naranja-fuego hover:bg-orange-700 text-blanco-humo font-bold py-3 px-6 rounded-2xl shadow-lg transition-all duration-300 hover:-translate-y-1 focus:ring-2 focus:ring-amarillo-volt">
+                + Nuevo Entrenador
+            </button>
+        </div>
+
+        <div class="max-w-7xl mx-auto glass-effect rounded-3xl overflow-hidden shadow-2xl">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-white/5 text-naranja-suave text-xs uppercase tracking-widest border-b border-white/10">
+                            <th class="p-5 font-bold">Doc.</th>
+                            <th class="p-5 font-bold">Profesor</th>
+                            <th class="p-5 font-bold">Contacto</th>
+                            <th class="p-5 font-bold">Especialidad Táctica</th>
+                            <th class="p-5 font-bold text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5 text-sm">
+                        {% for entrenador in entrenadores %}
+                        <tr class="hover:bg-white/5 transition-all duration-300 group">
+                            <td class="p-5 text-gris-claro font-mono text-xs">{{ entrenador.documento }}</td>
+                            <td class="p-5 font-bold text-blanco-humo">
+                                {{ entrenador.nombres }} {{ entrenador.apellidos }}
+                            </td>
+                            <td class="p-5">
+                                <div class="text-blanco-humo">{{ entrenador.telefono }}</div>
+                                <div class="text-xs text-gris-claro mt-0.5">{{ entrenador.email }}</div>
+                            </td>
+                            <td class="p-5">
+                                <span class="bg-amarillo-volt/10 text-amarillo-volt font-bold px-3 py-1 rounded-lg text-xs uppercase tracking-wider">
+                                    {{ entrenador.especialidad }}
+                                </span>
+                            </td>
+                            <td class="p-5 text-center space-x-2">
+                                <button class="text-gris-claro hover:text-amarillo-volt transition-colors font-bold text-xs uppercase">Editar</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>
