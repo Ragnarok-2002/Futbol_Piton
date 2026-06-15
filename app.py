@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, session
 import mysql.connector
+from datetime import datetime
 
 app = Flask(__name__)
 # Clave secreta obligatoria en Flask para manejar sesiones en el futuro
@@ -24,7 +25,7 @@ def obtener_conexion():
 def registro_publico():
     if request.method == 'POST':
         conexion = obtener_conexion()
-        cursor = conexion.cursor()
+        cursor = conexion.cursor(dictionary=True) # Usamos dictionary para las validaciones
         
         # Recogemos los datos del formulario
         id_rol = request.form.get('rol') 
@@ -35,15 +36,44 @@ def registro_publico():
         email = request.form.get('email')
         contrasena = request.form.get('password')
         fecha_nacimiento = request.form.get('fecha_nacimiento')
+
+        # --------------------------------------------------------
+        # BLOQUE DE PRUEBAS QA (VALIDACIONES DE SEGURIDAD Y NEGOCIO)
+        # --------------------------------------------------------
         
-        # 1. Creamos la cuenta de usuario (Asegúrate de haber activado A_I en phpMyAdmin)
+        # 1. Validar que no existan clones
+        cursor.execute("SELECT id_usuario FROM usuario WHERE usuario = %s OR email = %s", (documento, email))
+        if cursor.fetchone():
+            return render_template('registro.html', error='Estos datos (Documento o Email) ya están registrados en la escuela.')
+
+        # 2. REGLAS DE NEGOCIO: Edades por Rol
+        if fecha_nacimiento:
+            nacimiento = datetime.strptime(fecha_nacimiento, '%Y-%m-%d')
+            fecha_hoy = datetime.now()
+            # Calculamos la edad exacta teniendo en cuenta meses y días
+            edad = fecha_hoy.year - nacimiento.year - ((fecha_hoy.month, fecha_hoy.day) < (nacimiento.month, nacimiento.day))
+
+            if id_rol == '4':  # Reglas exclusivas para JUGADORES
+                if edad < 10:
+                    return render_template('registro.html', error='Aún no tienes la edad mínima (10 años). Te invitamos a inscribirte en nuestra escuela aliada JUNIOR.')
+                elif edad > 22:
+                    return render_template('registro.html', error='Superaste la edad máxima (22 años). Te invitamos a inscribirte en nuestra escuela aliada MASTER.')
+            
+            elif id_rol == '5': # Regla de calidad para ACUDIENTES
+                if edad < 18:
+                    return render_template('registro.html', error='Para registrarte como Acudiente debes ser mayor de edad (18+ años).')
+
+        # --------------------------------------------------------
+        # SI PASA LAS PRUEBAS, GUARDAMOS NORMALMENTE
+        # --------------------------------------------------------
+        cursor = conexion.cursor() # Volvemos al cursor normal para los inserts
+        
+        # Creamos la cuenta de usuario
         cursor.execute("INSERT INTO usuario (id_rol, usuario, contrasena, email, estado) VALUES (%s, %s, %s, %s, %s)", 
                        (id_rol, documento, contrasena, email, 'Activo'))
         id_usuario_nuevo = cursor.lastrowid
         
-        # 2. Guardamos los datos en su tabla correspondiente
         if id_rol == '4': # Jugador
-            # AQUÍ ESTÁ LA MAGIA: Agregamos fecha_registro y usamos CURDATE()
             query_jugador = """
                 INSERT INTO jugador (id_usuario, id_rol, documento, nombres, apellidos, fecha_nacimiento, telefono, email, fecha_registro)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, CURDATE())
@@ -52,10 +82,10 @@ def registro_publico():
             
         elif id_rol == '5': # Acudiente
             query_acudiente = """
-                INSERT INTO acudiente (id_usuario, id_rol, nombre, apellido)
-                VALUES (%s, %s, %s, %s)
+                INSERT INTO acudiente (id_usuario, id_rol, nombre, apellido, documento, telefono, email)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
             """
-            cursor.execute(query_acudiente, (id_usuario_nuevo, id_rol, nombres, apellidos))
+            cursor.execute(query_acudiente, (id_usuario_nuevo, id_rol, nombres, apellidos, documento, telefono, email))
             
         conexion.commit()
         cursor.close()
@@ -219,7 +249,6 @@ def gestion_jugadores():
 # ==========================================
 @app.route('/dashboard-jugador')
 def dashboard_jugador():
-    # Si alguien intenta entrar aquí sin iniciar sesión, lo devolvemos al login
     if 'id_usuario' not in session:
         return redirect('/')
         
@@ -228,9 +257,9 @@ def dashboard_jugador():
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
     
-    # Buscamos los datos personales del jugador usando el ID de su cuenta
+    # IMPORTANTE: Ahora también traemos la fecha_nacimiento y el id_acudiente
     query = """
-        SELECT nombres, apellidos, documento, email, telefono 
+        SELECT nombres, apellidos, documento, email, telefono, fecha_nacimiento, id_acudiente 
         FROM jugador 
         WHERE id_usuario = %s
     """
@@ -240,11 +269,23 @@ def dashboard_jugador():
     cursor.close()
     conexion.close()
     
-    # Si por alguna razón no encuentra los datos en la tabla jugador
     if not datos_jugador:
         return "Error: No se encontraron los datos de este jugador."
         
-    return render_template('dashboard_jugador.html', jugador=datos_jugador)
+    # LÓGICA DE BLOQUEO PARA MENORES SIN ACUDIENTE
+    nacimiento = datos_jugador['fecha_nacimiento']
+    # En caso de que MySQL lo devuelva como texto, lo pasamos a fecha
+    if isinstance(nacimiento, str):
+        nacimiento = datetime.strptime(nacimiento, '%Y-%m-%d').date()
+        
+    fecha_hoy = datetime.now().date()
+    edad = fecha_hoy.year - nacimiento.year - ((fecha_hoy.month, fecha_hoy.day) < (nacimiento.month, nacimiento.day))
+    
+    # La regla: Está bloqueado SI tiene menos de 18 años Y (and) su id_acudiente es nulo (None)
+    bloqueado = (edad < 18) and (datos_jugador['id_acudiente'] is None)
+        
+    # Le mandamos la variable 'bloqueado' al HTML para que decida qué mostrar
+    return render_template('dashboard_jugador.html', jugador=datos_jugador, bloqueado=bloqueado)
 
 # ==========================================
 # MÓDULO: DASHBOARD DEL ACUDIENTE
@@ -397,6 +438,32 @@ def eliminar_jugador():
     conexion.close()
     
     return redirect('/equipos')
+
+# ==========================================
+# MÓDULO: GESTIÓN DE ENTRENADORES
+# ==========================================
+@app.route('/entrenadores')
+def gestion_entrenadores():
+    if 'id_usuario' not in session:
+        return redirect('/')
+        
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    
+    # Hacemos un JOIN con usuario para traer el documento
+    query = """
+        SELECT e.id_entrenador, e.nombres, e.apellidos, e.telefono, e.email, e.especialidad,
+               u.usuario AS documento
+        FROM entrenador e
+        JOIN usuario u ON e.id_usuario = u.id_usuario
+    """
+    cursor.execute(query)
+    entrenadores = cursor.fetchall()
+    
+    cursor.close()
+    conexion.close()
+    
+    return render_template('gestion_entrenadores.html', entrenadores=entrenadores)
 
 # ==========================================
 # INICIALIZADOR DEL PROYECTO (¡SIEMPRE AL FINAL!)
