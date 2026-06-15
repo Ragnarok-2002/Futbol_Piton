@@ -26,14 +26,13 @@
         .glass-effect {
             background: rgba(37, 37, 37, 0.85);
             backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-negro-carbon via-negro-carbon to-naranja-fuego min-h-screen text-blanco-humo font-sans flex">
+<body class="bg-gradient-to-br from-negro-carbon via-negro-carbon to-naranja-fuego/10 min-h-screen text-blanco-humo font-sans flex flex-col md:flex-row">
 
-    <aside class="w-64 bg-gris-carbon border-r border-white/5 flex flex-col justify-between p-6 hidden md:flex">
+    <aside class="w-full md:w-64 bg-gris-carbon/50 border-r border-white/5 flex flex-col justify-between p-6 glass-effect z-10 md:sticky md:top-0 md:h-screen">
         <div class="space-y-8">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-naranja-fuego flex items-center justify-center text-xl shadow-lg shadow-naranja-fuego/20">⚽</div>
@@ -43,83 +42,88 @@
                 </div>
             </div>
 
-            <nav class="space-y-2">
-                <a href="/dashboard_admin" class="flex items-center gap-3 px-4 py-3 bg-naranja-fuego text-blanco-humo font-bold rounded-2xl transition-all duration-300">
+            <nav class="space-y-2 hidden md:block">
+                <a href="/dashboard-admin" class="flex items-center gap-3 px-4 py-3 bg-naranja-fuego text-blanco-humo font-bold rounded-2xl transition-all duration-300 shadow-lg shadow-naranja-fuego/20">
                     <span>🏠</span> Inicio
                 </a>
                 <a href="/jugadores" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
-                    <span class="group-hover:text-amarillo-volt">👥</span> Gestionar Jugadores
+                    <span class="group-hover:text-amarillo-volt transition-colors">👥</span> Jugadores
+                </a>
+                <a href="/equipos" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">🛡️</span> Equipos
                 </a>
                 <a href="#" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
-                    <span class="group-hover:text-amarillo-volt">🛡️</span> Gestionar Acudientes
+                    <span class="group-hover:text-amarillo-volt transition-colors">👨‍👩‍👦</span> Acudientes
+                </a>
+                <a href="/entrenadores" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">👨‍🏫</span> Entrenadores
                 </a>
                 <a href="#" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
-                    <span class="group-hover:text-amarillo-volt">📋</span> Asistencias
+                    <span class="group-hover:text-amarillo-volt transition-colors">📋</span> Asistencias
                 </a>
                 <a href="#" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
-                    <span class="group-hover:text-amarillo-volt">💰</span> Control de Pagos
+                    <span class="group-hover:text-amarillo-volt transition-colors">💰</span> Finanzas
                 </a>
             </nav>
         </div>
 
-        <a href="/" class="flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-2xl transition-all duration-300 font-medium">
+        <a href="/" class="hidden md:flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-2xl transition-all duration-300 font-medium mt-10">
             <span>🚪</span> Cerrar Sesión
         </a>
     </aside>
 
     <main class="flex-1 p-6 md:p-10 space-y-8 overflow-y-auto">
         
-        <header class="flex justify-between items-center bg-gris-carbon/50 p-4 rounded-2xl border border-white/5">
+        <header class="flex justify-between items-center glass-effect p-6 rounded-3xl border border-white/5">
             <div>
-                <h1 class="text-xl md:text-2xl font-black">¡Hola de nuevo, Administrador!</h1>
+                <h1 class="text-xl md:text-2xl font-black mb-1">¡Hola de nuevo, Administrador!</h1>
                 <p class="text-xs text-gris-claro">Bienvenido al centro de control operativo de la escuela.</p>
             </div>
-            <a href="/mi-perfil" class="flex items-center gap-3 hover:opacity-80 transition-all group">
-                <span class="text-sm font-semibold hidden sm:inline group-hover:text-amarillo-volt transition-colors">Modo Dios (Configurar)</span>
-                <div class="w-10 h-10 rounded-full bg-amarillo-volt text-negro-carbon font-bold flex items-center justify-center shadow-md shadow-amarillo-volt/10">AD</div>
+            <a href="/mi-perfil" class="flex items-center gap-3 hover:opacity-80 transition-all group bg-white/5 px-4 py-2 rounded-2xl border border-white/5 hover:border-amarillo-volt/50">
+                <span class="text-sm font-semibold hidden sm:inline text-gris-claro group-hover:text-amarillo-volt transition-colors">Modo Dios (Configurar)</span>
+                <div class="w-8 h-8 rounded-full bg-amarillo-volt text-negro-carbon font-black flex items-center justify-center text-xs">AD</div>
             </a>
         </header>
 
         <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             
-            <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-naranja-fuego/50 transition-all duration-300 group">
-                <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-naranja-fuego/20 transition-all">🏃‍♂️</div>
+            <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-naranja-fuego/50 transition-all duration-300 group flex flex-col justify-between">
                 <div>
+                    <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-naranja-fuego/20 group-hover:scale-110 transition-all mb-4">🏃‍♂️</div>
                     <h3 class="font-bold text-lg">Jugadores</h3>
-                    <p class="text-xs text-gris-claro">Inscripciones, fichas médicas y categorías.</p>
+                    <p class="text-xs text-gris-claro mt-1">Inscripciones, fichas médicas y categorías.</p>
                 </div>
-                <a href="/jugadores" class="block w-full text-center py-2 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt group-hover:bg-amarillo-volt group-hover:text-negro-carbon transition-all duration-300">ADMINISTRAR</a>
+                <a href="/jugadores" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt hover:bg-amarillo-volt hover:text-negro-carbon transition-all duration-300">ADMINISTRAR</a>
             </div>
 
-            <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-naranja-fuego/50 transition-all duration-300 group">
-                <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-naranja-fuego/20 transition-all">👨‍👩-👦</div>
+            <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-naranja-fuego/50 transition-all duration-300 group flex flex-col justify-between">
                 <div>
+                    <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-naranja-fuego/20 group-hover:scale-110 transition-all mb-4">👨‍👩-👦</div>
                     <h3 class="font-bold text-lg">Acudientes</h3>
-                    <p class="text-xs text-gris-claro">Vinculación de padres, datos de contacto y parentesco.</p>
+                    <p class="text-xs text-gris-claro mt-1">Vinculación de padres, datos de contacto y parentesco.</p>
                 </div>
-                <button class="w-full py-2 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt group-hover:bg-amarillo-volt group-hover:text-negro-carbon transition-all duration-300">ADMINISTRAR</button>
+                <button class="w-full py-2.5 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt hover:bg-amarillo-volt hover:text-negro-carbon transition-all duration-300">ADMINISTRAR</button>
             </div>
 
-            <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-naranja-fuego/50 transition-all duration-300 group">
-                <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-naranja-fuego/20 transition-all">📋</div>
+            <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-naranja-fuego/50 transition-all duration-300 group flex flex-col justify-between">
                 <div>
-                    <h3 class="font-bold text-lg">Profesores</h3>
-                    <p class="text-xs text-gris-claro">Asignación de entrenadores a grupos de fútbol.</p>
+                    <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-naranja-fuego/20 group-hover:scale-110 transition-all mb-4">📋</div>
+                    <h3 class="font-bold text-lg">Cuerpo Técnico</h3>
+                    <p class="text-xs text-gris-claro mt-1">Asignación de entrenadores a grupos de fútbol.</p>
                 </div>
-                <button class="w-full py-2 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt group-hover:bg-amarillo-volt group-hover:text-negro-carbon transition-all duration-300">ADMINISTRAR</button>
+                <button class="w-full py-2.5 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt hover:bg-amarillo-volt hover:text-negro-carbon transition-all duration-300">ADMINISTRAR</button>
             </div>
 
-            <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-naranja-fuego/50 transition-all duration-300 group">
-                <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-naranja-fuego/20 transition-all">💵</div>
+            <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-naranja-fuego/50 transition-all duration-300 group flex flex-col justify-between">
                 <div>
+                    <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-naranja-fuego/20 group-hover:scale-110 transition-all mb-4">💵</div>
                     <h3 class="font-bold text-lg">Finanzas</h3>
-                    <p class="text-xs text-gris-claro">Control de matrículas, pensiones y recibos de pago.</p>
+                    <p class="text-xs text-gris-claro mt-1">Control de matrículas, pensiones y recibos de pago.</p>
                 </div>
-                <button class="w-full py-2 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt group-hover:bg-amarillo-volt group-hover:text-negro-carbon transition-all duration-300">ADMINISTRAR</button>
+                <button class="w-full py-2.5 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt hover:bg-amarillo-volt hover:text-negro-carbon transition-all duration-300">ADMINISTRAR</button>
             </div>
 
         </section>
-
     </main>
 
 </body>
