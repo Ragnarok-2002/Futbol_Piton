@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 10-06-2026 a las 17:56:06
+-- Tiempo de generación: 15-06-2026 a las 03:52:51
 -- Versión del servidor: 10.4.32-MariaDB
--- Versión de PHP: 8.2.12
+-- Versión de PHP: 8.0.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -68,7 +68,8 @@ INSERT INTO `acudiente` (`id_acudiente`, `id_usuario`, `id_rol`, `nombre`, `apel
 (23, 56, 5, 'Ernesto', 'Acosta', '10234773', '3101234023', 'padre.acosta@gmail.com'),
 (24, 57, 5, 'Beatriz', 'Mendoza', '42345884', '3101234024', 'madre.mendoza@gmail.com'),
 (25, 58, 5, 'Raúl', 'Zapata', '10234795', '3101234025', 'tutor.zapata@gmail.com'),
-(26, 62, 5, 'papa', 'grillo', '', '', '');
+(26, 62, 5, 'papa', 'grillo', '', '', ''),
+(27, 68, 5, 'padre', 'messi', '852', '3332224499', 'padre10@gmail.com');
 
 -- --------------------------------------------------------
 
@@ -436,7 +437,10 @@ INSERT INTO `jugador` (`id_jugador`, `id_acudiente`, `id_usuario`, `id_rol`, `no
 (27, NULL, 60, 4, 'david', 'cabezas', '2002-12-12', '3332224456', 'SENAcabezas@CDM.com', '999', '2026-06-07'),
 (28, NULL, 61, 4, 'pepe', 'grillo', '2000-01-01', '3332224457', 'grillo@gmail.com', '111', '2026-06-07'),
 (29, NULL, 63, 4, 'alexander', 'acevedo', '2040-01-02', '3332225566', 'acevedo10@gmail.com', '456', '2026-06-10'),
-(30, NULL, 64, 4, 'alexander', 'acevedo', '2027-12-02', '3332225566', 'acevedo10@gmail.com', '456', '2026-06-10');
+(30, NULL, 64, 4, 'alexander', 'acevedo', '2027-12-02', '3332225566', 'acevedo10@gmail.com', '456', '2026-06-10'),
+(31, NULL, 65, 4, 'pepe', 'galindo', '2026-06-13', '3332224466', 'galindo@gmail.com', '455', '2026-06-13'),
+(32, NULL, 66, 4, 'juan', 'lopez', '2004-07-14', '3332224477', 'lopez@gmail.com', '741', '2026-06-13'),
+(33, NULL, 67, 4, 'messi', 'chiquito', '2016-02-10', '3332224488', 'messi10@gmail.com', '963', '2026-06-14');
 
 -- --------------------------------------------------------
 
@@ -597,7 +601,7 @@ CREATE TABLE `usuario` (
 --
 
 INSERT INTO `usuario` (`id_usuario`, `id_rol`, `usuario`, `contrasena`, `email`, `estado`) VALUES
-(1, 1, 'sebastianADMIN', '1234', 'sebastian.camargo@escuelaaaa.com', 'activo'),
+(1, 1, 'ADMIN', '1234', 'sebastian.camargo@escuelaaaa.com', 'activo'),
 (2, 1, 'alexander_acevedo', 'hashed_pass_SA2', 'alexander.acevedo@escuelaaaa.com', 'activo'),
 (3, 2, 'admin_escuela', 'hashed_pass_002', 'admin@escuelaaaa.com', 'activo'),
 (4, 3, 'ent_delanteros', 'hashed_pass_003', 'carlos.rios@escuelaaaa.com', 'activo'),
@@ -660,7 +664,11 @@ INSERT INTO `usuario` (`id_usuario`, `id_rol`, `usuario`, `contrasena`, `email`,
 (61, 4, '111', '222', 'grillo@gmail.com', 'Activo'),
 (62, 5, '222', '333', 'grilloPA@gmail.com', 'Activo'),
 (63, 4, '456', '000', 'acevedo10@gmail.com', 'Activo'),
-(64, 4, '456', '000', 'acevedo10@gmail.com', 'Activo');
+(64, 4, '456', '000', 'acevedo10@gmail.com', 'Activo'),
+(65, 4, '455', '999', 'galindo@gmail.com', 'Activo'),
+(66, 4, '741', '147', 'lopez@gmail.com', 'Activo'),
+(67, 4, '963', '369', 'messi10@gmail.com', 'Activo'),
+(68, 5, '852', '258', 'padre10@gmail.com', 'Activo');
 
 --
 -- Índices para tablas volcadas
@@ -770,19 +778,19 @@ ALTER TABLE `usuario`
 -- AUTO_INCREMENT de la tabla `acudiente`
 --
 ALTER TABLE `acudiente`
-  MODIFY `id_acudiente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `id_acudiente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT de la tabla `jugador`
 --
 ALTER TABLE `jugador`
-  MODIFY `id_jugador` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `id_jugador` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT de la tabla `usuario`
 --
 ALTER TABLE `usuario`
-  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
+  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=69;
 
 --
 -- Restricciones para tablas volcadas
