@@ -28,11 +28,21 @@
             backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
-        /* Ocultar elementos para las transiciones del modal */
         .hidden { display: none; }
     </style>
 </head>
 <body class="bg-gradient-to-br from-negro-carbon via-negro-carbon to-naranja-fuego/10 min-h-screen text-blanco-humo font-sans flex items-center justify-center p-4">
+
+    <div id="toastAlerta" class="fixed top-5 right-5 z-50 transform transition-all duration-500 translate-x-full opacity-0">
+        <div class="glass-effect bg-red-900/40 border-l-4 border-red-500 p-5 rounded-2xl shadow-2xl flex items-center gap-4">
+            <div class="text-3xl">⚠️</div>
+            <div>
+                <h4 class="font-bold text-blanco-humo text-sm tracking-wide">Acción Requerida</h4>
+                <p id="textoToast" class="text-xs text-naranja-suave mt-1">Aquí va el error</p>
+            </div>
+            <button onclick="cerrarToast()" class="ml-4 text-gris-claro hover:text-white font-bold text-lg">&times;</button>
+        </div>
+    </div>
 
     <div class="glass-effect rounded-3xl p-8 max-w-2xl w-full shadow-2xl relative">
         
@@ -77,23 +87,23 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div class="space-y-2">
                     <label class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Teléfono</label>
-                    <input type="text" name="telefono" class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none">
+                    <input type="text" id="telefono" name="telefono" class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none">
                 </div>
                 <div class="space-y-2">
                     <label class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Email</label>
-                    <input type="email" name="email" class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none">
+                    <input type="email" id="email" name="email" class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none">
                 </div>
                 <div class="space-y-2">
-                    <label class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Nacimiento</label>
-                    <input type="date" name="fecha_nacimiento" class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none">
+                    <label class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Fecha de Nacimiento</label>
+                    <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" max="" onclick="this.max=new Date().toISOString().split('T')[0]" class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
                 </div>
             </div>
 
             <div class="pt-4 flex gap-4">
-                <a href="/" class="w-1/3 bg-white/5 hover:bg-white/10 text-center text-blanco-humo font-bold py-4 rounded-2xl transition-all duration-300 text-sm">
+                <a href="/" class="w-1/3 bg-white/5 hover:bg-white/10 text-center text-blanco-humo font-bold py-4 rounded-2xl transition-all duration-300 text-sm flex items-center justify-center">
                     VOLVER
                 </a>
-                <button type="button" onclick="mostrarModal()" class="w-2/3 bg-naranja-fuego hover:bg-orange-700 text-blanco-humo font-bold py-4 rounded-2xl shadow-lg transition-all duration-300 hover:translate-y-[-2px] tracking-widest text-sm focus:ring-2 focus:ring-amarillo-volt">
+                <button type="button" onclick="abrirModal()" class="w-2/3 bg-naranja-fuego hover:bg-orange-700 text-blanco-humo font-bold py-4 rounded-2xl shadow-lg transition-all duration-300 hover:-translate-y-1 tracking-widest text-sm focus:ring-2 focus:ring-amarillo-volt">
                     CONTINUAR REGISTRO
                 </button>
             </div>
@@ -124,10 +134,10 @@
             </div>
 
             <div class="flex gap-3">
-                <button onclick="cerrarModal()" class="w-1/2 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold text-gris-claro transition-all">
+                <button type="button" onclick="cerrarModal()" class="w-1/2 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold text-gris-claro transition-all">
                     CORREGIR
                 </button>
-                <button onclick="enviarFormulario()" class="w-1/2 py-3 bg-amarillo-volt hover:bg-yellow-400 rounded-xl text-xs font-black text-negro-carbon shadow-lg shadow-amarillo-volt/20 transition-all">
+                <button type="button" onclick="enviarFormulario()" class="w-1/2 py-3 bg-amarillo-volt hover:bg-yellow-400 rounded-xl text-xs font-black text-negro-carbon shadow-lg shadow-amarillo-volt/20 transition-all">
                     SÍ, REGISTRARME
                 </button>
             </div>
@@ -135,36 +145,84 @@
     </div>
 
     <script>
-        function mostrarModal() {
-            // Capturamos los datos del formulario
-            const rolSelect = document.getElementById('rol');
-            const textoRol = rolSelect.options[rolSelect.selectedIndex].text;
-            const doc = document.getElementById('documento').value;
-            const nombres = document.getElementById('nombres').value;
-            const apellidos = document.getElementById('apellidos').value;
+        // 1. Lógica de la Alerta Elegante
+        function mostrarToast(mensaje) {
+            document.getElementById('textoToast').innerText = mensaje;
+            const toast = document.getElementById('toastAlerta');
+            toast.classList.remove('translate-x-full', 'opacity-0');
+            // Se oculta automáticamente después de 6 segundos
+            setTimeout(cerrarToast, 6000);
+        }
 
-            // Validación rápida para no abrir el modal si faltan datos clave
-            if(rolSelect.value === "" || doc === "" || nombres === "") {
-                alert("Por favor, llena los campos obligatorios y selecciona un rol.");
+        function cerrarToast() {
+            const toast = document.getElementById('toastAlerta');
+            toast.classList.add('translate-x-full', 'opacity-0');
+        }
+
+        // 2. Si Python detecta un clon o error de fecha, lo muestra automáticamente
+        {% if error %}
+        window.onload = function() {
+            mostrarToast("{{ error }}");
+        };
+        {% endif %}
+
+        // 3. Validación ESTRICTA antes de abrir tu modal
+        function abrirModal() { 
+            const rolSelect = document.getElementById('rol');
+            const textoRol = rolSelect.options[rolSelect.selectedIndex] ? rolSelect.options[rolSelect.selectedIndex].text : '';
+            
+            const doc = document.getElementById('documento').value.trim();
+            const nombres = document.getElementById('nombres').value.trim();
+            const apellidos = document.getElementById('apellidos').value.trim();
+            const telefono = document.getElementById('telefono').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const fechaNacimiento = document.getElementById('fecha_nacimiento').value.trim();
+
+            if(rolSelect.value === "" || doc === "" || nombres === "" || apellidos === "" || telefono === "" || email === "" || password === "" || fechaNacimiento === "") {
+                mostrarToast("Por favor, llena toda la información. Todos los campos son obligatorios.");
                 return;
             }
 
-            // Pintamos los datos en el Modal
+            // LÓGICA DE NEGOCIO: VALIDACIÓN DE EDADES
+            const fechaNac = new Date(fechaNacimiento);
+            const hoy = new Date();
+            let edad = hoy.getFullYear() - fechaNac.getFullYear();
+            const mes = hoy.getMonth() - fechaNac.getMonth();
+            if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
+                edad--; // Resta un año si aún no ha cumplido meses/días en el año actual
+            }
+
+            if (rolSelect.value === "4") { // Si es Jugador
+                if (edad < 10) {
+                    mostrarToast("Aún no tienes la edad mínima (10 años). Te invitamos a inscribirte en nuestra escuela aliada JUNIOR para los más pequeños.");
+                    return;
+                }
+                if (edad > 22) {
+                    mostrarToast("Superaste la edad máxima (22 años). Te invitamos a inscribirte en nuestra escuela aliada MASTER para seguir creciendo.");
+                    return;
+                }
+            } else if (rolSelect.value === "5") { // Si es Acudiente
+                if (edad < 18) {
+                    mostrarToast("Para registrarte como Acudiente o Tutor legal debes ser mayor de edad.");
+                    return;
+                }
+            }
+
+            // Si todo es correcto, pintamos los datos en el Modal
             document.getElementById('resumenRol').innerText = textoRol;
             document.getElementById('resumenDoc').innerText = doc;
             document.getElementById('resumenNombre').innerText = nombres + " " + apellidos;
 
-            // Mostramos el modal quitando la clase 'hidden'
             document.getElementById('modalConfirmacion').classList.remove('hidden');
         }
+        
 
         function cerrarModal() {
-            // Ocultamos el modal agregando la clase 'hidden'
             document.getElementById('modalConfirmacion').classList.add('hidden');
         }
 
         function enviarFormulario() {
-            // Enviamos el formulario a Python
             document.getElementById('formularioRegistro').submit();
         }
     </script>
