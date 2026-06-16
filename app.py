@@ -1,3 +1,5 @@
+# pip install Flask mysql-connector-python
+
 from flask import Flask, render_template, request, redirect, session
 import mysql.connector
 from datetime import datetime
@@ -221,20 +223,25 @@ def actualizar_perfil():
     return redirect('/dashboard-admin')
 
 # ==========================================
-# MÓDULO: GESTIÓN DE JUGADORES
+# MÓDULO: GESTIÓN DE JUGADORES (VISTA)
 # ==========================================
 @app.route('/jugadores')
 def gestion_jugadores():
+    if 'id_usuario' not in session:
+        return redirect('/')
+
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
     
-    # Quitamos la tabla ficha_jugador y agregamos documento, telefono, email y fecha_registro
+    # Hacemos JOIN con usuario para traer el ESTADO de la cuenta y su ID
     query = """
         SELECT j.id_jugador, j.documento, j.nombres, j.apellidos, 
                j.telefono, j.email, j.fecha_nacimiento, j.fecha_registro,
-               a.nombre AS nombre_acudiente, a.apellido AS apellido_acudiente
+               a.nombre AS nombre_acudiente, a.apellido AS apellido_acudiente,
+               u.estado, u.id_usuario
         FROM jugador j
         LEFT JOIN acudiente a ON j.id_acudiente = a.id_acudiente
+        JOIN usuario u ON j.id_usuario = u.id_usuario
     """
     cursor.execute(query)
     jugadores = cursor.fetchall()
@@ -243,6 +250,70 @@ def gestion_jugadores():
     conexion.close()
     
     return render_template('gestion_jugadores.html', jugadores=jugadores)
+
+# ==========================================
+# RUTAS DE ACCIÓN: EDITAR Y BORRAR JUGADORES
+# ==========================================
+@app.route('/editar-jugador-admin', methods=['POST'])
+def editar_jugador_admin():
+    # 1. Recogemos los datos del formulario modal
+    id_jugador = request.form.get('id_jugador')
+    id_usuario = request.form.get('id_usuario')
+    nombres = request.form.get('nombres')
+    apellidos = request.form.get('apellidos')
+    telefono = request.form.get('telefono')
+    email = request.form.get('email')
+    estado = request.form.get('estado')
+
+    conexion = obtener_conexion()
+    cursor = conexion.cursor()
+
+    # 2. Actualizamos los datos personales en la tabla jugador
+    cursor.execute("""
+        UPDATE jugador 
+        SET nombres = %s, apellidos = %s, telefono = %s, email = %s 
+        WHERE id_jugador = %s
+    """, (nombres, apellidos, telefono, email, id_jugador))
+
+    # 3. Actualizamos el estado de acceso y el email en la tabla usuario
+    cursor.execute("""
+        UPDATE usuario 
+        SET estado = %s, email = %s
+        WHERE id_usuario = %s
+    """, (estado, email, id_usuario))
+
+    conexion.commit()
+    cursor.close()
+    conexion.close()
+    
+    return redirect('/jugadores')
+
+@app.route('/borrar-jugador-admin', methods=['POST'])
+def borrar_jugador_admin():
+    id_jugador = request.form.get('id_jugador')
+    
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+
+    # Buscamos el ID del usuario asociado antes de empezar a borrar
+    cursor.execute("SELECT id_usuario FROM jugador WHERE id_jugador = %s", (id_jugador,))
+    resultado = cursor.fetchone()
+
+    # ELIMINACIÓN EN CASCADA (Orden estricto de hijos a padres para evitar Error 1451)
+    cursor.execute("DELETE FROM asistencia WHERE id_jugador = %s", (id_jugador,))
+    cursor.execute("DELETE FROM ficha_jugador WHERE id_jugador = %s", (id_jugador,))
+    cursor.execute("DELETE FROM detalle_pago WHERE id_pago IN (SELECT id_pago FROM pago WHERE id_jugador = %s)", (id_jugador,))
+    cursor.execute("DELETE FROM pago WHERE id_jugador = %s", (id_jugador,))
+    cursor.execute("DELETE FROM jugador WHERE id_jugador = %s", (id_jugador,))
+    
+    if resultado:
+        cursor.execute("DELETE FROM usuario WHERE id_usuario = %s", (resultado['id_usuario'],))
+
+    conexion.commit()
+    cursor.close()
+    conexion.close()
+
+    return redirect('/jugadores')
 
 # ==========================================
 # MÓDULO: DASHBOARD DEL JUGADOR
