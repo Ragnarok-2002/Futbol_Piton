@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 15-06-2026 a las 03:52:51
+-- Tiempo de generación: 16-06-2026 a las 04:03:10
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.0.30
 
@@ -609,7 +609,7 @@ INSERT INTO `usuario` (`id_usuario`, `id_rol`, `usuario`, `contrasena`, `email`,
 (6, 3, 'ent_defensas', 'hashed_pass_005', 'andres.vargas@escuelaaaa.com', 'activo'),
 (7, 3, 'ent_porteros', 'hashed_pass_006', 'luis.perez@escuelaaaa.com', 'activo'),
 (8, 3, 'ent_general', 'hashed_pass_007', 'miguel.torres@escuelaaaa.com', 'activo'),
-(9, 4, 'jug_s20_001', 'hashed_pass_008', 'juanc.gomez@escuelaaaa.com', 'activo'),
+(9, 4, 'jug_s20_001', 'hashed_pass_008', 'juanc.gomez@escuelaaaa.com', 'Inactivo'),
 (10, 4, 'jug_s20_002', 'hashed_pass_009', 'sebas.ramirez@escuelaaaa.com', 'activo'),
 (11, 4, 'jug_s20_003', 'hashed_pass_010', 'felipe.castro@escuelaaaa.com', 'activo'),
 (12, 4, 'jug_s20_004', 'hashed_pass_011', 'david.ospina2@escuelaaaa.com', 'activo'),
