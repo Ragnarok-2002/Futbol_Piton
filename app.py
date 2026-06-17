@@ -57,6 +57,18 @@ def obtener_panel_actual():
         return '/'
     return panel_por_rol(obtener_id_rol_sesion())
 
+def calcular_edad(fecha_nacimiento):
+    nacimiento = datetime.strptime(fecha_nacimiento, '%Y-%m-%d')
+    fecha_hoy = datetime.now()
+    return fecha_hoy.year - nacimiento.year - ((fecha_hoy.month, fecha_hoy.day) < (nacimiento.month, nacimiento.day))
+
+def validar_edad_acudiente(fecha_nacimiento):
+    if not fecha_nacimiento:
+        return False, 'La fecha de nacimiento es obligatoria para registrar un acudiente.'
+    if calcular_edad(fecha_nacimiento) < 18:
+        return False, 'No tiene la mayoría de edad para ser acudiente/tutor. Debe ser mayor de 18 años.'
+    return True, None
+
 # ==========================================
 # MÓDULO: REGISTRO/NUEVO USUARIO (JUGADOR O ACUDIENTE)
 # ==========================================
@@ -85,21 +97,18 @@ def registro_publico():
             return render_template('registro.html', error='Estos datos (Documento o Email) ya están registrados en la escuela.')
 
         # 2. REGLAS DE NEGOCIO: Edades por Rol
-        if fecha_nacimiento:
-            nacimiento = datetime.strptime(fecha_nacimiento, '%Y-%m-%d')
-            fecha_hoy = datetime.now()
-            # Calculamos la edad exacta teniendo en cuenta meses y días
-            edad = fecha_hoy.year - nacimiento.year - ((fecha_hoy.month, fecha_hoy.day) < (nacimiento.month, nacimiento.day))
+        if id_rol == '5':
+            es_valido, mensaje_error = validar_edad_acudiente(fecha_nacimiento)
+            if not es_valido:
+                return render_template('registro.html', error=mensaje_error)
+        elif fecha_nacimiento:
+            edad = calcular_edad(fecha_nacimiento)
 
             if id_rol == '4':  # Reglas exclusivas para JUGADORES
                 if edad < 10:
                     return render_template('registro.html', error='Aún no tienes la edad mínima (10 años). Te invitamos a inscribirte en nuestra escuela aliada JUNIOR.')
                 elif edad > 22:
                     return render_template('registro.html', error='Superaste la edad máxima (22 años). Te invitamos a inscribirte en nuestra escuela aliada MASTER.')
-            
-            elif id_rol == '5': # Regla de calidad para ACUDIENTES
-                if edad < 18:
-                    return render_template('registro.html', error='Para registrarte como Acudiente debes ser mayor de edad (18+ años).')
 
         # --------------------------------------------------------
         # SI PASA LAS PRUEBAS, GUARDAMOS NORMALMENTE
@@ -120,10 +129,10 @@ def registro_publico():
             
         elif id_rol == '5': # Acudiente
             query_acudiente = """
-                INSERT INTO acudiente (id_usuario, id_rol, nombre, apellido, documento, telefono, email)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO acudiente (id_usuario, id_rol, nombre, apellido, documento, fecha_nacimiento, telefono, email)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """
-            cursor.execute(query_acudiente, (id_usuario_nuevo, id_rol, nombres, apellidos, documento, telefono, email))
+            cursor.execute(query_acudiente, (id_usuario_nuevo, id_rol, nombres, apellidos, documento, fecha_nacimiento, telefono, email))
             
         conexion.commit()
         cursor.close()
@@ -306,6 +315,159 @@ def gestion_jugadores():
     return render_template('gestion_jugadores.html', jugadores=jugadores)
 
 # ==========================================
+# MÓDULO: GESTIÓN DE ACUDIENTES (VISTA)
+# ==========================================
+def obtener_lista_acudientes():
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+
+    query = """
+        SELECT a.id_acudiente, a.id_usuario, a.nombre, a.apellido, a.documento,
+               a.telefono, a.email, u.estado, u.usuario AS usuario_acceso,
+               (SELECT COUNT(*) FROM jugador j WHERE j.id_acudiente = a.id_acudiente) AS total_jugadores,
+               (SELECT GROUP_CONCAT(CONCAT(j.nombres, ' ', j.apellidos) SEPARATOR ', ')
+                FROM jugador j WHERE j.id_acudiente = a.id_acudiente) AS jugadores_a_cargo
+        FROM acudiente a
+        JOIN usuario u ON a.id_usuario = u.id_usuario
+        ORDER BY a.apellido ASC, a.nombre ASC
+    """
+    cursor.execute(query)
+    acudientes = cursor.fetchall()
+
+    cursor.close()
+    conexion.close()
+
+    return acudientes
+
+@app.route('/acudientes')
+def gestion_acudientes():
+    if not usuario_tiene_sesion():
+        return redirect('/')
+    if obtener_id_rol_sesion() not in [1, 2]:
+        return redirect(panel_por_rol(obtener_id_rol_sesion()))
+
+    return render_template('gestion_acudientes.html', acudientes=obtener_lista_acudientes())
+
+# ==========================================
+# RUTAS DE ACCIÓN: EDITAR Y BORRAR ACUDIENTES
+# ==========================================
+@app.route('/nuevo-acudiente-admin', methods=['POST'])
+def nuevo_acudiente_admin():
+    if not usuario_tiene_sesion():
+        return redirect('/')
+    if obtener_id_rol_sesion() not in [1, 2]:
+        return redirect(panel_por_rol(obtener_id_rol_sesion()))
+
+    documento = request.form.get('documento')
+    nombres = request.form.get('nombres')
+    apellidos = request.form.get('apellidos')
+    telefono = request.form.get('telefono')
+    email = request.form.get('email')
+    contrasena = request.form.get('password')
+    fecha_nacimiento = request.form.get('fecha_nacimiento')
+    id_rol = '5'
+
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+
+    cursor.execute("SELECT id_usuario FROM usuario WHERE usuario = %s OR email = %s", (documento, email))
+    if cursor.fetchone():
+        cursor.close()
+        conexion.close()
+        return render_template(
+            'gestion_acudientes.html',
+            acudientes=obtener_lista_acudientes(),
+            error='Estos datos (Documento o Email) ya están registrados en la escuela.'
+        )
+
+    es_valido, mensaje_error = validar_edad_acudiente(fecha_nacimiento)
+    if not es_valido:
+        cursor.close()
+        conexion.close()
+        return render_template(
+            'gestion_acudientes.html',
+            acudientes=obtener_lista_acudientes(),
+            error=mensaje_error
+        )
+
+    cursor = conexion.cursor()
+
+    cursor.execute(
+        "INSERT INTO usuario (id_rol, usuario, contrasena, email, estado) VALUES (%s, %s, %s, %s, %s)",
+        (id_rol, documento, contrasena, email, 'Activo')
+    )
+    id_usuario_nuevo = cursor.lastrowid
+
+    cursor.execute(
+        """
+        INSERT INTO acudiente (id_usuario, id_rol, nombre, apellido, documento, fecha_nacimiento, telefono, email)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """,
+        (id_usuario_nuevo, id_rol, nombres, apellidos, documento, fecha_nacimiento, telefono, email)
+    )
+
+    conexion.commit()
+    cursor.close()
+    conexion.close()
+
+    return redirect('/acudientes')
+
+@app.route('/editar-acudiente-admin', methods=['POST'])
+def editar_acudiente_admin():
+    id_acudiente = request.form.get('id_acudiente')
+    id_usuario = request.form.get('id_usuario')
+    nombre = request.form.get('nombre')
+    apellido = request.form.get('apellido')
+    documento = request.form.get('documento')
+    telefono = request.form.get('telefono')
+    email = request.form.get('email')
+    estado = request.form.get('estado')
+
+    conexion = obtener_conexion()
+    cursor = conexion.cursor()
+
+    cursor.execute("""
+        UPDATE acudiente
+        SET nombre = %s, apellido = %s, documento = %s, telefono = %s, email = %s
+        WHERE id_acudiente = %s
+    """, (nombre, apellido, documento, telefono, email, id_acudiente))
+
+    cursor.execute("""
+        UPDATE usuario
+        SET estado = %s, email = %s
+        WHERE id_usuario = %s
+    """, (estado, email, id_usuario))
+
+    conexion.commit()
+    cursor.close()
+    conexion.close()
+
+    return redirect('/acudientes')
+
+@app.route('/borrar-acudiente-admin', methods=['POST'])
+def borrar_acudiente_admin():
+    id_acudiente = request.form.get('id_acudiente')
+
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+
+    cursor.execute("SELECT id_usuario FROM acudiente WHERE id_acudiente = %s", (id_acudiente,))
+    resultado = cursor.fetchone()
+
+    # Desvinculamos jugadores antes de borrar para evitar Error 1451
+    cursor.execute("UPDATE jugador SET id_acudiente = NULL WHERE id_acudiente = %s", (id_acudiente,))
+    cursor.execute("DELETE FROM acudiente WHERE id_acudiente = %s", (id_acudiente,))
+
+    if resultado:
+        cursor.execute("DELETE FROM usuario WHERE id_usuario = %s", (resultado['id_usuario'],))
+
+    conexion.commit()
+    cursor.close()
+    conexion.close()
+
+    return redirect('/acudientes')
+
+# ==========================================
 # RUTAS DE ACCIÓN: EDITAR Y BORRAR JUGADORES
 # ==========================================
 @app.route('/editar-jugador-admin', methods=['POST'])
@@ -466,10 +628,10 @@ def modulo_equipos():
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
     
-    # 1. Obtenemos el rol para saber si habilitamos la edición
-    cursor.execute("SELECT id_rol FROM usuario WHERE id_usuario = %s", (session['id_usuario'],))
-    usuario = cursor.fetchone()
-    es_entrenador = usuario['id_rol'] in [1, 2, 3] if usuario else False
+    # 1. Obtenemos el rol para saber si habilitamos la edición y qué menú lateral mostrar
+    id_rol = obtener_id_rol_sesion()
+    es_admin = id_rol in [1, 2]
+    es_entrenador = id_rol in [1, 2, 3] if id_rol else False
     
     # 2. Traemos todos los equipos para la lista desplegable del modal
     cursor.execute("SELECT id_equipo, nombre_equipo FROM equipo")
@@ -512,8 +674,9 @@ def modulo_equipos():
         'equipos.html',
         equipos=equipos_db,
         es_entrenador=es_entrenador,
-        lista_equipos=lista_equipos,
-        url_panel=obtener_panel_actual()
+        es_admin=es_admin,
+        id_rol=id_rol,
+        lista_equipos=lista_equipos
     )
 
 # ==========================================
