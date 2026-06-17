@@ -185,7 +185,7 @@
             }
 
             // LÓGICA DE NEGOCIO: VALIDACIÓN DE EDADES
-            const fechaNac = new Date(fechaNacimiento);
+            const fechaNac = new Date(fechaNacimiento + 'T00:00:00');
             const hoy = new Date();
             let edad = hoy.getFullYear() - fechaNac.getFullYear();
             const mes = hoy.getMonth() - fechaNac.getMonth();
