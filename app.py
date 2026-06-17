@@ -27,8 +27,7 @@ def obtener_conexion():
 def registro_publico():
     if request.method == 'POST':
         conexion = obtener_conexion()
-        cursor = conexion.cursor(dictionary=True) # Usamos dictionary para las validaciones
-        
+        cursor = conexion.cursor(dictionary=True) # Usamos dictionary para las validaciones      
         # Recogemos los datos del formulario
         id_rol = request.form.get('rol') 
         documento = request.form.get('documento')
@@ -71,7 +70,7 @@ def registro_publico():
         cursor = conexion.cursor() # Volvemos al cursor normal para los inserts
         
         # Creamos la cuenta de usuario
-        cursor.execute("INSERT INTO usuario (id_rol, usuario, contrasena, email, estado) VALUES (%s, %s, %s, %s, %s)", 
+        cursor.execute("INSERT INTO usuario (id_rol, usuario, contrasena, email, estado) VALUES (%s, %s, %s, %s, %s)",
                        (id_rol, documento, contrasena, email, 'Activo'))
         id_usuario_nuevo = cursor.lastrowid
         
@@ -521,10 +520,11 @@ def gestion_entrenadores():
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
     
-    # Hacemos un JOIN con usuario para traer el documento
+    # AHORA SÍ extraemos e.documento de la tabla entrenador.
+    # También traemos u.usuario por si lo necesitas mostrar después como "Usuario de Acceso"
     query = """
-        SELECT e.id_entrenador, e.nombres, e.apellidos, e.telefono, e.email, e.especialidad,
-               u.usuario AS documento
+        SELECT e.id_entrenador, e.documento, e.nombres, e.apellidos, e.telefono, e.email, e.especialidad,
+               u.usuario AS usuario_acceso
         FROM entrenador e
         JOIN usuario u ON e.id_usuario = u.id_usuario
     """
