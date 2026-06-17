@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 16-06-2026 a las 04:03:10
+-- Tiempo de generación: 17-06-2026 a las 18:13:59
 -- Versión del servidor: 10.4.32-MariaDB
--- Versión de PHP: 8.0.30
+-- Versión de PHP: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -34,6 +34,7 @@ CREATE TABLE `acudiente` (
   `nombre` varchar(100) NOT NULL,
   `apellido` varchar(100) NOT NULL,
   `documento` varchar(20) NOT NULL,
+  `fecha_nacimiento` date DEFAULT NULL,
   `telefono` varchar(20) NOT NULL,
   `email` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -42,34 +43,35 @@ CREATE TABLE `acudiente` (
 -- Volcado de datos para la tabla `acudiente`
 --
 
-INSERT INTO `acudiente` (`id_acudiente`, `id_usuario`, `id_rol`, `nombre`, `apellido`, `documento`, `telefono`, `email`) VALUES
-(1, 34, 5, 'Ricardo', 'Gómez', '10234561', '3101234001', 'padre.gomez@gmail.com'),
-(2, 35, 5, 'Claudia', 'Ramírez', '42345672', '3101234002', 'madre.ramirez@gmail.com'),
-(3, 36, 5, 'Hernando', 'Castro', '10234573', '3101234003', 'padre.castro@gmail.com'),
-(4, 37, 5, 'Patricia', 'Ospina', '42345684', '3101234004', 'madre.ospina@gmail.com'),
-(5, 38, 5, 'Roberto', 'Silva', '10234595', '3101234005', 'tutor.silva@gmail.com'),
-(6, 39, 5, 'Gustavo', 'Lozano', '10234606', '3101234006', 'padre.lozano@gmail.com'),
-(7, 40, 5, 'Marcela', 'Gutiérrez', '42345717', '3101234007', 'madre.gutierrez@gmail.com'),
-(8, 41, 5, 'Fabio', 'Herrera', '10234628', '3101234008', 'padre.herrera@gmail.com'),
-(9, 42, 5, 'Adriana', 'Mora', '42345739', '3101234009', 'madre.mora@gmail.com'),
-(10, 43, 5, 'Diego', 'Ruiz', '10234640', '3101234010', 'tutor.ruiz@gmail.com'),
-(11, 44, 5, 'Mauricio', 'Jiménez', '10234651', '3101234011', 'padre.jimenez@gmail.com'),
-(12, 45, 5, 'Esperanza', 'Reyes', '42345762', '3101234012', 'madre.reyes@gmail.com'),
-(13, 46, 5, 'Bernardo', 'Peña', '10234673', '3101234013', 'padre.pena@gmail.com'),
-(14, 47, 5, 'Liliana', 'Cardona', '42345784', '3101234014', 'madre.cardona@gmail.com'),
-(15, 48, 5, 'Henry', 'Flórez', '10234695', '3101234015', 'tutor.florez@gmail.com'),
-(16, 49, 5, 'Jairo', 'Molina', '10234706', '3101234016', 'padre.molina@gmail.com'),
-(17, 50, 5, 'Carmen', 'Arango', '42345817', '3101234017', 'madre.arango@gmail.com'),
-(18, 51, 5, 'Nelson', 'Soto', '10234728', '3101234018', 'padre.soto@gmail.com'),
-(19, 52, 5, 'Yolanda', 'Duque', '42345839', '3101234019', 'madre.duque@gmail.com'),
-(20, 53, 5, 'Rodrigo', 'León', '10234740', '3101234020', 'tutor.leon@gmail.com'),
-(21, 54, 5, 'Alberto', 'Salazar', '10234751', '3101234021', 'padre.salazar@gmail.com'),
-(22, 55, 5, 'Gloria', 'Cerón', '42345862', '3101234022', 'madre.ceron@gmail.com'),
-(23, 56, 5, 'Ernesto', 'Acosta', '10234773', '3101234023', 'padre.acosta@gmail.com'),
-(24, 57, 5, 'Beatriz', 'Mendoza', '42345884', '3101234024', 'madre.mendoza@gmail.com'),
-(25, 58, 5, 'Raúl', 'Zapata', '10234795', '3101234025', 'tutor.zapata@gmail.com'),
-(26, 62, 5, 'papa', 'grillo', '', '', ''),
-(27, 68, 5, 'padre', 'messi', '852', '3332224499', 'padre10@gmail.com');
+INSERT INTO `acudiente` (`id_acudiente`, `id_usuario`, `id_rol`, `nombre`, `apellido`, `documento`, `fecha_nacimiento`, `telefono`, `email`) VALUES
+(1, 34, 5, 'Ricardo', 'Gómez', '10234561', '1980-05-15', '3101234001', 'padre.gomez@gmail.com'),
+(2, 35, 5, 'Claudia', 'Ramírez', '42345672', '1980-05-15', '3101234002', 'madre.ramirez@gmail.com'),
+(3, 36, 5, 'Hernando', 'Castro', '10234573', '1980-05-15', '3101234003', 'padre.castro@gmail.com'),
+(4, 37, 5, 'Patricia', 'Ospina', '42345684', '1980-05-15', '3101234004', 'madre.ospina@gmail.com'),
+(5, 38, 5, 'Roberto', 'Silva', '10234595', '1980-05-15', '3101234005', 'tutor.silva@gmail.com'),
+(6, 39, 5, 'Gustavo', 'Lozano', '10234606', '1980-05-15', '3101234006', 'padre.lozano@gmail.com'),
+(7, 40, 5, 'Marcela', 'Gutiérrez', '42345717', '1980-05-15', '3101234007', 'madre.gutierrez@gmail.com'),
+(8, 41, 5, 'Fabio', 'Herrera', '10234628', '1980-05-15', '3101234008', 'padre.herrera@gmail.com'),
+(9, 42, 5, 'Adriana', 'Mora', '42345739', '1980-05-15', '3101234009', 'madre.mora@gmail.com'),
+(10, 43, 5, 'Diego', 'Ruiz', '10234640', '1980-05-15', '3101234010', 'tutor.ruiz@gmail.com'),
+(11, 44, 5, 'Mauricio', 'Jiménez', '10234651', '1980-05-15', '3101234011', 'padre.jimenez@gmail.com'),
+(12, 45, 5, 'Esperanza', 'Reyes', '42345762', '1980-05-15', '3101234012', 'madre.reyes@gmail.com'),
+(13, 46, 5, 'Bernardo', 'Peña', '10234673', '1980-05-15', '3101234013', 'padre.pena@gmail.com'),
+(14, 47, 5, 'Liliana', 'Cardona', '42345784', '1980-05-15', '3101234014', 'madre.cardona@gmail.com'),
+(15, 48, 5, 'Henry', 'Flórez', '10234695', '1980-05-15', '3101234015', 'tutor.florez@gmail.com'),
+(16, 49, 5, 'Jairo', 'Molina', '10234706', '1980-05-15', '3101234016', 'padre.molina@gmail.com'),
+(17, 50, 5, 'Carmen', 'Arango', '42345817', '1980-05-15', '3101234017', 'madre.arango@gmail.com'),
+(18, 51, 5, 'Nelson', 'Soto', '10234728', '1980-05-15', '3101234018', 'padre.soto@gmail.com'),
+(19, 52, 5, 'Yolanda', 'Duque', '42345839', '1980-05-15', '3101234019', 'madre.duque@gmail.com'),
+(20, 53, 5, 'Rodrigo', 'León', '10234740', '1980-05-15', '3101234020', 'tutor.leon@gmail.com'),
+(21, 54, 5, 'Alberto', 'Salazar', '10234751', '1980-05-15', '3101234021', 'padre.salazar@gmail.com'),
+(22, 55, 5, 'Gloria', 'Cerón', '42345862', '1980-05-15', '3101234022', 'madre.ceron@gmail.com'),
+(23, 56, 5, 'Ernesto', 'Acosta', '10234773', '1980-05-15', '3101234023', 'padre.acosta@gmail.com'),
+(24, 57, 5, 'Beatriz', 'Mendoza', '42345884', '1980-05-15', '3101234024', 'madre.mendoza@gmail.com'),
+(25, 58, 5, 'Raúl', 'Zapata', '10234795', '1980-05-15', '3101234025', 'tutor.zapata@gmail.com'),
+(26, 62, 5, 'papa', 'grillo', '', '1980-05-15', '', ''),
+(27, 68, 5, 'padre', 'messi', '852', '1980-05-15', '3332224499', 'padre10@gmail.com'),
+(30, 71, 5, 'andriu', 'zambrano', '123456', '2006-07-12', '123456789', 'andriuZ@gmail.com');
 
 -- --------------------------------------------------------
 
@@ -234,6 +236,8 @@ CREATE TABLE `entrenador` (
   `id_rol` int(11) NOT NULL,
   `nombres` varchar(100) NOT NULL,
   `apellidos` varchar(100) NOT NULL,
+  `documento` varchar(20) DEFAULT NULL,
+  `fecha_nacimiento` date DEFAULT NULL,
   `telefono` varchar(20) NOT NULL,
   `email` varchar(100) NOT NULL,
   `especialidad` varchar(100) NOT NULL
@@ -243,12 +247,12 @@ CREATE TABLE `entrenador` (
 -- Volcado de datos para la tabla `entrenador`
 --
 
-INSERT INTO `entrenador` (`id_entrenador`, `id_usuario`, `id_rol`, `nombres`, `apellidos`, `telefono`, `email`, `especialidad`) VALUES
-(1, 4, 3, 'Carlos', 'Ríos Mendoza', '3151230001', 'carlos.rios@escuelaaaa.com', 'Delanteros'),
-(2, 5, 3, 'Jorge', 'Méndez Castaño', '3151230002', 'jorge.mendez@escuelaaaa.com', 'Mediocampistas'),
-(3, 6, 3, 'Andrés', 'Vargas Ortega', '3151230003', 'andres.vargas@escuelaaaa.com', 'Defensas'),
-(4, 7, 3, 'Luis', 'Pérez Acevedo', '3151230004', 'luis.perez@escuelaaaa.com', 'Porteros'),
-(5, 8, 3, 'Miguel', 'Torres Suárez', '3151230005', 'miguel.torres@escuelaaaa.com', 'General');
+INSERT INTO `entrenador` (`id_entrenador`, `id_usuario`, `id_rol`, `nombres`, `apellidos`, `documento`, `fecha_nacimiento`, `telefono`, `email`, `especialidad`) VALUES
+(1, 4, 3, 'Carlos', 'Ríos Mendoza', '1010000001', '1990-08-20', '3151230001', 'carlos.rios@escuelaaaa.com', 'Delanteros'),
+(2, 5, 3, 'Jorge', 'Méndez Castaño', '1010000002', '1990-08-20', '3151230002', 'jorge.mendez@escuelaaaa.com', 'Mediocampistas'),
+(3, 6, 3, 'Andrés', 'Vargas Ortega', '1010000003', '1990-08-20', '3151230003', 'andres.vargas@escuelaaaa.com', 'Defensas'),
+(4, 7, 3, 'Luis', 'Pérez Acevedo', '1010000004', '1990-08-20', '3151230004', 'luis.perez@escuelaaaa.com', 'Porteros'),
+(5, 8, 3, 'Miguel', 'Torres Suárez', '1010000005', '1990-08-20', '3151230005', 'miguel.torres@escuelaaaa.com', 'General');
 
 -- --------------------------------------------------------
 
@@ -381,7 +385,8 @@ INSERT INTO `ficha_jugador` (`id_jugador`, `id_equipo`, `id_estado`, `posicion`,
 (24, 5, 1, 'Defensa', 1.41, 35.50),
 (25, 5, 1, 'Portero', 1.45, 38.00),
 (26, 2, 1, 'Por definir', 0.00, 0.00),
-(29, 5, 1, 'Por definir', 0.00, 0.00);
+(29, 5, 1, 'Por definir', 0.00, 0.00),
+(33, 3, 1, 'Por definir', 0.00, 0.00);
 
 -- --------------------------------------------------------
 
@@ -437,7 +442,6 @@ INSERT INTO `jugador` (`id_jugador`, `id_acudiente`, `id_usuario`, `id_rol`, `no
 (27, NULL, 60, 4, 'david', 'cabezas', '2002-12-12', '3332224456', 'SENAcabezas@CDM.com', '999', '2026-06-07'),
 (28, NULL, 61, 4, 'pepe', 'grillo', '2000-01-01', '3332224457', 'grillo@gmail.com', '111', '2026-06-07'),
 (29, NULL, 63, 4, 'alexander', 'acevedo', '2040-01-02', '3332225566', 'acevedo10@gmail.com', '456', '2026-06-10'),
-(30, NULL, 64, 4, 'alexander', 'acevedo', '2027-12-02', '3332225566', 'acevedo10@gmail.com', '456', '2026-06-10'),
 (31, NULL, 65, 4, 'pepe', 'galindo', '2026-06-13', '3332224466', 'galindo@gmail.com', '455', '2026-06-13'),
 (32, NULL, 66, 4, 'juan', 'lopez', '2004-07-14', '3332224477', 'lopez@gmail.com', '741', '2026-06-13'),
 (33, NULL, 67, 4, 'messi', 'chiquito', '2016-02-10', '3332224488', 'messi10@gmail.com', '963', '2026-06-14');
@@ -656,7 +660,7 @@ INSERT INTO `usuario` (`id_usuario`, `id_rol`, `usuario`, `contrasena`, `email`,
 (53, 5, 'acu_020', 'hashed_pass_052', 'tutor.leon@gmail.com', 'activo'),
 (54, 5, 'acu_021', 'hashed_pass_053', 'padre.salazar@gmail.com', 'activo'),
 (55, 5, 'acu_022', 'hashed_pass_054', 'madre.ceron@gmail.com', 'activo'),
-(56, 5, 'acu_023', 'hashed_pass_055', 'padre.acosta@gmail.com', 'activo'),
+(56, 5, 'acu_023', 'hashed_pass_055', 'padre.acosta@gmail.com', 'Inactivo'),
 (57, 5, 'acu_024', 'hashed_pass_056', 'madre.mendoza@gmail.com', 'activo'),
 (58, 5, 'acu_025', 'hashed_pass_057', 'tutor.zapata@gmail.com', 'activo'),
 (59, 4, '777', '666', '', 'Activo'),
@@ -664,11 +668,11 @@ INSERT INTO `usuario` (`id_usuario`, `id_rol`, `usuario`, `contrasena`, `email`,
 (61, 4, '111', '222', 'grillo@gmail.com', 'Activo'),
 (62, 5, '222', '333', 'grilloPA@gmail.com', 'Activo'),
 (63, 4, '456', '000', 'acevedo10@gmail.com', 'Activo'),
-(64, 4, '456', '000', 'acevedo10@gmail.com', 'Activo'),
 (65, 4, '455', '999', 'galindo@gmail.com', 'Activo'),
 (66, 4, '741', '147', 'lopez@gmail.com', 'Activo'),
 (67, 4, '963', '369', 'messi10@gmail.com', 'Activo'),
-(68, 5, '852', '258', 'padre10@gmail.com', 'Activo');
+(68, 5, '852', '258', 'padre10@gmail.com', 'Activo'),
+(71, 5, '123456', '4567', 'andriuZ@gmail.com', 'Activo');
 
 --
 -- Índices para tablas volcadas
@@ -778,7 +782,7 @@ ALTER TABLE `usuario`
 -- AUTO_INCREMENT de la tabla `acudiente`
 --
 ALTER TABLE `acudiente`
-  MODIFY `id_acudiente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `id_acudiente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT de la tabla `jugador`
@@ -790,7 +794,7 @@ ALTER TABLE `jugador`
 -- AUTO_INCREMENT de la tabla `usuario`
 --
 ALTER TABLE `usuario`
-  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=69;
+  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=72;
 
 --
 -- Restricciones para tablas volcadas
