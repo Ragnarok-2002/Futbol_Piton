@@ -339,14 +339,44 @@ def obtener_lista_acudientes():
 
     return acudientes
 
+def obtener_lista_jugadores_vinculacion():
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+
+    query = """
+        SELECT j.id_jugador, j.nombres, j.apellidos, j.documento, j.id_acudiente,
+               CONCAT(a.nombre, ' ', a.apellido) AS nombre_acudiente_actual
+        FROM jugador j
+        LEFT JOIN acudiente a ON j.id_acudiente = a.id_acudiente
+        ORDER BY j.apellidos ASC, j.nombres ASC
+    """
+    cursor.execute(query)
+    jugadores = cursor.fetchall()
+
+    cursor.close()
+    conexion.close()
+
+    return jugadores
+
+def render_gestion_acudientes(error=None):
+    id_rol = obtener_id_rol_sesion()
+    return render_template(
+        'gestion_acudientes.html',
+        acudientes=obtener_lista_acudientes(),
+        jugadores=obtener_lista_jugadores_vinculacion(),
+        es_admin=id_rol in [1, 2],
+        es_entrenador=id_rol == 3,
+        error=error
+    )
+
 @app.route('/acudientes')
 def gestion_acudientes():
     if not usuario_tiene_sesion():
         return redirect('/')
-    if obtener_id_rol_sesion() not in [1, 2]:
+    if obtener_id_rol_sesion() not in [1, 2, 3]:
         return redirect(panel_por_rol(obtener_id_rol_sesion()))
 
-    return render_template('gestion_acudientes.html', acudientes=obtener_lista_acudientes())
+    return render_gestion_acudientes()
 
 # ==========================================
 # RUTAS DE ACCIÓN: EDITAR Y BORRAR ACUDIENTES
@@ -374,21 +404,13 @@ def nuevo_acudiente_admin():
     if cursor.fetchone():
         cursor.close()
         conexion.close()
-        return render_template(
-            'gestion_acudientes.html',
-            acudientes=obtener_lista_acudientes(),
-            error='Estos datos (Documento o Email) ya están registrados en la escuela.'
-        )
+        return render_gestion_acudientes(error='Estos datos (Documento o Email) ya están registrados en la escuela.')
 
     es_valido, mensaje_error = validar_edad_acudiente(fecha_nacimiento)
     if not es_valido:
         cursor.close()
         conexion.close()
-        return render_template(
-            'gestion_acudientes.html',
-            acudientes=obtener_lista_acudientes(),
-            error=mensaje_error
-        )
+        return render_gestion_acudientes(error=mensaje_error)
 
     cursor = conexion.cursor()
 
@@ -405,6 +427,33 @@ def nuevo_acudiente_admin():
         """,
         (id_usuario_nuevo, id_rol, nombres, apellidos, documento, fecha_nacimiento, telefono, email)
     )
+
+    conexion.commit()
+    cursor.close()
+    conexion.close()
+
+    return redirect('/acudientes')
+
+@app.route('/vincular-jugadores-acudiente', methods=['POST'])
+def vincular_jugadores_acudiente():
+    if not usuario_tiene_sesion():
+        return redirect('/')
+    if obtener_id_rol_sesion() not in [1, 2, 3]:
+        return redirect(panel_por_rol(obtener_id_rol_sesion()))
+
+    id_acudiente = request.form.get('id_acudiente')
+    jugadores_seleccionados = request.form.getlist('jugadores')
+
+    conexion = obtener_conexion()
+    cursor = conexion.cursor()
+
+    cursor.execute("UPDATE jugador SET id_acudiente = NULL WHERE id_acudiente = %s", (id_acudiente,))
+
+    for id_jugador in jugadores_seleccionados:
+        cursor.execute(
+            "UPDATE jugador SET id_acudiente = %s WHERE id_jugador = %s",
+            (id_acudiente, id_jugador)
+        )
 
     conexion.commit()
     cursor.close()
