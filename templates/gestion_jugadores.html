@@ -74,14 +74,24 @@
     </aside>
 
     <main class="flex-1 p-6 md:p-10 space-y-8 overflow-y-auto">
-        <div class="max-w-7xl mx-auto flex justify-between items-center mb-6">
+        <div class="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
             <div>
                 <h1 class="text-3xl font-black tracking-tight"><span class="text-naranja-fuego">Gestión de</span> Jugadores</h1>
                 <p class="text-gris-claro text-sm mt-1">Administra los datos personales e inscripciones de la plantilla.</p>
             </div>
-            <button class="bg-naranja-fuego hover:bg-orange-700 text-blanco-humo font-bold py-3 px-6 rounded-2xl shadow-lg transition-all duration-300 hover:-translate-y-1 focus:ring-2 focus:ring-amarillo-volt">
-                + Nuevo Jugador
-            </button>
+            
+            <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+                <div class="relative w-full sm:w-80">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-xl">
+                        🔍
+                    </div>
+                    <input type="text" id="buscadorJugadores" onkeyup="filtrarTabla()" placeholder="Buscar por documento o nombre..." class="w-full bg-negro-carbon text-blanco-humo pl-12 pr-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt transition-all shadow-inner">
+                </div>
+                
+                <button class="bg-naranja-fuego hover:bg-orange-700 text-blanco-humo font-bold py-3 px-6 rounded-2xl shadow-lg transition-all duration-300 hover:-translate-y-1 focus:ring-2 focus:ring-amarillo-volt whitespace-nowrap">
+                    + Nuevo Jugador
+                </button>
+            </div>
         </div>
 
         <div class="max-w-7xl mx-auto glass-effect rounded-3xl overflow-hidden shadow-2xl">
@@ -98,7 +108,7 @@
                             <th class="p-5 font-bold text-center">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-white/5 text-sm">
+                    <tbody id="tablaJugadores" class="divide-y divide-white/5 text-sm">
                         {% for jugador in jugadores %}
                         <tr class="hover:bg-white/5 transition-all duration-300 group">
                             <td class="p-5">
@@ -210,6 +220,29 @@
     </div>
 
     <script>
+        // ================= FUNCIÓN DE BÚSQUEDA EN VIVO =================
+        function filtrarTabla() {
+            // 1. Capturamos lo que el usuario escribe y lo pasamos a minúsculas
+            const input = document.getElementById('buscadorJugadores').value.toLowerCase();
+            // 2. Buscamos todas las filas de la tabla
+            const filas = document.querySelectorAll('#tablaJugadores tr');
+
+            // 3. Revisamos fila por fila
+            filas.forEach(fila => {
+                // El documento está en la columna 2 (index 1) y el nombre en la columna 3 (index 2)
+                const documento = fila.cells[1].innerText.toLowerCase();
+                const nombre = fila.cells[2].innerText.toLowerCase();
+
+                // Si lo que escribió está incluido en el documento o en el nombre, mostramos la fila
+                if (documento.includes(input) || nombre.includes(input)) {
+                    fila.style.display = '';
+                } else {
+                    // Si no coincide, ocultamos la fila
+                    fila.style.display = 'none';
+                }
+            });
+        }
+        
         function abrirModalEditar(id_jugador, id_usuario, nombres, apellidos, telefono, email, estado) {
             // Rellenar el formulario con los datos actuales
             document.getElementById('edit_id_jugador').value = id_jugador;
