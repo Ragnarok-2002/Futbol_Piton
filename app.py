@@ -21,6 +21,43 @@ def obtener_conexion():
     )
 
 # ==========================================
+# 2. FUNCIONES AUXILIARES DE SESIÓN Y NAVEGACIÓN
+# ==========================================
+def usuario_tiene_sesion():
+    return 'id_usuario' in session
+
+def obtener_id_rol_sesion():
+    if 'id_rol' in session:
+        return session['id_rol']
+    if not usuario_tiene_sesion():
+        return None
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    cursor.execute("SELECT id_rol FROM usuario WHERE id_usuario = %s", (session['id_usuario'],))
+    fila = cursor.fetchone()
+    cursor.close()
+    conexion.close()
+    if fila:
+        session['id_rol'] = fila['id_rol']
+        return fila['id_rol']
+    return None
+
+def panel_por_rol(id_rol):
+    if id_rol == 4:
+        return '/dashboard-jugador'
+    elif id_rol == 5:
+        return '/modulo-acudiente'
+    elif id_rol == 3:
+        return '/modulo-entrenador'
+    else:
+        return '/dashboard-admin'
+
+def obtener_panel_actual():
+    if not usuario_tiene_sesion():
+        return '/'
+    return panel_por_rol(obtener_id_rol_sesion())
+
+# ==========================================
 # MÓDULO: REGISTRO/NUEVO USUARIO (JUGADOR O ACUDIENTE)
 # ==========================================
 @app.route('/registro', methods=['GET', 'POST'])
@@ -105,6 +142,14 @@ def home():
     return render_template('Login_Final.html')
 
 # ==========================================
+# MÓDULO: CERRAR SESIÓN
+# ==========================================
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect('/')
+
+# ==========================================
 # 3. RUTA DEL PROCESO DE LOGIN
 # ==========================================
 @app.route('/login', methods=['POST'])
@@ -124,8 +169,9 @@ def login():
     conexion.close()
     
     if cuenta:
-        # ¡MAGIA!: Guardamos el ID del usuario en la sesión para saber quién es
+        # Guardamos en sesión quién inició sesión y su rol para la navegación
         session['id_usuario'] = cuenta['id_usuario']
+        session['id_rol'] = cuenta['id_rol']
         
         id_rol = cuenta['id_rol']
         
@@ -145,6 +191,10 @@ def login():
 # ==========================================
 @app.route('/dashboard-admin')
 def dashboard_admin():
+    if not usuario_tiene_sesion():
+        return redirect('/')
+    if session.get('id_rol') not in [1, 2]:
+        return redirect(panel_por_rol(obtener_id_rol_sesion()))
     return render_template('dashboard_admin.html')
 
 # ==========================================
@@ -185,41 +235,46 @@ def dashboard_entrenador():
 # ==========================================
 @app.route('/mi-perfil')
 def mi_perfil():
-    # Por ahora simulamos que tu ID de usuario en la base de datos es el 1 
-    # (Revisa en tu phpMyAdmin qué ID tiene tu usuario administrador)
-    id_usuario_admin = 1 
+    if not usuario_tiene_sesion():
+        return redirect('/')
+    if obtener_id_rol_sesion() not in [1, 2]:
+        return redirect(panel_por_rol(obtener_id_rol_sesion()))
+
+    id_usuario_actual = session['id_usuario']
     
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
     
-    # Traemos tus datos actuales para mostrarlos en los campos de texto
-    cursor.execute("SELECT usuario FROM usuario WHERE id_usuario = %s", (id_usuario_admin,))
+    cursor.execute("SELECT usuario FROM usuario WHERE id_usuario = %s", (id_usuario_actual,))
     datos_admin = cursor.fetchone()
     
     cursor.close()
     conexion.close()
     
-    return render_template('perfil_admin.html', admin=datos_admin)
+    return render_template('perfil_admin.html', admin=datos_admin, url_panel=obtener_panel_actual())
 
 @app.route('/actualizar-perfil', methods=['POST'])
 def actualizar_perfil():
+    if not usuario_tiene_sesion():
+        return redirect('/')
+    if obtener_id_rol_sesion() not in [1, 2]:
+        return redirect(panel_por_rol(obtener_id_rol_sesion()))
+
     nuevo_usuario = request.form.get('username')
     nueva_contrasena = request.form.get('password')
-    id_usuario_admin = 1 # El mismo ID de tu usuario admin
+    id_usuario_actual = session['id_usuario']
     
     conexion = obtener_conexion()
     cursor = conexion.cursor()
     
-    # Ejecutamos la actualización en la Base de Datos de XAMPP
     query = "UPDATE usuario SET usuario = %s, contrasena = %s WHERE id_usuario = %s"
-    cursor.execute(query, (nuevo_usuario, nueva_contrasena, id_usuario_admin))
-    conexion.commit() # ¡Obligatorio! Confirma los cambios de escritura en MySQL
+    cursor.execute(query, (nuevo_usuario, nueva_contrasena, id_usuario_actual))
+    conexion.commit()
     
     cursor.close()
     conexion.close()
     
-    # Después de guardar, te regresamos al Dashboard con los datos nuevos
-    return redirect('/dashboard-admin')
+    return redirect(obtener_panel_actual())
 
 # ==========================================
 # MÓDULO: GESTIÓN DE JUGADORES (VISTA)
@@ -453,7 +508,13 @@ def modulo_equipos():
             "posicion": fila['posicion']
         })
         
-    return render_template('equipos.html', equipos=equipos_db, es_entrenador=es_entrenador, lista_equipos=lista_equipos)
+    return render_template(
+        'equipos.html',
+        equipos=equipos_db,
+        es_entrenador=es_entrenador,
+        lista_equipos=lista_equipos,
+        url_panel=obtener_panel_actual()
+    )
 
 # ==========================================
 # RUTAS DE ACCIÓN: MOVER Y ELIMINAR JUGADOR
