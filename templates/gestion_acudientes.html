@@ -47,13 +47,14 @@
     <aside class="w-full md:w-64 bg-gris-carbon/50 border-r border-white/5 flex flex-col justify-between p-6 glass-effect z-10 md:sticky md:top-0 md:h-screen">
         <div class="space-y-8">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-naranja-fuego flex items-center justify-center text-xl shadow-lg shadow-naranja-fuego/20">⚽</div>
+                <div class="w-10 h-10 rounded-xl bg-naranja-fuego flex items-center justify-center text-xl shadow-lg shadow-naranja-fuego/20">{% if es_entrenador %}👨‍🏫{% else %}⚽{% endif %}</div>
                 <div>
                     <h2 class="text-sm font-black tracking-wider uppercase">CrackGlow</h2>
-                    <p class="text-xs text-amarillo-volt font-bold">ADMINISTRADOR</p>
+                    <p class="text-xs text-amarillo-volt font-bold">{% if es_entrenador %}ENTRENADOR{% else %}ADMINISTRADOR{% endif %}</p>
                 </div>
             </div>
 
+            {% if es_admin %}
             <nav class="space-y-2 hidden md:block">
                 <a href="/dashboard-admin" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
                     <span class="group-hover:text-amarillo-volt transition-colors">🏠</span> Inicio
@@ -77,10 +78,23 @@
                     <span class="group-hover:text-amarillo-volt transition-colors">💰</span> Finanzas
                 </a>
             </nav>
+            {% elif es_entrenador %}
+            <nav class="space-y-2 hidden md:block">
+                <a href="/modulo-entrenador" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">🏠</span> Inicio
+                </a>
+                <a href="/equipos" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">🛡️</span> Equipos
+                </a>
+                <a href="/acudientes" class="flex items-center gap-3 px-4 py-3 bg-naranja-fuego text-blanco-humo font-bold rounded-2xl transition-all duration-300 shadow-lg shadow-naranja-fuego/20">
+                    <span>👨‍👩‍👦</span> Acudientes
+                </a>
+            </nav>
+            {% endif %}
         </div>
 
         <a href="/logout" class="hidden md:flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-2xl transition-all duration-300 font-medium mt-10">
-            <span>🚪</span> Cerrar Sesión
+            <span>🚪</span> {% if es_entrenador %}Salir{% else %}Cerrar Sesión{% endif %}
         </a>
     </aside>
 
@@ -88,7 +102,7 @@
         <div class="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
             <div>
                 <h1 class="text-3xl font-black tracking-tight"><span class="text-naranja-fuego">Gestión de</span> Acudientes</h1>
-                <p class="text-gris-claro text-sm mt-1">Consulta tutores legales, datos de contacto y jugadores vinculados.</p>
+                <p class="text-gris-claro text-sm mt-1">{% if es_entrenador %}Vincula jugadores con sus tutores legales.{% else %}Consulta tutores legales, datos de contacto y jugadores vinculados.{% endif %}</p>
             </div>
 
             <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
@@ -99,9 +113,11 @@
                     <input type="text" id="buscadorAcudientes" onkeyup="filtrarTabla()" placeholder="Buscar por documento o nombre..." class="w-full bg-negro-carbon text-blanco-humo pl-12 pr-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt transition-all shadow-inner">
                 </div>
 
+                {% if es_admin %}
                 <button type="button" onclick="abrirModalNuevo()" class="bg-naranja-fuego hover:bg-orange-700 text-blanco-humo font-bold py-3 px-6 rounded-2xl shadow-lg transition-all duration-300 hover:-translate-y-1 focus:ring-2 focus:ring-amarillo-volt whitespace-nowrap">
                     + Nuevo Acudiente
                 </button>
+                {% endif %}
             </div>
         </div>
 
@@ -151,7 +167,12 @@
                                 {% endif %}
                             </td>
                             <td class="p-5 text-center">
-                                <div class="flex justify-center gap-3 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div class="flex flex-wrap justify-center gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onclick="abrirModalVincular('{{ acudiente.id_acudiente }}', '{{ acudiente.nombre }} {{ acudiente.apellido }}')"
+                                            class="text-naranja-fuego hover:text-white transition-colors font-bold text-xs uppercase bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 hover:border-naranja-fuego hover:bg-naranja-fuego/20">
+                                        Vincular
+                                    </button>
+                                    {% if es_admin %}
                                     <button onclick="abrirModalEditar('{{ acudiente.id_acudiente }}', '{{ acudiente.id_usuario }}', '{{ acudiente.nombre }}', '{{ acudiente.apellido }}', '{{ acudiente.documento }}', '{{ acudiente.telefono }}', '{{ acudiente.email }}', '{{ acudiente.estado }}')"
                                             class="text-amarillo-volt hover:text-white transition-colors font-bold text-xs uppercase bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 hover:border-amarillo-volt">
                                         Editar
@@ -160,6 +181,7 @@
                                             class="text-red-500 hover:text-white transition-colors font-bold text-xs uppercase bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 hover:bg-red-600 hover:border-red-600">
                                         Borrar
                                     </button>
+                                    {% endif %}
                                 </div>
                             </td>
                         </tr>
@@ -169,6 +191,42 @@
             </div>
         </div>
     </main>
+
+    <div id="modalVincular" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
+        <div class="glass-effect rounded-3xl p-8 max-w-2xl w-full shadow-2xl border border-naranja-fuego/30 my-8">
+            <h2 class="text-xl font-black text-blanco-humo mb-1 border-b border-white/10 pb-4">Vincular Jugadores</h2>
+            <p class="text-gris-claro text-xs mb-4">Acudiente: <strong id="vincular_nombre_acudiente" class="text-naranja-fuego"></strong></p>
+            <p class="text-gris-claro text-xs mb-6">Marca uno o varios jugadores. Un padre o tutor puede tener varios representados a la vez.</p>
+
+            <form action="/vincular-jugadores-acudiente" method="POST">
+                <input type="hidden" name="id_acudiente" id="vincular_id_acudiente">
+
+                <div class="max-h-80 overflow-y-auto space-y-2 pr-2 mb-6 border border-white/10 rounded-2xl p-4 bg-negro-carbon/50">
+                    {% for jugador in jugadores %}
+                    <label class="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 cursor-pointer border border-transparent hover:border-white/10 transition-all">
+                        <input type="checkbox" name="jugadores" value="{{ jugador.id_jugador }}"
+                               class="checkbox-vinculo mt-1 accent-amarillo-volt"
+                               data-acudiente="{{ jugador.id_acudiente or '' }}">
+                        <div class="text-sm">
+                            <span class="font-bold text-blanco-humo">{{ jugador.nombres }} {{ jugador.apellidos }}</span>
+                            <span class="text-gris-claro font-mono text-xs ml-2">({{ jugador.documento }})</span>
+                            {% if jugador.nombre_acudiente_actual %}
+                            <div class="text-xs text-gris-claro mt-1">Acudiente actual: {{ jugador.nombre_acudiente_actual }}</div>
+                            {% else %}
+                            <div class="text-xs text-amarillo-volt mt-1">Sin acudiente</div>
+                            {% endif %}
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+
+                <div class="flex gap-3 pt-2 border-t border-white/10">
+                    <button type="button" onclick="cerrarModal('modalVincular')" class="w-1/2 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold text-gris-claro transition-all">CANCELAR</button>
+                    <button type="submit" class="w-1/2 py-3 bg-naranja-fuego hover:bg-orange-700 rounded-xl text-xs font-black text-blanco-humo transition-all shadow-lg shadow-naranja-fuego/20">GUARDAR VÍNCULOS</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <div id="modalNuevo" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
         <div class="glass-effect rounded-3xl p-8 max-w-2xl w-full shadow-2xl border border-naranja-fuego/30 my-8">
@@ -309,6 +367,17 @@
 
         function abrirModalNuevo() {
             document.getElementById('modalNuevo').classList.remove('hidden');
+        }
+
+        function abrirModalVincular(id_acudiente, nombreAcudiente) {
+            document.getElementById('vincular_id_acudiente').value = id_acudiente;
+            document.getElementById('vincular_nombre_acudiente').innerText = nombreAcudiente;
+
+            document.querySelectorAll('.checkbox-vinculo').forEach(checkbox => {
+                checkbox.checked = checkbox.dataset.acudiente === String(id_acudiente);
+            });
+
+            document.getElementById('modalVincular').classList.remove('hidden');
         }
 
         function calcularEdad(fechaNacimiento) {
