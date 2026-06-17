@@ -40,13 +40,127 @@
         .hidden { display: none; }
     </style>
 </head>
-<body class="bg-gradient-to-br from-negro-carbon via-negro-carbon to-naranja-fuego/10 min-h-screen text-blanco-humo p-6 md:p-10 font-sans relative">
+<body class="bg-gradient-to-br from-negro-carbon via-negro-carbon to-naranja-fuego/10 min-h-screen text-blanco-humo font-sans flex flex-col md:flex-row relative">
 
-    <div class="max-w-7xl mx-auto">
-        <header class="flex justify-between items-center mb-8">
+    {% if es_admin %}
+    <aside class="w-full md:w-64 bg-gris-carbon/50 border-r border-white/5 flex flex-col justify-between p-6 glass-effect z-10 md:sticky md:top-0 md:h-screen">
+        <div class="space-y-8">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-naranja-fuego flex items-center justify-center text-xl shadow-lg shadow-naranja-fuego/20">⚽</div>
+                <div>
+                    <h2 class="text-sm font-black tracking-wider uppercase">CrackGlow</h2>
+                    <p class="text-xs text-amarillo-volt font-bold">ADMINISTRADOR</p>
+                </div>
+            </div>
+
+            <nav class="space-y-2 hidden md:block">
+                <a href="/dashboard-admin" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">🏠</span> Inicio
+                </a>
+                <a href="/jugadores" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">👥</span> Jugadores
+                </a>
+                <a href="/equipos" class="flex items-center gap-3 px-4 py-3 bg-naranja-fuego text-blanco-humo font-bold rounded-2xl transition-all duration-300 shadow-lg shadow-naranja-fuego/20">
+                    <span>🛡️</span> Equipos
+                </a>
+                <a href="/acudientes" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">👨‍👩‍👦</span> Acudientes
+                </a>
+                <a href="/entrenadores" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">👨‍🏫</span> Entrenadores
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">📋</span> Asistencias
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">💰</span> Finanzas
+                </a>
+            </nav>
+        </div>
+
+        <a href="/logout" class="hidden md:flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-2xl transition-all duration-300 font-medium mt-10">
+            <span>🚪</span> Cerrar Sesión
+        </a>
+    </aside>
+
+    {% elif id_rol == 3 %}
+    <aside class="w-full md:w-64 bg-gris-carbon/50 border-r border-white/5 flex flex-col justify-between p-6 glass-effect z-10 md:sticky md:top-0 md:h-screen">
+        <div class="space-y-8">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-naranja-fuego flex items-center justify-center text-xl shadow-lg shadow-naranja-fuego/20">👨‍🏫</div>
+                <div>
+                    <h2 class="text-sm font-black tracking-wider uppercase">CrackGlow</h2>
+                    <p class="text-xs text-amarillo-volt font-bold">ENTRENADOR</p>
+                </div>
+            </div>
+            <nav class="space-y-2 hidden md:block">
+                <a href="/modulo-entrenador" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">🏠</span> Inicio
+                </a>
+                <a href="/equipos" class="flex items-center gap-3 px-4 py-3 bg-naranja-fuego text-blanco-humo font-bold rounded-2xl transition-all duration-300 shadow-lg shadow-naranja-fuego/20">
+                    <span>🛡️</span> Equipos
+                </a>
+            </nav>
+        </div>
+        <a href="/logout" class="hidden md:flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-2xl transition-all font-medium mt-10">
+            <span>🚪</span> Salir
+        </a>
+    </aside>
+
+    {% elif id_rol == 4 %}
+    <aside class="w-full md:w-64 bg-gris-carbon/50 border-r border-white/5 flex flex-col justify-between p-6 glass-effect z-10 md:sticky md:top-0 md:h-screen">
+        <div class="space-y-8">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-naranja-fuego flex items-center justify-center text-xl shadow-lg shadow-naranja-fuego/20">⚽</div>
+                <div>
+                    <h2 class="text-sm font-black tracking-wider uppercase">CrackGlow</h2>
+                    <p class="text-xs text-amarillo-volt font-bold">JUGADOR</p>
+                </div>
+            </div>
+            <nav class="space-y-2 hidden md:block">
+                <a href="/dashboard-jugador" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">🏠</span> Mi Panel
+                </a>
+                <a href="/equipos" class="flex items-center gap-3 px-4 py-3 bg-naranja-fuego text-blanco-humo font-bold rounded-2xl transition-all duration-300 shadow-lg shadow-naranja-fuego/20">
+                    <span>🛡️</span> Mi Equipo
+                </a>
+            </nav>
+        </div>
+        <a href="/logout" class="hidden md:flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-2xl transition-all font-medium mt-10">
+            <span>🚪</span> Salir
+        </a>
+    </aside>
+
+    {% elif id_rol == 5 %}
+    <aside class="w-full md:w-64 bg-gris-carbon/50 border-r border-white/5 flex flex-col justify-between p-6 glass-effect z-10 md:sticky md:top-0 md:h-screen">
+        <div class="space-y-8">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-naranja-fuego flex items-center justify-center text-xl shadow-lg shadow-naranja-fuego/20">👨‍👩‍👦</div>
+                <div>
+                    <h2 class="text-sm font-black tracking-wider uppercase">CrackGlow</h2>
+                    <p class="text-xs text-amarillo-volt font-bold">ACUDIENTE</p>
+                </div>
+            </div>
+            <nav class="space-y-2 hidden md:block">
+                <a href="/modulo-acudiente" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">🏠</span> Inicio
+                </a>
+                <a href="/equipos" class="flex items-center gap-3 px-4 py-3 bg-naranja-fuego text-blanco-humo font-bold rounded-2xl transition-all duration-300 shadow-lg shadow-naranja-fuego/20">
+                    <span>🛡️</span> Equipos
+                </a>
+            </nav>
+        </div>
+        <a href="/logout" class="hidden md:flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-2xl transition-all font-medium mt-10">
+            <span>🚪</span> Salir
+        </a>
+    </aside>
+    {% endif %}
+
+    <main class="flex-1 p-6 md:p-10 space-y-8 overflow-y-auto">
+        <header class="flex justify-between items-center">
             <div>
-            <a href="{{ url_panel }}" class="text-gris-claro hover:text-amarillo-volt text-sm font-bold transition-colors mb-2 inline-block">← Volver al Panel</a>
                 <h1 class="text-3xl font-black tracking-tight"><span class="text-naranja-fuego">Plantillas y</span> Equipos</h1>
+                <p class="text-gris-claro text-sm mt-1">Consulta y organiza las plantillas por categoría.</p>
             </div>
             {% if es_entrenador %}
             <button class="bg-naranja-fuego hover:bg-orange-700 text-blanco-humo font-bold py-3 px-6 rounded-2xl shadow-lg transition-all hover:-translate-y-1">
@@ -55,7 +169,7 @@
             {% endif %}
         </header>
 
-        <div class="flex flex-wrap gap-4 mb-10 border-b border-white/10 pb-6">
+        <div class="flex flex-wrap gap-4 border-b border-white/10 pb-6">
             {% for nombre_equipo, jugadores in equipos.items() %}
             <button id="btn-{{ loop.index }}" 
                     onclick="cambiarEquipo({{ loop.index }})"
@@ -102,7 +216,7 @@
             </div>
             {% endfor %}
         </div>
-    </div>
+    </main>
 
     <div id="modalMover" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
         <div class="glass-effect rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-amarillo-volt/30 transform scale-100 transition-all">

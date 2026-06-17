@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Acudientes - Escuela de Fútbol</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'negro-carbon': '#1A1A1A',
+                        'gris-carbon': '#252525',
+                        'naranja-fuego': '#E65100',
+                        'naranja-suave': '#FFF3E0',
+                        'blanco-humo': '#F5F5F5',
+                        'amarillo-volt': '#EEFF41',
+                        'gris-claro': '#B3B3B3'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-effect {
+            background: rgba(37, 37, 37, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-negro-carbon via-negro-carbon to-naranja-fuego/10 min-h-screen text-blanco-humo font-sans flex flex-col md:flex-row relative">
+
+    <div id="toastAlerta" class="fixed top-5 right-5 z-[60] transform transition-all duration-500 translate-x-full opacity-0">
+        <div class="glass-effect bg-red-900/40 border-l-4 border-red-500 p-5 rounded-2xl shadow-2xl flex items-center gap-4">
+            <div class="text-3xl">⚠️</div>
+            <div>
+                <h4 class="font-bold text-blanco-humo text-sm tracking-wide">Acción Requerida</h4>
+                <p id="textoToast" class="text-xs text-naranja-suave mt-1">Aquí va el error</p>
+            </div>
+            <button onclick="cerrarToast()" class="ml-4 text-gris-claro hover:text-white font-bold text-lg">&times;</button>
+        </div>
+    </div>
+
+    <aside class="w-full md:w-64 bg-gris-carbon/50 border-r border-white/5 flex flex-col justify-between p-6 glass-effect z-10 md:sticky md:top-0 md:h-screen">
+        <div class="space-y-8">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-naranja-fuego flex items-center justify-center text-xl shadow-lg shadow-naranja-fuego/20">⚽</div>
+                <div>
+                    <h2 class="text-sm font-black tracking-wider uppercase">CrackGlow</h2>
+                    <p class="text-xs text-amarillo-volt font-bold">ADMINISTRADOR</p>
+                </div>
+            </div>
+
+            <nav class="space-y-2 hidden md:block">
+                <a href="/dashboard-admin" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">🏠</span> Inicio
+                </a>
+                <a href="/jugadores" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">👥</span> Jugadores
+                </a>
+                <a href="/equipos" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">🛡️</span> Equipos
+                </a>
+                <a href="/acudientes" class="flex items-center gap-3 px-4 py-3 bg-naranja-fuego text-blanco-humo font-bold rounded-2xl transition-all duration-300 shadow-lg shadow-naranja-fuego/20">
+                    <span>👨‍👩‍👦</span> Acudientes
+                </a>
+                <a href="/entrenadores" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">👨‍🏫</span> Entrenadores
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">📋</span> Asistencias
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:text-blanco-humo hover:bg-white/5 rounded-2xl transition-all duration-300 group">
+                    <span class="group-hover:text-amarillo-volt transition-colors">💰</span> Finanzas
+                </a>
+            </nav>
+        </div>
+
+        <a href="/logout" class="hidden md:flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-2xl transition-all duration-300 font-medium mt-10">
+            <span>🚪</span> Cerrar Sesión
+        </a>
+    </aside>
+
+    <main class="flex-1 p-6 md:p-10 space-y-8 overflow-y-auto">
+        <div class="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
+            <div>
+                <h1 class="text-3xl font-black tracking-tight"><span class="text-naranja-fuego">Gestión de</span> Acudientes</h1>
+                <p class="text-gris-claro text-sm mt-1">Consulta tutores legales, datos de contacto y jugadores vinculados.</p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+                <div class="relative w-full sm:w-80">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-xl">
+                        🔍
+                    </div>
+                    <input type="text" id="buscadorAcudientes" onkeyup="filtrarTabla()" placeholder="Buscar por documento o nombre..." class="w-full bg-negro-carbon text-blanco-humo pl-12 pr-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt transition-all shadow-inner">
+                </div>
+
+                <button type="button" onclick="abrirModalNuevo()" class="bg-naranja-fuego hover:bg-orange-700 text-blanco-humo font-bold py-3 px-6 rounded-2xl shadow-lg transition-all duration-300 hover:-translate-y-1 focus:ring-2 focus:ring-amarillo-volt whitespace-nowrap">
+                    + Nuevo Acudiente
+                </button>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto glass-effect rounded-3xl overflow-hidden shadow-2xl">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-white/5 text-naranja-suave text-xs uppercase tracking-widest border-b border-white/10">
+                            <th class="p-5 font-bold">Estado</th>
+                            <th class="p-5 font-bold">Doc.</th>
+                            <th class="p-5 font-bold">Acudiente</th>
+                            <th class="p-5 font-bold">Contacto</th>
+                            <th class="p-5 font-bold">Usuario Acceso</th>
+                            <th class="p-5 font-bold">Jugadores a Cargo</th>
+                            <th class="p-5 font-bold text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaAcudientes" class="divide-y divide-white/5 text-sm">
+                        {% for acudiente in acudientes %}
+                        <tr class="hover:bg-white/5 transition-all duration-300 group">
+                            <td class="p-5">
+                                {% if acudiente.estado|lower == 'activo' %}
+                                    <span class="bg-green-500/10 text-green-500 font-bold px-3 py-1 rounded-lg text-xs uppercase tracking-wider">Activo</span>
+                                {% else %}
+                                    <span class="bg-red-500/10 text-red-500 font-bold px-3 py-1 rounded-lg text-xs uppercase tracking-wider">Inactivo</span>
+                                {% endif %}
+                            </td>
+                            <td class="p-5 text-gris-claro font-mono text-xs">
+                                {{ acudiente.documento if acudiente.documento else acudiente.usuario_acceso }}
+                            </td>
+                            <td class="p-5 font-bold text-blanco-humo">
+                                {{ acudiente.nombre }} {{ acudiente.apellido }}
+                            </td>
+                            <td class="p-5">
+                                <div class="text-blanco-humo">{{ acudiente.telefono or 'Sin teléfono' }}</div>
+                                <div class="text-xs text-gris-claro mt-0.5">{{ acudiente.email or 'Sin email' }}</div>
+                            </td>
+                            <td class="p-5 text-gris-claro font-mono text-xs">{{ acudiente.usuario_acceso }}</td>
+                            <td class="p-5">
+                                {% if acudiente.total_jugadores > 0 %}
+                                    <span class="bg-amarillo-volt/10 text-amarillo-volt font-bold px-3 py-1 rounded-lg text-xs">
+                                        {{ acudiente.total_jugadores }} jugador(es)
+                                    </span>
+                                    <div class="text-xs text-gris-claro mt-2 max-w-xs">{{ acudiente.jugadores_a_cargo }}</div>
+                                {% else %}
+                                    <span class="text-gris-claro italic bg-white/5 px-3 py-1 rounded-xl text-xs border border-white/5">Sin vincular</span>
+                                {% endif %}
+                            </td>
+                            <td class="p-5 text-center">
+                                <div class="flex justify-center gap-3 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onclick="abrirModalEditar('{{ acudiente.id_acudiente }}', '{{ acudiente.id_usuario }}', '{{ acudiente.nombre }}', '{{ acudiente.apellido }}', '{{ acudiente.documento }}', '{{ acudiente.telefono }}', '{{ acudiente.email }}', '{{ acudiente.estado }}')"
+                                            class="text-amarillo-volt hover:text-white transition-colors font-bold text-xs uppercase bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 hover:border-amarillo-volt">
+                                        Editar
+                                    </button>
+                                    <button onclick="abrirModalBorrar('{{ acudiente.id_acudiente }}', '{{ acudiente.nombre }} {{ acudiente.apellido }}')"
+                                            class="text-red-500 hover:text-white transition-colors font-bold text-xs uppercase bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 hover:bg-red-600 hover:border-red-600">
+                                        Borrar
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <div id="modalNuevo" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
+        <div class="glass-effect rounded-3xl p-8 max-w-2xl w-full shadow-2xl border border-naranja-fuego/30 my-8">
+            <h2 class="text-xl font-black text-blanco-humo mb-2 border-b border-white/10 pb-4">Registrar Nuevo Acudiente</h2>
+            <p class="text-gris-claro text-xs mb-6">Crea la cuenta de un padre, madre o tutor legal. Los datos deben coincidir con el registro público.</p>
+
+            <form id="formNuevoAcudiente" action="/nuevo-acudiente-admin" method="POST" class="space-y-4" onsubmit="return validarFormularioNuevoAcudiente(event)">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Documento</label>
+                        <input type="text" id="nuevo_documento" name="documento" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Contraseña</label>
+                        <input type="password" id="nuevo_password" name="password" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Nombres</label>
+                        <input type="text" id="nuevo_nombres" name="nombres" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Apellidos</label>
+                        <input type="text" id="nuevo_apellidos" name="apellidos" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Teléfono</label>
+                        <input type="text" id="nuevo_telefono" name="telefono" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Email</label>
+                        <input type="email" id="nuevo_email" name="email" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Fecha de Nacimiento</label>
+                        <input type="date" id="nuevo_fecha_nacimiento" name="fecha_nacimiento" required max="" onclick="this.max=new Date().toISOString().split('T')[0]" class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-6 border-t border-white/10">
+                    <button type="button" onclick="cerrarModal('modalNuevo')" class="w-1/2 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold text-gris-claro transition-all">CANCELAR</button>
+                    <button type="button" onclick="validarYRegistrarAcudiente()" class="w-1/2 py-3 bg-naranja-fuego hover:bg-orange-700 rounded-xl text-xs font-black text-blanco-humo transition-all shadow-lg shadow-naranja-fuego/20">REGISTRAR ACUDIENTE</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalEditar" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="glass-effect rounded-3xl p-8 max-w-lg w-full shadow-2xl border border-amarillo-volt/30 transform scale-100 transition-all">
+            <h2 class="text-xl font-black text-blanco-humo mb-6 border-b border-white/10 pb-4">Editar Acudiente</h2>
+
+            <form action="/editar-acudiente-admin" method="POST" class="space-y-4">
+                <input type="hidden" name="id_acudiente" id="edit_id_acudiente">
+                <input type="hidden" name="id_usuario" id="edit_id_usuario">
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Nombres</label>
+                        <input type="text" name="nombre" id="edit_nombre" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Apellidos</label>
+                        <input type="text" name="apellido" id="edit_apellido" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-naranja-suave text-xs font-bold uppercase">Documento</label>
+                    <input type="text" name="documento" id="edit_documento" class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Teléfono</label>
+                        <input type="text" name="telefono" id="edit_telefono" class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Email</label>
+                        <input type="email" name="email" id="edit_email" class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                </div>
+
+                <div class="space-y-2 pt-2 border-t border-white/10 mt-4">
+                    <label class="text-amarillo-volt text-xs font-bold uppercase">Estado de la Cuenta</label>
+                    <select name="estado" id="edit_estado" class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                        <option value="Activo">Activo (Puede iniciar sesión)</option>
+                        <option value="Inactivo">Inactivo (Acceso suspendido)</option>
+                    </select>
+                </div>
+
+                <div class="flex gap-3 pt-6 border-t border-white/10">
+                    <button type="button" onclick="cerrarModal('modalEditar')" class="w-1/2 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold text-gris-claro transition-all">CANCELAR</button>
+                    <button type="submit" class="w-1/2 py-3 bg-amarillo-volt hover:bg-yellow-400 rounded-xl text-xs font-black text-negro-carbon transition-all shadow-lg shadow-amarillo-volt/20">GUARDAR CAMBIOS</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalBorrar" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="glass-effect rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-red-500/30 transform scale-100 transition-all">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">⚠️</div>
+                <h2 class="text-xl font-black text-blanco-humo">¿Eliminar Definitivamente?</h2>
+                <p class="text-gris-claro text-xs mt-2">Vas a borrar a <strong id="delete_nombre" class="text-blanco-humo"></strong>. Los jugadores vinculados quedarán sin acudiente y se eliminarán sus credenciales de acceso.</p>
+            </div>
+
+            <form action="/borrar-acudiente-admin" method="POST" class="flex gap-3">
+                <input type="hidden" name="id_acudiente" id="delete_id_acudiente">
+                <button type="button" onclick="cerrarModal('modalBorrar')" class="w-1/2 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold text-gris-claro transition-all">CANCELAR</button>
+                <button type="submit" class="w-1/2 py-3 bg-red-600 hover:bg-red-700 rounded-xl text-xs font-black text-white shadow-lg shadow-red-600/20 transition-all">SÍ, BORRAR</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function mostrarToast(mensaje) {
+            document.getElementById('textoToast').innerText = mensaje;
+            const toast = document.getElementById('toastAlerta');
+            toast.classList.remove('translate-x-full', 'opacity-0');
+            setTimeout(cerrarToast, 6000);
+        }
+
+        function cerrarToast() {
+            const toast = document.getElementById('toastAlerta');
+            toast.classList.add('translate-x-full', 'opacity-0');
+        }
+
+        {% if error %}
+        window.onload = function() {
+            mostrarToast("{{ error }}");
+        };
+        {% endif %}
+
+        function abrirModalNuevo() {
+            document.getElementById('modalNuevo').classList.remove('hidden');
+        }
+
+        function calcularEdad(fechaNacimiento) {
+            const partes = fechaNacimiento.split('-');
+            const fechaNac = new Date(partes[0], partes[1] - 1, partes[2]);
+            const hoy = new Date();
+            let edad = hoy.getFullYear() - fechaNac.getFullYear();
+            const mes = hoy.getMonth() - fechaNac.getMonth();
+            if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
+                edad--;
+            }
+            return edad;
+        }
+
+        function validarFormularioNuevoAcudiente(event) {
+            event.preventDefault();
+
+            const documento = document.getElementById('nuevo_documento').value.trim();
+            const nombres = document.getElementById('nuevo_nombres').value.trim();
+            const apellidos = document.getElementById('nuevo_apellidos').value.trim();
+            const telefono = document.getElementById('nuevo_telefono').value.trim();
+            const email = document.getElementById('nuevo_email').value.trim();
+            const password = document.getElementById('nuevo_password').value.trim();
+            const fechaNacimiento = document.getElementById('nuevo_fecha_nacimiento').value.trim();
+
+            if (!documento || !nombres || !apellidos || !telefono || !email || !password || !fechaNacimiento) {
+                mostrarToast('Por favor, llena toda la información. Todos los campos son obligatorios.');
+                return false;
+            }
+
+            const edad = calcularEdad(fechaNacimiento);
+            if (edad < 18) {
+                mostrarToast('No tiene la mayoría de edad para ser acudiente/tutor. Debe ser mayor de 18 años.');
+                return false;
+            }
+
+            event.target.submit();
+            return false;
+        }
+
+        function validarYRegistrarAcudiente() {
+            document.getElementById('formNuevoAcudiente').requestSubmit();
+        }
+
+        function filtrarTabla() {
+            const input = document.getElementById('buscadorAcudientes').value.toLowerCase();
+            const filas = document.querySelectorAll('#tablaAcudientes tr');
+
+            filas.forEach(fila => {
+                const documento = fila.cells[1].innerText.toLowerCase();
+                const nombre = fila.cells[2].innerText.toLowerCase();
+
+                if (documento.includes(input) || nombre.includes(input)) {
+                    fila.style.display = '';
+                } else {
+                    fila.style.display = 'none';
+                }
+            });
+        }
+
+        function abrirModalEditar(id_acudiente, id_usuario, nombre, apellido, documento, telefono, email, estado) {
+            document.getElementById('edit_id_acudiente').value = id_acudiente;
+            document.getElementById('edit_id_usuario').value = id_usuario;
+            document.getElementById('edit_nombre').value = nombre;
+            document.getElementById('edit_apellido').value = apellido;
+            document.getElementById('edit_documento').value = documento;
+            document.getElementById('edit_telefono').value = telefono;
+            document.getElementById('edit_email').value = email;
+
+            const estadoFormateado = estado.charAt(0).toUpperCase() + estado.slice(1).toLowerCase();
+            document.getElementById('edit_estado').value = estadoFormateado;
+
+            document.getElementById('modalEditar').classList.remove('hidden');
+        }
+
+        function abrirModalBorrar(id_acudiente, nombreCompleto) {
+            document.getElementById('delete_id_acudiente').value = id_acudiente;
+            document.getElementById('delete_nombre').innerText = nombreCompleto;
+            document.getElementById('modalBorrar').classList.remove('hidden');
+        }
+
+        function cerrarModal(idModal) {
+            document.getElementById(idModal).classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
