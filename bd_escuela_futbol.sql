@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 17-06-2026 a las 18:13:59
+-- Tiempo de generación: 19-06-2026 a las 18:38:23
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -92,44 +92,44 @@ CREATE TABLE `asistencia` (
 -- Volcado de datos para la tabla `asistencia`
 --
 
-INSERT INTO `asistencia` (`id_asistencia`, `id_entrenamiento`, `id_jugador`, `id_equipo`, `asistio`) VALUES
-(1, 1, 1, 1, 1),
-(2, 2, 6, 2, 1),
-(3, 3, 11, 3, 1),
-(4, 4, 16, 4, 1),
-(5, 5, 21, 5, 1),
-(6, 6, 2, 1, 1),
-(7, 7, 7, 2, 1),
-(8, 8, 12, 3, 1),
-(9, 9, 17, 4, 1),
-(10, 10, 22, 5, 1),
-(11, 11, 3, 1, 1),
-(12, 11, 4, 1, 1),
-(13, 12, 8, 2, 1),
-(14, 12, 9, 2, 1),
-(15, 13, 13, 3, 1),
-(16, 13, 14, 3, 0),
-(17, 14, 18, 4, 1),
-(18, 14, 19, 4, 1),
-(19, 15, 23, 5, 1),
-(20, 15, 24, 5, 1),
-(21, 16, 5, 1, 1),
-(22, 17, 10, 2, 1),
-(23, 18, 1, 1, 1),
-(24, 18, 2, 1, 1),
-(25, 18, 3, 1, 1),
-(26, 18, 4, 1, 1),
-(27, 18, 5, 1, 1),
-(28, 19, 11, 3, 1),
-(29, 19, 12, 3, 1),
-(30, 19, 13, 3, 0),
-(31, 19, 14, 3, 1),
-(32, 19, 15, 3, 1),
-(33, 20, 21, 5, 1),
-(34, 20, 22, 5, 1),
-(35, 20, 23, 5, 1),
-(36, 20, 24, 5, 1),
-(37, 20, 25, 5, 1);
+INSERT INTO `asistencia` (`id_asistencia`, `id_entrenamiento`, `id_jugador`, `id_equipo`, `asistio`, `observacion`) VALUES
+(1, 1, 1, 1, 1, NULL),
+(2, 2, 6, 2, 1, NULL),
+(3, 3, 11, 3, 1, NULL),
+(4, 4, 16, 4, 1, NULL),
+(5, 5, 21, 5, 1, NULL),
+(6, 6, 2, 1, 1, NULL),
+(7, 7, 7, 2, 1, NULL),
+(8, 8, 12, 3, 1, NULL),
+(9, 9, 17, 4, 1, NULL),
+(10, 10, 22, 5, 1, NULL),
+(11, 11, 3, 1, 1, NULL),
+(12, 11, 4, 1, 1, NULL),
+(13, 12, 8, 2, 1, NULL),
+(14, 12, 9, 2, 1, NULL),
+(15, 13, 13, 3, 1, NULL),
+(16, 13, 14, 3, 0, NULL),
+(17, 14, 18, 4, 1, NULL),
+(18, 14, 19, 4, 1, NULL),
+(19, 15, 23, 5, 1, NULL),
+(20, 15, 24, 5, 1, NULL),
+(21, 16, 5, 1, 1, NULL),
+(22, 17, 10, 2, 1, NULL),
+(23, 18, 1, 1, 1, NULL),
+(24, 18, 2, 1, 1, NULL),
+(25, 18, 3, 1, 1, NULL),
+(26, 18, 4, 1, 1, NULL),
+(27, 18, 5, 1, 1, NULL),
+(28, 19, 11, 3, 1, NULL),
+(29, 19, 12, 3, 1, NULL),
+(30, 19, 13, 3, 0, NULL),
+(31, 19, 14, 3, 1, NULL),
+(32, 19, 15, 3, 1, NULL),
+(33, 20, 21, 5, 1, NULL),
+(34, 20, 22, 5, 1, NULL),
+(35, 20, 23, 5, 1, NULL),
+(36, 20, 24, 5, 1, NULL),
+(37, 20, 25, 5, 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -317,7 +317,8 @@ INSERT INTO `equipo` (`id_equipo`, `id_division`, `nombre_equipo`) VALUES
 (2, 2, 'AAA Sub-18'),
 (3, 3, 'AAA Sub-16'),
 (4, 4, 'AAA Sub-14'),
-(5, 5, 'AAA Sub-10');
+(5, 5, 'AAA Sub-10'),
+(6, 2, 'bbbb');
 
 -- --------------------------------------------------------
 
@@ -360,35 +361,37 @@ CREATE TABLE `ficha_jugador` (
 -- Volcado de datos para la tabla `ficha_jugador`
 --
 
-INSERT INTO `ficha_jugador` (`id_jugador`, `id_equipo`, `id_estado`, `posicion`, `estatura`, `peso`) VALUES
-(1, 1, 1, 'Delantero', 1.78, 72.00),
-(2, 1, 1, 'Mediocampista', 1.74, 68.00),
-(3, 1, 1, 'Defensa', 1.76, 70.00),
-(4, 1, 1, 'Defensa', 1.75, 71.00),
-(5, 1, 1, 'Portero', 1.82, 78.00),
-(6, 2, 1, 'Delantero', 1.70, 65.00),
-(7, 2, 1, 'Mediocampista', 1.68, 62.00),
-(8, 2, 1, 'Defensa', 1.72, 67.00),
-(9, 2, 1, 'Defensa', 1.71, 66.00),
-(10, 2, 1, 'Portero', 1.76, 73.00),
-(11, 3, 1, 'Delantero', 1.65, 58.00),
-(12, 3, 1, 'Mediocampista', 1.63, 55.00),
-(13, 3, 1, 'Defensa', 1.67, 60.00),
-(14, 3, 1, 'Defensa', 1.66, 59.00),
-(15, 3, 1, 'Portero', 1.70, 65.00),
-(16, 4, 1, 'Delantero', 1.58, 50.00),
-(17, 4, 1, 'Mediocampista', 1.56, 47.00),
-(18, 4, 1, 'Defensa', 1.60, 52.00),
-(19, 4, 1, 'Defensa', 1.59, 51.00),
-(20, 4, 1, 'Portero', 1.63, 55.00),
-(21, 5, 1, 'Delantero', 1.40, 35.00),
-(22, 5, 1, 'Mediocampista', 1.38, 33.00),
-(23, 5, 1, 'Defensa', 1.42, 36.00),
-(24, 5, 1, 'Defensa', 1.41, 35.50),
-(25, 5, 1, 'Portero', 1.45, 38.00),
-(26, 2, 1, 'Por definir', 0.00, 0.00),
-(29, 5, 1, 'Por definir', 0.00, 0.00),
-(33, 3, 1, 'Por definir', 0.00, 0.00);
+INSERT INTO `ficha_jugador` (`id_jugador`, `id_equipo`, `id_estado`, `posicion`, `estatura`, `peso`, `apodo`) VALUES
+(1, 1, 1, 'Delantero', 1.78, 72.00, NULL),
+(2, 1, 1, 'Mediocampista', 1.74, 68.00, NULL),
+(3, 1, 1, 'Defensa', 1.76, 70.00, NULL),
+(4, 1, 1, 'Defensa', 1.75, 71.00, NULL),
+(5, 1, 1, 'Portero', 1.82, 78.00, NULL),
+(6, 2, 1, 'Delantero', 1.70, 65.00, NULL),
+(7, 2, 1, 'Mediocampista', 1.68, 62.00, NULL),
+(8, 2, 1, 'Defensa', 1.72, 67.00, NULL),
+(9, 2, 1, 'Defensa', 1.71, 66.00, NULL),
+(10, 2, 1, 'Portero', 1.76, 73.00, NULL),
+(11, 3, 1, 'Delantero', 1.65, 58.00, NULL),
+(12, 3, 1, 'Mediocampista', 1.63, 55.00, NULL),
+(13, 3, 1, 'Defensa', 1.67, 60.00, NULL),
+(14, 3, 1, 'Defensa', 1.66, 59.00, NULL),
+(15, 3, 1, 'Portero', 1.70, 65.00, NULL),
+(16, 4, 1, 'Delantero', 1.58, 50.00, NULL),
+(17, 4, 1, 'Mediocampista', 1.56, 47.00, NULL),
+(18, 4, 1, 'Defensa', 1.60, 52.00, NULL),
+(19, 4, 1, 'Defensa', 1.59, 51.00, NULL),
+(20, 4, 1, 'Portero', 1.63, 55.00, NULL),
+(21, 5, 1, 'Delantero', 1.40, 35.00, NULL),
+(22, 5, 1, 'Mediocampista', 1.38, 33.00, NULL),
+(23, 5, 1, 'Defensa', 1.42, 36.00, NULL),
+(24, 5, 1, 'Defensa', 1.41, 35.50, NULL),
+(25, 5, 1, 'Portero', 1.45, 38.00, NULL),
+(26, 2, 1, 'Por definir', 0.00, 0.00, NULL),
+(27, 4, 1, 'Por definir', 0.00, 0.00, NULL),
+(29, 5, 1, 'Por definir', 0.00, 0.00, NULL),
+(33, 3, 1, 'Por definir', 0.00, 0.00, NULL),
+(34, 6, 1, 'Por definir', 0.00, 0.00, NULL);
 
 -- --------------------------------------------------------
 
@@ -446,7 +449,8 @@ INSERT INTO `jugador` (`id_jugador`, `id_acudiente`, `id_usuario`, `id_rol`, `no
 (29, NULL, 63, 4, 'alexander', 'acevedo', '2040-01-02', '3332225566', 'acevedo10@gmail.com', '456', '2026-06-10'),
 (31, NULL, 65, 4, 'pepe', 'galindo', '2026-06-13', '3332224466', 'galindo@gmail.com', '455', '2026-06-13'),
 (32, NULL, 66, 4, 'juan', 'lopez', '2004-07-14', '3332224477', 'lopez@gmail.com', '741', '2026-06-13'),
-(33, NULL, 67, 4, 'messi', 'chiquito', '2016-02-10', '3332224488', 'messi10@gmail.com', '963', '2026-06-14');
+(33, NULL, 67, 4, 'messi', 'chiquito', '2016-02-10', '3332224488', 'messi10@gmail.com', '963', '2026-06-14'),
+(34, 23, 72, 4, 'luis', 'cabezas', '2009-11-19', '12345678999', 'lucABEZAS@78.COM', '7412', '2026-06-19');
 
 -- --------------------------------------------------------
 
@@ -674,7 +678,8 @@ INSERT INTO `usuario` (`id_usuario`, `id_rol`, `usuario`, `contrasena`, `email`,
 (66, 4, '741', '147', 'lopez@gmail.com', 'Activo'),
 (67, 4, '963', '369', 'messi10@gmail.com', 'Activo'),
 (68, 5, '852', '258', 'padre10@gmail.com', 'Activo'),
-(71, 5, '123456', '4567', 'andriuZ@gmail.com', 'Activo');
+(71, 5, '123456', '4567', 'andriuZ@gmail.com', 'Activo'),
+(72, 4, '7412', '789654', 'lucABEZAS@78.COM', 'Activo');
 
 --
 -- Índices para tablas volcadas
@@ -790,13 +795,13 @@ ALTER TABLE `acudiente`
 -- AUTO_INCREMENT de la tabla `jugador`
 --
 ALTER TABLE `jugador`
-  MODIFY `id_jugador` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `id_jugador` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
 
 --
 -- AUTO_INCREMENT de la tabla `usuario`
 --
 ALTER TABLE `usuario`
-  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=72;
+  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=73;
 
 --
 -- Restricciones para tablas volcadas
