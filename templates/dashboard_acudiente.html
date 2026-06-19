@@ -72,12 +72,15 @@
             {% if hijos %}
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {% for hijo in hijos %}
-                    <div class="glass-effect p-6 rounded-3xl border border-white/5 flex items-center gap-4 hover:border-naranja-fuego/30 transition-all">
-                        <div class="w-14 h-14 bg-negro-carbon rounded-full flex items-center justify-center text-2xl border border-white/10">⚽</div>
-                        <div>
-                            <h3 class="font-bold text-blanco-humo">{{ hijo.nombres }} {{ hijo.apellidos }}</h3>
-                            <p class="text-xs text-gris-claro">Doc: {{ hijo.documento }}</p>
+                    <div class="glass-effect p-6 rounded-3xl border border-white/5 flex flex-col gap-4 hover:border-naranja-fuego/30 transition-all">
+                        <div class="flex items-center gap-4">
+                            <div class="w-14 h-14 bg-negro-carbon rounded-full flex items-center justify-center text-2xl border border-white/10">⚽</div>
+                            <div>
+                                <h3 class="font-bold text-blanco-humo">{{ hijo.nombres }} {{ hijo.apellidos }}</h3>
+                                <p class="text-xs text-gris-claro">Doc: {{ hijo.documento }}</p>
+                            </div>
                         </div>
+                        <a href="/ficha-tecnica/{{ hijo.id_jugador }}" class="block w-full text-center py-2 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt hover:bg-amarillo-volt hover:text-negro-carbon transition-all">VER FICHA TÉCNICA</a>
                     </div>
                     {% endfor %}
                 </div>
@@ -99,7 +102,7 @@
                         <h3 class="font-bold text-lg text-blanco-humo">Fichas Técnicas</h3>
                         <p class="text-xs text-gris-claro mt-1">Supervisa la información médica y deportiva de tus representados.</p>
                     </div>
-                    <a href="#" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt hover:bg-amarillo-volt hover:text-negro-carbon transition-all duration-300">VER FICHAS</a>
+                    <a href="/ficha-tecnica/{{ hijos[0].id_jugador }}" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt hover:bg-amarillo-volt hover:text-negro-carbon transition-all duration-300">VER FICHAS</a>
                 </div>
 
                 <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-naranja-fuego/50 transition-all duration-300 group flex flex-col justify-between">
@@ -135,7 +138,7 @@
                         <h3 class="font-bold text-lg text-blanco-humo">Cuerpo Técnico</h3>
                         <p class="text-xs text-gris-claro mt-1">Conoce al entrenador asignado y sus datos de contacto institucionales.</p>
                     </div>
-                    <a href="#" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt hover:bg-amarillo-volt hover:text-negro-carbon transition-all duration-300">VER PROFESORES</a>
+                    <a href="/cuerpo-tecnico" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt hover:bg-amarillo-volt hover:text-negro-carbon transition-all duration-300">VER PROFESORES</a>
                 </div>
             </section>
         {% else %}

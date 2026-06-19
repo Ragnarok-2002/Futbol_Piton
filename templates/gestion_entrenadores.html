@@ -28,9 +28,21 @@
             backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
+        .hidden { display: none; }
     </style>
 </head>
-<body class="bg-gradient-to-br from-negro-carbon via-negro-carbon to-naranja-fuego/10 min-h-screen text-blanco-humo font-sans flex flex-col md:flex-row">
+<body class="bg-gradient-to-br from-negro-carbon via-negro-carbon to-naranja-fuego/10 min-h-screen text-blanco-humo font-sans flex flex-col md:flex-row relative">
+
+    <div id="toastAlerta" class="fixed top-5 right-5 z-[60] transform transition-all duration-500 translate-x-full opacity-0">
+        <div class="glass-effect bg-red-900/40 border-l-4 border-red-500 p-5 rounded-2xl shadow-2xl flex items-center gap-4">
+            <div class="text-3xl">⚠️</div>
+            <div>
+                <h4 class="font-bold text-blanco-humo text-sm tracking-wide">Acción Requerida</h4>
+                <p id="textoToast" class="text-xs text-naranja-suave mt-1">Aquí va el error</p>
+            </div>
+            <button onclick="cerrarToast()" class="ml-4 text-gris-claro hover:text-white font-bold text-lg">&times;</button>
+        </div>
+    </div>
 
     <aside class="w-full md:w-64 bg-gris-carbon/50 border-r border-white/5 flex flex-col justify-between p-6 glass-effect z-10 md:sticky md:top-0 md:h-screen">
         <div class="space-y-8">
@@ -73,12 +85,12 @@
     </aside>
 
     <main class="flex-1 p-6 md:p-10 space-y-8 overflow-y-auto">
-        <div class="max-w-7xl mx-auto flex justify-between items-center mb-6">
+        <div class="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
             <div>
                 <h1 class="text-3xl font-black tracking-tight"><span class="text-naranja-fuego">Cuerpo</span> Técnico</h1>
                 <p class="text-gris-claro text-sm mt-1">Administra la nómina de profesores y sus especialidades.</p>
             </div>
-            <button class="bg-naranja-fuego hover:bg-orange-700 text-blanco-humo font-bold py-3 px-6 rounded-2xl shadow-lg transition-all duration-300 hover:-translate-y-1 focus:ring-2 focus:ring-amarillo-volt">
+            <button type="button" onclick="abrirModalNuevo()" class="bg-naranja-fuego hover:bg-orange-700 text-blanco-humo font-bold py-3 px-6 rounded-2xl shadow-lg transition-all duration-300 hover:-translate-y-1 focus:ring-2 focus:ring-amarillo-volt whitespace-nowrap">
                 + Nuevo Entrenador
             </button>
         </div>
@@ -88,31 +100,56 @@
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-white/5 text-naranja-suave text-xs uppercase tracking-widest border-b border-white/10">
+                            <th class="p-5 font-bold">Estado</th>
                             <th class="p-5 font-bold">Doc.</th>
                             <th class="p-5 font-bold">Profesor</th>
                             <th class="p-5 font-bold">Contacto</th>
-                            <th class="p-5 font-bold">Especialidad Táctica</th>
+                            <th class="p-5 font-bold">F. Nacimiento</th>
+                            <th class="p-5 font-bold">Especialidad</th>
                             <th class="p-5 font-bold text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-white/5 text-sm">
                         {% for entrenador in entrenadores %}
                         <tr class="hover:bg-white/5 transition-all duration-300 group">
-                            <td class="p-5 text-gris-claro font-mono text-xs">{{ entrenador.documento }}</td>
+                            <td class="p-5">
+                                {% if entrenador.estado|lower == 'activo' %}
+                                    <span class="bg-green-500/10 text-green-500 font-bold px-3 py-1 rounded-lg text-xs uppercase tracking-wider">Activo</span>
+                                {% else %}
+                                    <span class="bg-red-500/10 text-red-500 font-bold px-3 py-1 rounded-lg text-xs uppercase tracking-wider">Inactivo</span>
+                                {% endif %}
+                            </td>
+                            <td class="p-5 text-gris-claro font-mono text-xs">{{ entrenador.documento or 'Sin doc.' }}</td>
                             <td class="p-5 font-bold text-blanco-humo">
                                 {{ entrenador.nombres }} {{ entrenador.apellidos }}
                             </td>
                             <td class="p-5">
-                                <div class="text-blanco-humo">{{ entrenador.telefono }}</div>
-                                <div class="text-xs text-gris-claro mt-0.5">{{ entrenador.email }}</div>
+                                <div class="text-blanco-humo">{{ entrenador.telefono or 'Sin teléfono' }}</div>
+                                <div class="text-xs text-gris-claro mt-0.5">{{ entrenador.email or 'Sin email' }}</div>
+                            </td>
+                            <td class="p-5 text-blanco-humo text-xs">
+                                {% if entrenador.fecha_nacimiento %}
+                                    🎂 {{ entrenador.fecha_nacimiento }}
+                                {% else %}
+                                    <span class="text-gris-claro italic">Sin registrar</span>
+                                {% endif %}
                             </td>
                             <td class="p-5">
                                 <span class="bg-amarillo-volt/10 text-amarillo-volt font-bold px-3 py-1 rounded-lg text-xs uppercase tracking-wider">
                                     {{ entrenador.especialidad }}
                                 </span>
                             </td>
-                            <td class="p-5 text-center space-x-2">
-                                <button class="text-gris-claro hover:text-amarillo-volt transition-colors font-bold text-xs uppercase">Editar</button>
+                            <td class="p-5 text-center">
+                                <div class="flex justify-center gap-2 opacity-100 md:opacity-100">
+                                    <button onclick="abrirModalEditar('{{ entrenador.id_entrenador }}', '{{ entrenador.id_usuario }}', '{{ entrenador.nombres }}', '{{ entrenador.apellidos }}', '{{ entrenador.documento }}', '{{ entrenador.telefono }}', '{{ entrenador.email }}', '{{ entrenador.especialidad }}', '{{ entrenador.estado }}')"
+                                            class="text-amarillo-volt hover:text-white transition-colors font-bold text-xs uppercase bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 hover:border-amarillo-volt">
+                                        Editar
+                                    </button>
+                                    <button onclick="abrirModalBorrar('{{ entrenador.id_entrenador }}', '{{ entrenador.nombres }} {{ entrenador.apellidos }}')"
+                                            class="text-red-500 hover:text-white transition-colors font-bold text-xs uppercase bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 hover:bg-red-600 hover:border-red-600">
+                                        Borrar
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
@@ -122,5 +159,224 @@
         </div>
     </main>
 
+    <div id="modalNuevo" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
+        <div class="glass-effect rounded-3xl p-8 max-w-2xl w-full shadow-2xl border border-naranja-fuego/30 my-8">
+            <h2 class="text-xl font-black text-blanco-humo mb-2 border-b border-white/10 pb-4">Registrar Nuevo Entrenador</h2>
+            <p class="text-gris-claro text-xs mb-6">Crea la cuenta de un profesor del cuerpo técnico. Debe ser mayor de edad.</p>
+
+            <form id="formNuevoEntrenador" action="/nuevo-entrenador-admin" method="POST" class="space-y-4" onsubmit="return validarFormularioNuevoEntrenador(event)">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Documento</label>
+                        <input type="text" id="nuevo_documento" name="documento" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Contraseña</label>
+                        <input type="password" id="nuevo_password" name="password" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Nombres</label>
+                        <input type="text" id="nuevo_nombres" name="nombres" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Apellidos</label>
+                        <input type="text" id="nuevo_apellidos" name="apellidos" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Teléfono</label>
+                        <input type="text" id="nuevo_telefono" name="telefono" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Email</label>
+                        <input type="email" id="nuevo_email" name="email" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Fecha de Nacimiento</label>
+                        <input type="date" id="nuevo_fecha_nacimiento" name="fecha_nacimiento" required max="" onclick="this.max=new Date().toISOString().split('T')[0]" class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                </div>
+
+                <div class="space-y-2 pt-2 border-t border-white/10">
+                    <label class="text-amarillo-volt text-xs font-bold uppercase">Especialidad Táctica</label>
+                    <select id="nuevo_especialidad" name="especialidad" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                        <option value="" disabled selected>Selecciona una especialidad...</option>
+                        {% for esp in especialidades %}
+                            <option value="{{ esp }}">{{ esp }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="flex gap-3 pt-6 border-t border-white/10">
+                    <button type="button" onclick="cerrarModal('modalNuevo')" class="w-1/2 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold text-gris-claro transition-all">CANCELAR</button>
+                    <button type="button" onclick="validarYRegistrarEntrenador()" class="w-1/2 py-3 bg-naranja-fuego hover:bg-orange-700 rounded-xl text-xs font-black text-blanco-humo transition-all shadow-lg shadow-naranja-fuego/20">REGISTRAR ENTRENADOR</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalEditar" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
+        <div class="glass-effect rounded-3xl p-8 max-w-lg w-full shadow-2xl border border-amarillo-volt/30 my-8">
+            <h2 class="text-xl font-black text-blanco-humo mb-6 border-b border-white/10 pb-4">Editar Entrenador</h2>
+            <form action="/editar-entrenador-admin" method="POST" class="space-y-4">
+                <input type="hidden" name="id_entrenador" id="edit_id_entrenador">
+                <input type="hidden" name="id_usuario" id="edit_id_usuario">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Nombres</label>
+                        <input type="text" name="nombres" id="edit_nombres" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Apellidos</label>
+                        <input type="text" name="apellidos" id="edit_apellidos" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-naranja-suave text-xs font-bold uppercase">Documento</label>
+                    <input type="text" name="documento" id="edit_documento" class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Teléfono</label>
+                        <input type="text" name="telefono" id="edit_telefono" class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Email</label>
+                        <input type="email" name="email" id="edit_email" class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-amarillo-volt text-xs font-bold uppercase">Especialidad</label>
+                    <select name="especialidad" id="edit_especialidad" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                        {% for esp in especialidades %}
+                            <option value="{{ esp }}">{{ esp }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-amarillo-volt text-xs font-bold uppercase">Estado de la Cuenta</label>
+                    <select name="estado" id="edit_estado" class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                        <option value="Activo">Activo</option>
+                        <option value="Inactivo">Inactivo</option>
+                    </select>
+                </div>
+                <div class="flex gap-3 pt-4 border-t border-white/10">
+                    <button type="button" onclick="cerrarModal('modalEditar')" class="w-1/2 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold text-gris-claro transition-all">CANCELAR</button>
+                    <button type="submit" class="w-1/2 py-3 bg-amarillo-volt hover:bg-yellow-400 rounded-xl text-xs font-black text-negro-carbon transition-all">GUARDAR</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalBorrar" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="glass-effect rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-red-500/30">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">⚠️</div>
+                <h2 class="text-xl font-black text-blanco-humo">¿Eliminar Entrenador?</h2>
+                <p class="text-gris-claro text-xs mt-2">Vas a borrar a <strong id="delete_nombre" class="text-blanco-humo"></strong> y sus registros de entrenamiento.</p>
+            </div>
+            <form action="/borrar-entrenador-admin" method="POST" class="flex gap-3">
+                <input type="hidden" name="id_entrenador" id="delete_id_entrenador">
+                <button type="button" onclick="cerrarModal('modalBorrar')" class="w-1/2 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold text-gris-claro transition-all">CANCELAR</button>
+                <button type="submit" class="w-1/2 py-3 bg-red-600 hover:bg-red-700 rounded-xl text-xs font-black text-white transition-all">SÍ, BORRAR</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function mostrarToast(mensaje) {
+            document.getElementById('textoToast').innerText = mensaje;
+            const toast = document.getElementById('toastAlerta');
+            toast.classList.remove('translate-x-full', 'opacity-0');
+            setTimeout(cerrarToast, 6000);
+        }
+
+        function cerrarToast() {
+            const toast = document.getElementById('toastAlerta');
+            toast.classList.add('translate-x-full', 'opacity-0');
+        }
+
+        {% if error %}
+        window.onload = function() {
+            mostrarToast("{{ error }}");
+            abrirModalNuevo();
+        };
+        {% endif %}
+
+        function abrirModalNuevo() {
+            document.getElementById('modalNuevo').classList.remove('hidden');
+        }
+
+        function cerrarModal(idModal) {
+            document.getElementById(idModal).classList.add('hidden');
+        }
+
+        function calcularEdad(fechaNacimiento) {
+            const partes = fechaNacimiento.split('-');
+            const fechaNac = new Date(partes[0], partes[1] - 1, partes[2]);
+            const hoy = new Date();
+            let edad = hoy.getFullYear() - fechaNac.getFullYear();
+            const mes = hoy.getMonth() - fechaNac.getMonth();
+            if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
+                edad--;
+            }
+            return edad;
+        }
+
+        function validarFormularioNuevoEntrenador(event) {
+            event.preventDefault();
+
+            const documento = document.getElementById('nuevo_documento').value.trim();
+            const nombres = document.getElementById('nuevo_nombres').value.trim();
+            const apellidos = document.getElementById('nuevo_apellidos').value.trim();
+            const telefono = document.getElementById('nuevo_telefono').value.trim();
+            const email = document.getElementById('nuevo_email').value.trim();
+            const password = document.getElementById('nuevo_password').value.trim();
+            const fechaNacimiento = document.getElementById('nuevo_fecha_nacimiento').value.trim();
+            const especialidad = document.getElementById('nuevo_especialidad').value;
+
+            if (!documento || !nombres || !apellidos || !telefono || !email || !password || !fechaNacimiento || !especialidad) {
+                mostrarToast('Por favor, llena toda la información. Todos los campos son obligatorios.');
+                return false;
+            }
+
+            if (calcularEdad(fechaNacimiento) < 18) {
+                mostrarToast('El entrenador debe ser mayor de edad (18 años o más).');
+                return false;
+            }
+
+            event.target.submit();
+            return false;
+        }
+
+        function validarYRegistrarEntrenador() {
+            document.getElementById('formNuevoEntrenador').requestSubmit();
+        }
+
+        function abrirModalEditar(id_entrenador, id_usuario, nombres, apellidos, documento, telefono, email, especialidad, estado) {
+            document.getElementById('edit_id_entrenador').value = id_entrenador;
+            document.getElementById('edit_id_usuario').value = id_usuario;
+            document.getElementById('edit_nombres').value = nombres;
+            document.getElementById('edit_apellidos').value = apellidos;
+            document.getElementById('edit_documento').value = documento;
+            document.getElementById('edit_telefono').value = telefono;
+            document.getElementById('edit_email').value = email;
+            document.getElementById('edit_especialidad').value = especialidad;
+            const estadoFormateado = estado.charAt(0).toUpperCase() + estado.slice(1).toLowerCase();
+            document.getElementById('edit_estado').value = estadoFormateado;
+            document.getElementById('modalEditar').classList.remove('hidden');
+        }
+
+        function abrirModalBorrar(id_entrenador, nombreCompleto) {
+            document.getElementById('delete_id_entrenador').value = id_entrenador;
+            document.getElementById('delete_nombre').innerText = nombreCompleto;
+            document.getElementById('modalBorrar').classList.remove('hidden');
+        }
+    </script>
 </body>
 </html>

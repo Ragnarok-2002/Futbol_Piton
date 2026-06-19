@@ -79,6 +79,138 @@ def validar_edad_jugador(fecha_nacimiento):
         return False, 'Superaste la edad máxima (22 años). Te invitamos a inscribirte en nuestra escuela aliada MASTER.'
     return True, None
 
+ESPECIALIDADES_ENTRENADOR = [
+    'Delanteros',
+    'Mediocampistas',
+    'Defensas',
+    'Porteros',
+    'General',
+]
+
+def validar_especialidad_entrenador(especialidad):
+    if especialidad not in ESPECIALIDADES_ENTRENADOR:
+        return False, 'La especialidad seleccionada no es válida.'
+    return True, None
+
+POSICIONES_JUGADOR = ['Delantero', 'Mediocampista', 'Defensa', 'Portero', 'Por definir']
+
+def validar_apodo_ficha(apodo):
+    apodo = apodo.strip()
+    if not apodo:
+        return False, 'El nombre en ficha es obligatorio.'
+    if len(apodo.split()) > 1:
+        return False, 'Solo se permite una palabra (apodo, nombre o apellido).'
+    if len(apodo) > 30:
+        return False, 'El nombre en ficha no puede superar 30 caracteres.'
+    return True, apodo
+
+def asegurar_columna_apodo_ficha():
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT COUNT(*) AS existe
+        FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = 'ficha_jugador'
+          AND COLUMN_NAME = 'apodo'
+    """)
+    if cursor.fetchone()['existe'] == 0:
+        cursor = conexion.cursor()
+        cursor.execute("ALTER TABLE ficha_jugador ADD COLUMN apodo VARCHAR(50) DEFAULT NULL")
+        conexion.commit()
+    cursor.close()
+    conexion.close()
+
+def obtener_id_acudiente_sesion():
+    if obtener_id_rol_sesion() != 5:
+        return None
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    cursor.execute("SELECT id_acudiente FROM acudiente WHERE id_usuario = %s", (session['id_usuario'],))
+    fila = cursor.fetchone()
+    cursor.close()
+    conexion.close()
+    return fila['id_acudiente'] if fila else None
+
+def obtener_datos_ficha_jugador(id_jugador):
+    asegurar_columna_apodo_ficha()
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    query = """
+        SELECT j.id_jugador, j.id_usuario, j.id_acudiente, j.nombres, j.apellidos,
+               j.documento, j.telefono, j.email, j.fecha_nacimiento,
+               f.posicion, f.estatura, f.peso, f.id_estado, f.id_equipo, f.apodo,
+               e.nombre_equipo, s.nombre AS division,
+               ej.disponibilidad
+        FROM jugador j
+        LEFT JOIN ficha_jugador f ON j.id_jugador = f.id_jugador
+        LEFT JOIN equipo e ON f.id_equipo = e.id_equipo
+        LEFT JOIN subdivisiones s ON e.id_division = s.id_division
+        LEFT JOIN estado_jugador ej ON f.id_estado = ej.id_estado
+        WHERE j.id_jugador = %s
+    """
+    cursor.execute(query, (id_jugador,))
+    datos = cursor.fetchone()
+    cursor.close()
+    conexion.close()
+    return datos
+
+def nombre_en_ficha(datos):
+    if datos.get('apodo'):
+        return datos['apodo'].upper()
+    if datos.get('apellidos'):
+        return datos['apellidos'].split()[0].upper()
+    if datos.get('nombres'):
+        return datos['nombres'].split()[0].upper()
+    return 'JUGADOR'
+
+def edad_jugador(fecha_nacimiento):
+    if not fecha_nacimiento:
+        return None
+    if isinstance(fecha_nacimiento, str):
+        return calcular_edad(fecha_nacimiento)
+    nacimiento = fecha_nacimiento
+    fecha_hoy = datetime.now().date()
+    return fecha_hoy.year - nacimiento.year - ((fecha_hoy.month, fecha_hoy.day) < (nacimiento.month, nacimiento.day))
+
+def puede_ver_ficha_jugador(datos):
+    if not datos:
+        return False
+    id_rol = obtener_id_rol_sesion()
+    id_usuario = session.get('id_usuario')
+    if id_rol in [1, 2, 3]:
+        return True
+    if id_rol == 4 and datos['id_usuario'] == id_usuario:
+        return True
+    if id_rol == 5:
+        id_acudiente = obtener_id_acudiente_sesion()
+        return id_acudiente and datos['id_acudiente'] == id_acudiente
+    return False
+
+def puede_editar_ficha_jugador(datos):
+    if not puede_ver_ficha_jugador(datos):
+        return False
+    id_rol = obtener_id_rol_sesion()
+    id_usuario = session.get('id_usuario')
+    if id_rol in [1, 2, 3]:
+        return True
+    if id_rol == 4 and datos['id_usuario'] == id_usuario:
+        return True
+    if id_rol == 5:
+        id_acudiente = obtener_id_acudiente_sesion()
+        edad = edad_jugador(datos['fecha_nacimiento'])
+        return id_acudiente and datos['id_acudiente'] == id_acudiente and edad is not None and edad < 18
+    return False
+
+def obtener_estados_jugador():
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    cursor.execute("SELECT id_estado, disponibilidad FROM estado_jugador ORDER BY id_estado ASC")
+    estados = cursor.fetchall()
+    cursor.close()
+    conexion.close()
+    return estados
+
 # ==========================================
 # MÓDULO: REGISTRO/NUEVO USUARIO (JUGADOR O ACUDIENTE)
 # ==========================================
@@ -720,8 +852,8 @@ def dashboard_acudiente():
 
     # Buscamos a los jugadores que están a su cargo
     query_hijos = """
-        SELECT nombres, apellidos, documento, fecha_nacimiento 
-        FROM jugador 
+        SELECT id_jugador, nombres, apellidos, documento, fecha_nacimiento
+        FROM jugador
         WHERE id_acudiente = %s
     """
     cursor.execute(query_hijos, (datos_acudiente['id_acudiente'],))
@@ -910,29 +1042,302 @@ def eliminar_jugador():
 # ==========================================
 # MÓDULO: GESTIÓN DE ENTRENADORES
 # ==========================================
-@app.route('/entrenadores')
-def gestion_entrenadores():
-    if 'id_usuario' not in session:
-        return redirect('/')
-        
+def obtener_lista_entrenadores(solo_activos=False):
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
-    
-    # AHORA SÍ extraemos e.documento de la tabla entrenador.
-    # También traemos u.usuario por si lo necesitas mostrar después como "Usuario de Acceso"
+
     query = """
-        SELECT e.id_entrenador, e.documento, e.nombres, e.apellidos, e.telefono, e.email, e.especialidad,
-               u.usuario AS usuario_acceso
+        SELECT e.id_entrenador, e.id_usuario, e.documento, e.nombres, e.apellidos,
+               e.telefono, e.email, e.especialidad, e.fecha_nacimiento, u.estado
         FROM entrenador e
         JOIN usuario u ON e.id_usuario = u.id_usuario
     """
+    if solo_activos:
+        query += " WHERE u.estado = 'Activo'"
+    query += " ORDER BY e.apellidos ASC, e.nombres ASC"
     cursor.execute(query)
     entrenadores = cursor.fetchall()
-    
+
     cursor.close()
     conexion.close()
-    
-    return render_template('gestion_entrenadores.html', entrenadores=entrenadores)
+
+    return entrenadores
+
+def render_gestion_entrenadores(error=None):
+    return render_template(
+        'gestion_entrenadores.html',
+        entrenadores=obtener_lista_entrenadores(),
+        especialidades=ESPECIALIDADES_ENTRENADOR,
+        error=error
+    )
+
+@app.route('/entrenadores')
+def gestion_entrenadores():
+    if not usuario_tiene_sesion():
+        return redirect('/')
+    if obtener_id_rol_sesion() not in [1, 2]:
+        return redirect(panel_por_rol(obtener_id_rol_sesion()))
+
+    return render_gestion_entrenadores()
+
+@app.route('/nuevo-entrenador-admin', methods=['POST'])
+def nuevo_entrenador_admin():
+    if not usuario_tiene_sesion():
+        return redirect('/')
+    if obtener_id_rol_sesion() not in [1, 2]:
+        return redirect(panel_por_rol(obtener_id_rol_sesion()))
+
+    documento = request.form.get('documento')
+    nombres = request.form.get('nombres')
+    apellidos = request.form.get('apellidos')
+    telefono = request.form.get('telefono')
+    email = request.form.get('email')
+    contrasena = request.form.get('password')
+    fecha_nacimiento = request.form.get('fecha_nacimiento')
+    especialidad = request.form.get('especialidad')
+    id_rol = '3'
+
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+
+    cursor.execute("SELECT id_usuario FROM usuario WHERE usuario = %s OR email = %s", (documento, email))
+    if cursor.fetchone():
+        cursor.close()
+        conexion.close()
+        return render_gestion_entrenadores(error='Estos datos (Documento o Email) ya están registrados en la escuela.')
+
+    es_valido, mensaje_error = validar_edad_acudiente(fecha_nacimiento)
+    if not es_valido:
+        cursor.close()
+        conexion.close()
+        return render_gestion_entrenadores(error=mensaje_error)
+
+    es_valido, mensaje_error = validar_especialidad_entrenador(especialidad)
+    if not es_valido:
+        cursor.close()
+        conexion.close()
+        return render_gestion_entrenadores(error=mensaje_error)
+
+    cursor = conexion.cursor()
+
+    cursor.execute(
+        "INSERT INTO usuario (id_rol, usuario, contrasena, email, estado) VALUES (%s, %s, %s, %s, %s)",
+        (id_rol, documento, contrasena, email, 'Activo')
+    )
+    id_usuario_nuevo = cursor.lastrowid
+
+    cursor.execute("SELECT COALESCE(MAX(id_entrenador), 0) + 1 AS nuevo_id FROM entrenador")
+    nuevo_id = cursor.fetchone()[0]
+
+    cursor.execute(
+        """
+        INSERT INTO entrenador (id_entrenador, id_usuario, id_rol, nombres, apellidos, documento, fecha_nacimiento, telefono, email, especialidad)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """,
+        (nuevo_id, id_usuario_nuevo, id_rol, nombres, apellidos, documento, fecha_nacimiento, telefono, email, especialidad)
+    )
+
+    conexion.commit()
+    cursor.close()
+    conexion.close()
+
+    return redirect('/entrenadores')
+
+@app.route('/cuerpo-tecnico')
+def cuerpo_tecnico():
+    if not usuario_tiene_sesion():
+        return redirect('/')
+    if obtener_id_rol_sesion() not in [4, 5]:
+        return redirect(panel_por_rol(obtener_id_rol_sesion()))
+
+    id_rol = obtener_id_rol_sesion()
+    return render_template(
+        'cuerpo_tecnico.html',
+        entrenadores=obtener_lista_entrenadores(solo_activos=True),
+        id_rol=id_rol
+    )
+
+@app.route('/editar-entrenador-admin', methods=['POST'])
+def editar_entrenador_admin():
+    if not usuario_tiene_sesion():
+        return redirect('/')
+    if obtener_id_rol_sesion() not in [1, 2]:
+        return redirect(panel_por_rol(obtener_id_rol_sesion()))
+
+    id_entrenador = request.form.get('id_entrenador')
+    id_usuario = request.form.get('id_usuario')
+    nombres = request.form.get('nombres')
+    apellidos = request.form.get('apellidos')
+    documento = request.form.get('documento')
+    telefono = request.form.get('telefono')
+    email = request.form.get('email')
+    especialidad = request.form.get('especialidad')
+    estado = request.form.get('estado')
+
+    es_valido, mensaje_error = validar_especialidad_entrenador(especialidad)
+    if not es_valido:
+        return render_gestion_entrenadores(error=mensaje_error)
+
+    conexion = obtener_conexion()
+    cursor = conexion.cursor()
+
+    cursor.execute("""
+        UPDATE entrenador
+        SET nombres = %s, apellidos = %s, documento = %s, telefono = %s, email = %s, especialidad = %s
+        WHERE id_entrenador = %s
+    """, (nombres, apellidos, documento, telefono, email, especialidad, id_entrenador))
+
+    cursor.execute("""
+        UPDATE usuario SET estado = %s, email = %s WHERE id_usuario = %s
+    """, (estado, email, id_usuario))
+
+    conexion.commit()
+    cursor.close()
+    conexion.close()
+
+    return redirect('/entrenadores')
+
+@app.route('/borrar-entrenador-admin', methods=['POST'])
+def borrar_entrenador_admin():
+    if not usuario_tiene_sesion():
+        return redirect('/')
+    if obtener_id_rol_sesion() not in [1, 2]:
+        return redirect(panel_por_rol(obtener_id_rol_sesion()))
+
+    id_entrenador = request.form.get('id_entrenador')
+
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+
+    cursor.execute("SELECT id_usuario FROM entrenador WHERE id_entrenador = %s", (id_entrenador,))
+    resultado = cursor.fetchone()
+
+    cursor.execute("DELETE FROM entrenamiento WHERE id_entrenador = %s", (id_entrenador,))
+    cursor.execute("DELETE FROM entrenador WHERE id_entrenador = %s", (id_entrenador,))
+
+    if resultado:
+        cursor.execute("DELETE FROM usuario WHERE id_usuario = %s", (resultado['id_usuario'],))
+
+    conexion.commit()
+    cursor.close()
+    conexion.close()
+
+    return redirect('/entrenadores')
+
+# ==========================================
+# MÓDULO: FICHA TÉCNICA DEL JUGADOR
+# ==========================================
+def render_ficha_tecnica(id_jugador, error=None, exito=None):
+    datos = obtener_datos_ficha_jugador(id_jugador)
+    if not datos or not puede_ver_ficha_jugador(datos):
+        return redirect(panel_por_rol(obtener_id_rol_sesion()))
+
+    id_rol = obtener_id_rol_sesion()
+    return render_template(
+        'ficha_tecnica.html',
+        jugador=datos,
+        edad=edad_jugador(datos['fecha_nacimiento']),
+        nombre_ficha=nombre_en_ficha(datos),
+        puede_editar=puede_editar_ficha_jugador(datos),
+        estados=obtener_estados_jugador(),
+        posiciones=POSICIONES_JUGADOR,
+        id_rol=id_rol,
+        error=error,
+        exito=exito
+    )
+
+@app.route('/ficha-tecnica')
+def ficha_tecnica_propia():
+    if not usuario_tiene_sesion():
+        return redirect('/')
+
+    id_rol = obtener_id_rol_sesion()
+    if id_rol == 4:
+        conexion = obtener_conexion()
+        cursor = conexion.cursor(dictionary=True)
+        cursor.execute("SELECT id_jugador FROM jugador WHERE id_usuario = %s", (session['id_usuario'],))
+        fila = cursor.fetchone()
+        cursor.close()
+        conexion.close()
+        if not fila:
+            return redirect('/dashboard-jugador')
+        return render_ficha_tecnica(fila['id_jugador'])
+
+    if id_rol in [1, 2, 3]:
+        return redirect('/jugadores')
+
+    return redirect(panel_por_rol(id_rol))
+
+@app.route('/ficha-tecnica/<int:id_jugador>')
+def ficha_tecnica_jugador(id_jugador):
+    if not usuario_tiene_sesion():
+        return redirect('/')
+    return render_ficha_tecnica(id_jugador)
+
+@app.route('/guardar-ficha-tecnica', methods=['POST'])
+def guardar_ficha_tecnica():
+    if not usuario_tiene_sesion():
+        return redirect('/')
+
+    id_jugador = request.form.get('id_jugador')
+    datos = obtener_datos_ficha_jugador(id_jugador)
+
+    if not datos or not puede_editar_ficha_jugador(datos):
+        return redirect(panel_por_rol(obtener_id_rol_sesion()))
+
+    apodo = request.form.get('apodo', '').strip()
+    posicion = request.form.get('posicion')
+    estatura = request.form.get('estatura')
+    peso = request.form.get('peso')
+    id_estado = request.form.get('id_estado')
+
+    es_valido, resultado_apodo = validar_apodo_ficha(apodo)
+    if not es_valido:
+        return render_ficha_tecnica(id_jugador, error=resultado_apodo)
+
+    if posicion not in POSICIONES_JUGADOR:
+        return render_ficha_tecnica(id_jugador, error='La posición seleccionada no es válida.')
+
+    try:
+        estatura_val = float(estatura)
+        peso_val = float(peso)
+        if estatura_val < 0 or estatura_val > 2.50 or peso_val < 0 or peso_val > 200:
+            raise ValueError
+    except (TypeError, ValueError):
+        return render_ficha_tecnica(id_jugador, error='Estatura o peso no válidos.')
+
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    cursor.execute("SELECT id_estado FROM estado_jugador WHERE id_estado = %s", (id_estado,))
+    if not cursor.fetchone():
+        cursor.close()
+        conexion.close()
+        return render_ficha_tecnica(id_jugador, error='El estado seleccionado no es válido.')
+
+    cursor = conexion.cursor()
+    cursor.execute("SELECT id_jugador FROM ficha_jugador WHERE id_jugador = %s", (id_jugador,))
+    tiene_ficha = cursor.fetchone()
+
+    if tiene_ficha:
+        cursor.execute("""
+            UPDATE ficha_jugador
+            SET apodo = %s, posicion = %s, estatura = %s, peso = %s, id_estado = %s
+            WHERE id_jugador = %s
+        """, (resultado_apodo, posicion, estatura_val, peso_val, id_estado, id_jugador))
+    else:
+        cursor.execute("SELECT id_equipo FROM equipo ORDER BY id_equipo ASC LIMIT 1")
+        equipo_default = cursor.fetchone()
+        id_equipo = equipo_default[0] if equipo_default else 1
+        cursor.execute("""
+            INSERT INTO ficha_jugador (id_jugador, id_equipo, id_estado, posicion, estatura, peso, apodo)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (id_jugador, id_equipo, id_estado, posicion, estatura_val, peso_val, resultado_apodo))
+
+    conexion.commit()
+    cursor.close()
+    conexion.close()
+
+    return render_ficha_tecnica(id_jugador, exito='Ficha técnica actualizada correctamente.')
 
 # ==========================================
 # INICIALIZADOR DEL PROYECTO (¡SIEMPRE AL FINAL!)

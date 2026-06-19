@@ -149,7 +149,11 @@
                                 {% endif %}
                             </td>
                             <td class="p-5 text-center">
-                                <div class="flex justify-center gap-3 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div class="flex justify-center gap-2 flex-wrap opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <a href="/ficha-tecnica/{{ jugador.id_jugador }}"
+                                       class="text-naranja-fuego hover:text-white transition-colors font-bold text-xs uppercase bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 hover:border-naranja-fuego">
+                                        Ficha
+                                    </a>
                                     <button onclick="abrirModalEditar('{{ jugador.id_jugador }}', '{{ jugador.id_usuario }}', '{{ jugador.nombres }}', '{{ jugador.apellidos }}', '{{ jugador.telefono }}', '{{ jugador.email }}', '{{ jugador.estado }}')" 
                                             class="text-amarillo-volt hover:text-white transition-colors font-bold text-xs uppercase bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 hover:border-amarillo-volt">
                                         Editar

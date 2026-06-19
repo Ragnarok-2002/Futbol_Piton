@@ -351,7 +351,8 @@ CREATE TABLE `ficha_jugador` (
   `id_estado` int(11) NOT NULL,
   `posicion` varchar(50) NOT NULL,
   `estatura` decimal(4,2) NOT NULL,
-  `peso` decimal(5,2) NOT NULL
+  `peso` decimal(5,2) NOT NULL,
+  `apodo` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
