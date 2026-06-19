@@ -84,7 +84,8 @@ CREATE TABLE `asistencia` (
   `id_entrenamiento` int(11) NOT NULL,
   `id_jugador` int(11) NOT NULL,
   `id_equipo` int(11) NOT NULL,
-  `asistio` tinyint(1) NOT NULL
+  `asistio` tinyint(1) NOT NULL,
+  `observacion` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --

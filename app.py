@@ -1,8 +1,9 @@
 # pip install Flask mysql-connector-python
 
-from flask import Flask, render_template, request, redirect, session
+from flask import Flask, render_template, request, redirect, session, url_for
 import mysql.connector
-from datetime import datetime
+import calendar
+from datetime import datetime, date
 
 app = Flask(__name__)
 # Clave secreta obligatoria en Flask para manejar sesiones en el futuro
@@ -1338,6 +1339,419 @@ def guardar_ficha_tecnica():
     conexion.close()
 
     return render_ficha_tecnica(id_jugador, exito='Ficha técnica actualizada correctamente.')
+
+# ==========================================
+# MÓDULO: ASISTENCIAS
+# ==========================================
+# asistio: 1 = presente (verde), 0 = ausente (rojo), 2 = justificado (azul)
+
+MESES_ES = [
+    '', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+]
+
+def asegurar_columna_observacion_asistencia():
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT COUNT(*) AS existe
+        FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = 'asistencia'
+          AND COLUMN_NAME = 'observacion'
+    """)
+    if cursor.fetchone()['existe'] == 0:
+        cursor = conexion.cursor()
+        cursor.execute("ALTER TABLE asistencia ADD COLUMN observacion VARCHAR(255) DEFAULT NULL")
+        conexion.commit()
+    cursor.close()
+    conexion.close()
+
+def obtener_id_entrenador_sesion():
+    if obtener_id_rol_sesion() != 3:
+        return None
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    cursor.execute("SELECT id_entrenador FROM entrenador WHERE id_usuario = %s", (session['id_usuario'],))
+    fila = cursor.fetchone()
+    cursor.close()
+    conexion.close()
+    return fila['id_entrenador'] if fila else None
+
+def obtener_lista_equipos():
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    cursor.execute("SELECT id_equipo, nombre_equipo FROM equipo ORDER BY nombre_equipo ASC")
+    equipos = cursor.fetchall()
+    cursor.close()
+    conexion.close()
+    return equipos
+
+def obtener_jugadores_vista_asistencias(id_rol):
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+
+    if id_rol == 4:
+        cursor.execute(
+            "SELECT id_jugador, nombres, apellidos FROM jugador WHERE id_usuario = %s",
+            (session['id_usuario'],)
+        )
+    elif id_rol == 5:
+        id_acudiente = obtener_id_acudiente_sesion()
+        if not id_acudiente:
+            cursor.close()
+            conexion.close()
+            return []
+        cursor.execute(
+            """
+            SELECT id_jugador, nombres, apellidos
+            FROM jugador WHERE id_acudiente = %s
+            ORDER BY apellidos ASC, nombres ASC
+            """,
+            (id_acudiente,)
+        )
+    else:
+        cursor.execute(
+            """
+            SELECT j.id_jugador, j.nombres, j.apellidos
+            FROM jugador j
+            ORDER BY j.apellidos ASC, j.nombres ASC
+            """
+        )
+
+    jugadores = cursor.fetchall()
+    cursor.close()
+    conexion.close()
+    return jugadores
+
+def jugador_permitido_asistencias(id_jugador, id_rol):
+    permitidos = obtener_jugadores_vista_asistencias(id_rol)
+    return any(j['id_jugador'] == int(id_jugador) for j in permitidos)
+
+def obtener_registros_asistencia_mes(id_jugador, anio, mes):
+    asegurar_columna_observacion_asistencia()
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    cursor.execute(
+        """
+        SELECT e.fecha, a.asistio, a.observacion, e.ubicacion, e.tipo_entrenamiento,
+               eq.nombre_equipo
+        FROM asistencia a
+        JOIN entrenamiento e ON a.id_entrenamiento = e.id_entrenamiento
+        JOIN equipo eq ON e.id_equipo = eq.id_equipo
+        WHERE a.id_jugador = %s AND YEAR(e.fecha) = %s AND MONTH(e.fecha) = %s
+        ORDER BY e.fecha ASC
+        """,
+        (id_jugador, anio, mes)
+    )
+    filas = cursor.fetchall()
+    cursor.close()
+    conexion.close()
+
+    registros = {}
+    for fila in filas:
+        clave = fila['fecha'].strftime('%Y-%m-%d') if hasattr(fila['fecha'], 'strftime') else str(fila['fecha'])
+        registros[clave] = fila
+    return registros
+
+def calcular_estadisticas_mes(registros):
+    total = len(registros)
+    presentes = sum(1 for r in registros.values() if r['asistio'] == 1)
+    ausentes = sum(1 for r in registros.values() if r['asistio'] == 0)
+    justificados = sum(1 for r in registros.values() if r['asistio'] == 2)
+    porcentaje = round((presentes / total) * 100) if total else 0
+    return {
+        'total': total,
+        'presentes': presentes,
+        'ausentes': ausentes,
+        'justificados': justificados,
+        'porcentaje': porcentaje
+    }
+
+def construir_calendario_mes(anio, mes, registros):
+    semanas = []
+    for semana in calendar.Calendar(firstweekday=0).monthdatescalendar(anio, mes):
+        dias = []
+        for dia in semana:
+            if dia.month != mes:
+                dias.append({'vacio': True})
+                continue
+            clave = dia.strftime('%Y-%m-%d')
+            registro = registros.get(clave)
+            estado = registro['asistio'] if registro else None
+            dias.append({
+                'vacio': False,
+                'dia': dia.day,
+                'fecha': clave,
+                'estado': estado,
+                'observacion': registro.get('observacion') if registro else None,
+                'ubicacion': registro.get('ubicacion') if registro else None,
+                'equipo': registro.get('nombre_equipo') if registro else None,
+                'tipo': registro.get('tipo_entrenamiento') if registro else None,
+                'es_hoy': dia == date.today(),
+                'futuro': dia > date.today()
+            })
+        semanas.append(dias)
+    return semanas
+
+def obtener_jugadores_equipo_para_lista(id_equipo, id_entrenamiento=None):
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    if id_entrenamiento:
+        cursor.execute(
+            """
+            SELECT j.id_jugador, j.nombres, j.apellidos,
+                   a.asistio, a.observacion
+            FROM jugador j
+            JOIN ficha_jugador f ON j.id_jugador = f.id_jugador
+            LEFT JOIN asistencia a ON a.id_jugador = j.id_jugador AND a.id_entrenamiento = %s
+            WHERE f.id_equipo = %s
+            ORDER BY j.apellidos ASC, j.nombres ASC
+            """,
+            (id_entrenamiento, id_equipo)
+        )
+    else:
+        cursor.execute(
+            """
+            SELECT j.id_jugador, j.nombres, j.apellidos,
+                   NULL AS asistio, NULL AS observacion
+            FROM jugador j
+            JOIN ficha_jugador f ON j.id_jugador = f.id_jugador
+            WHERE f.id_equipo = %s
+            ORDER BY j.apellidos ASC, j.nombres ASC
+            """,
+            (id_equipo,)
+        )
+    jugadores = cursor.fetchall()
+    cursor.close()
+    conexion.close()
+    return jugadores
+
+def obtener_o_crear_entrenamiento(id_entrenador, id_equipo, fecha, ubicacion, tipo_entrenamiento):
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    cursor.execute(
+        "SELECT id_entrenamiento FROM entrenamiento WHERE id_equipo = %s AND fecha = %s",
+        (id_equipo, fecha)
+    )
+    existente = cursor.fetchone()
+    if existente:
+        cursor.close()
+        conexion.close()
+        return existente['id_entrenamiento']
+
+    cursor.execute("SELECT COALESCE(MAX(id_entrenamiento), 0) + 1 AS nuevo_id FROM entrenamiento")
+    nuevo_id = cursor.fetchone()['nuevo_id']
+    cursor = conexion.cursor()
+    cursor.execute(
+        """
+        INSERT INTO entrenamiento (id_entrenamiento, id_entrenador, id_equipo, fecha, ubicacion, tipo_entrenamiento)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        """,
+        (nuevo_id, id_entrenador, id_equipo, fecha, ubicacion, tipo_entrenamiento)
+    )
+    conexion.commit()
+    cursor.close()
+    conexion.close()
+    return nuevo_id
+
+def render_asistencias(error=None, exito=None):
+    if not usuario_tiene_sesion():
+        return redirect('/')
+
+    if request.args.get('guardado') == '1' and not exito:
+        exito = 'Lista de asistencia guardada correctamente.'
+
+    id_rol = obtener_id_rol_sesion()
+    if id_rol not in [1, 2, 3, 4, 5]:
+        return redirect(panel_por_rol(id_rol))
+
+    hoy = date.today()
+    try:
+        mes = int(request.args.get('mes', hoy.month))
+        anio = int(request.args.get('anio', hoy.year))
+    except (TypeError, ValueError):
+        mes, anio = hoy.month, hoy.year
+
+    mes = max(1, min(12, mes))
+    puede_registrar = id_rol in [1, 2, 3]
+    jugadores_vista = obtener_jugadores_vista_asistencias(id_rol)
+
+    if id_rol in [4, 5] and not jugadores_vista:
+        return render_template(
+            'asistencias.html',
+            id_rol=id_rol,
+            puede_registrar=False,
+            sin_jugadores=True,
+            mes=mes,
+            anio=anio,
+            nombre_mes=MESES_ES[mes],
+            error=error,
+            exito=exito
+        )
+
+    id_jugador_sel = request.args.get('id_jugador')
+    if id_jugador_sel:
+        id_jugador_sel = int(id_jugador_sel)
+    elif jugadores_vista:
+        id_jugador_sel = jugadores_vista[0]['id_jugador']
+    else:
+        id_jugador_sel = None
+
+    if id_jugador_sel and id_rol in [4, 5] and not jugador_permitido_asistencias(id_jugador_sel, id_rol):
+        return redirect(url_for('modulo_asistencias'))
+
+    registros = obtener_registros_asistencia_mes(id_jugador_sel, anio, mes) if id_jugador_sel else {}
+    estadisticas = calcular_estadisticas_mes(registros)
+    semanas = construir_calendario_mes(anio, mes, registros)
+
+    mes_anterior = mes - 1 if mes > 1 else 12
+    anio_anterior = anio if mes > 1 else anio - 1
+    mes_siguiente = mes + 1 if mes < 12 else 1
+    anio_siguiente = anio if mes < 12 else anio + 1
+
+    fecha_lista = request.args.get('fecha', hoy.strftime('%Y-%m-%d'))
+    id_equipo_lista = request.args.get('id_equipo')
+    equipos = obtener_lista_equipos() if puede_registrar else []
+    if puede_registrar and not id_equipo_lista and equipos:
+        id_equipo_lista = str(equipos[0]['id_equipo'])
+
+    id_entrenamiento_lista = None
+    jugadores_lista = []
+    if puede_registrar and id_equipo_lista:
+        conexion = obtener_conexion()
+        cursor = conexion.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT id_entrenamiento FROM entrenamiento WHERE id_equipo = %s AND fecha = %s",
+            (id_equipo_lista, fecha_lista)
+        )
+        fila_ent = cursor.fetchone()
+        cursor.close()
+        conexion.close()
+        if fila_ent:
+            id_entrenamiento_lista = fila_ent['id_entrenamiento']
+        jugadores_lista = obtener_jugadores_equipo_para_lista(int(id_equipo_lista), id_entrenamiento_lista)
+
+    jugador_actual = next((j for j in jugadores_vista if j['id_jugador'] == id_jugador_sel), None) if id_jugador_sel else None
+
+    return render_template(
+        'asistencias.html',
+        id_rol=id_rol,
+        puede_registrar=puede_registrar,
+        sin_jugadores=False,
+        mes=mes,
+        anio=anio,
+        nombre_mes=MESES_ES[mes],
+        mes_anterior=mes_anterior,
+        anio_anterior=anio_anterior,
+        mes_siguiente=mes_siguiente,
+        anio_siguiente=anio_siguiente,
+        semanas=semanas,
+        estadisticas=estadisticas,
+        jugadores_vista=jugadores_vista,
+        id_jugador_sel=id_jugador_sel,
+        jugador_actual=jugador_actual,
+        equipos=equipos,
+        fecha_lista=fecha_lista,
+        id_equipo_lista=id_equipo_lista,
+        jugadores_lista=jugadores_lista,
+        hoy=hoy.strftime('%Y-%m-%d'),
+        error=error,
+        exito=exito
+    )
+
+@app.route('/asistencias')
+def modulo_asistencias():
+    return render_asistencias()
+
+@app.route('/asistencias/registrar', methods=['POST'])
+def registrar_asistencias():
+    if not usuario_tiene_sesion():
+        return redirect('/')
+    if obtener_id_rol_sesion() not in [1, 2, 3]:
+        return redirect(panel_por_rol(obtener_id_rol_sesion()))
+
+    fecha = request.form.get('fecha')
+    id_equipo = request.form.get('id_equipo')
+    ubicacion = request.form.get('ubicacion', 'Cancha Principal').strip() or 'Cancha Principal'
+    tipo_entrenamiento = request.form.get('tipo_entrenamiento', 'General').strip() or 'General'
+    mes = request.form.get('mes')
+    anio = request.form.get('anio')
+    id_jugador_vista = request.form.get('id_jugador_vista')
+
+    if not fecha or not id_equipo:
+        return render_asistencias(error='Selecciona fecha y equipo para tomar la lista.')
+
+    if datetime.strptime(fecha, '%Y-%m-%d').date() > date.today():
+        return render_asistencias(error='No puedes registrar asistencia en fechas futuras.')
+
+    id_entrenador = obtener_id_entrenador_sesion()
+    if not id_entrenador:
+        conexion = obtener_conexion()
+        cursor = conexion.cursor(dictionary=True)
+        cursor.execute("SELECT id_entrenador FROM entrenador ORDER BY id_entrenador ASC LIMIT 1")
+        fila = cursor.fetchone()
+        cursor.close()
+        conexion.close()
+        id_entrenador = fila['id_entrenador'] if fila else 1
+
+    asegurar_columna_observacion_asistencia()
+    id_entrenamiento = obtener_o_crear_entrenamiento(
+        id_entrenador, int(id_equipo), fecha, ubicacion, tipo_entrenamiento
+    )
+
+    jugadores = obtener_jugadores_equipo_para_lista(int(id_equipo))
+
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+
+    for jugador in jugadores:
+        id_j = str(jugador['id_jugador'])
+        estado_raw = request.form.get(f'estado_{id_j}')
+        observacion = request.form.get(f'observacion_{id_j}', '').strip()
+
+        if estado_raw not in ('0', '1', '2'):
+            continue
+
+        asistio = int(estado_raw)
+        if asistio != 2:
+            observacion = None
+        elif not observacion:
+            observacion = 'Justificado'
+
+        cursor.execute(
+            "SELECT id_asistencia FROM asistencia WHERE id_entrenamiento = %s AND id_jugador = %s",
+            (id_entrenamiento, jugador['id_jugador'])
+        )
+        existente = cursor.fetchone()
+
+        if existente:
+            cursor.execute(
+                """
+                UPDATE asistencia SET asistio = %s, observacion = %s, id_equipo = %s
+                WHERE id_entrenamiento = %s AND id_jugador = %s
+                """,
+                (asistio, observacion, id_equipo, id_entrenamiento, jugador['id_jugador'])
+            )
+        else:
+            cursor.execute("SELECT COALESCE(MAX(id_asistencia), 0) + 1 AS nuevo_id FROM asistencia")
+            nuevo_id = cursor.fetchone()['nuevo_id']
+            cursor.execute(
+                """
+                INSERT INTO asistencia (id_asistencia, id_entrenamiento, id_jugador, id_equipo, asistio, observacion)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                """,
+                (nuevo_id, id_entrenamiento, jugador['id_jugador'], id_equipo, asistio, observacion)
+            )
+
+    conexion.commit()
+    cursor.close()
+    conexion.close()
+
+    params = f'mes={mes or date.today().month}&anio={anio or date.today().year}&fecha={fecha}&id_equipo={id_equipo}'
+    if id_jugador_vista:
+        params += f'&id_jugador={id_jugador_vista}'
+    return redirect(f'/asistencias?{params}&guardado=1')
 
 # ==========================================
 # INICIALIZADOR DEL PROYECTO (¡SIEMPRE AL FINAL!)
