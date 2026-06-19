@@ -336,7 +336,7 @@ def obtener_lista_acudientes():
 
     query = """
         SELECT a.id_acudiente, a.id_usuario, a.nombre, a.apellido, a.documento,
-               a.telefono, a.email, u.estado, u.usuario AS usuario_acceso,
+               a.telefono, a.email, a.fecha_nacimiento, u.estado,
                (SELECT COUNT(*) FROM jugador j WHERE j.id_acudiente = a.id_acudiente) AS total_jugadores,
                (SELECT GROUP_CONCAT(CONCAT(j.nombres, ' ', j.apellidos) SEPARATOR ', ')
                 FROM jugador j WHERE j.id_acudiente = a.id_acudiente) AS jugadores_a_cargo

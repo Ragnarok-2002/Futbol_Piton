@@ -130,7 +130,7 @@
                             <th class="p-5 font-bold">Doc.</th>
                             <th class="p-5 font-bold">Acudiente</th>
                             <th class="p-5 font-bold">Contacto</th>
-                            <th class="p-5 font-bold">Usuario Acceso</th>
+                            <th class="p-5 font-bold">Fecha de Nacimiento</th>
                             <th class="p-5 font-bold">Jugadores a Cargo</th>
                             <th class="p-5 font-bold text-center">Acciones</th>
                         </tr>
@@ -146,7 +146,7 @@
                                 {% endif %}
                             </td>
                             <td class="p-5 text-gris-claro font-mono text-xs">
-                                {{ acudiente.documento if acudiente.documento else acudiente.usuario_acceso }}
+                                {{ acudiente.documento or 'Sin doc.' }}
                             </td>
                             <td class="p-5 font-bold text-blanco-humo">
                                 {{ acudiente.nombre }} {{ acudiente.apellido }}
@@ -155,7 +155,13 @@
                                 <div class="text-blanco-humo">{{ acudiente.telefono or 'Sin teléfono' }}</div>
                                 <div class="text-xs text-gris-claro mt-0.5">{{ acudiente.email or 'Sin email' }}</div>
                             </td>
-                            <td class="p-5 text-gris-claro font-mono text-xs">{{ acudiente.usuario_acceso }}</td>
+                            <td class="p-5 text-blanco-humo text-xs">
+                                {% if acudiente.fecha_nacimiento %}
+                                    🎂 {{ acudiente.fecha_nacimiento }}
+                                {% else %}
+                                    <span class="text-gris-claro italic">Sin registrar</span>
+                                {% endif %}
+                            </td>
                             <td class="p-5">
                                 {% if acudiente.total_jugadores > 0 %}
                                     <span class="bg-amarillo-volt/10 text-amarillo-volt font-bold px-3 py-1 rounded-lg text-xs">
