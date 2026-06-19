@@ -735,28 +735,21 @@ def dashboard_acudiente():
 # ==========================================
 # MÓDULO: GESTIÓN Y VISUALIZACIÓN DE EQUIPOS
 # ==========================================
-@app.route('/equipos')
-def modulo_equipos():
-    if 'id_usuario' not in session:
-        return redirect('/')
-        
+def obtener_datos_equipos():
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
-    
-    # 1. Obtenemos el rol para saber si habilitamos la edición y qué menú lateral mostrar
-    id_rol = obtener_id_rol_sesion()
-    es_admin = id_rol in [1, 2]
-    es_entrenador = id_rol in [1, 2, 3] if id_rol else False
-    
-    # 2. Traemos todos los equipos para la lista desplegable del modal
-    cursor.execute("SELECT id_equipo, nombre_equipo FROM equipo")
+
+    cursor.execute("SELECT id_equipo, nombre_equipo FROM equipo ORDER BY nombre_equipo ASC")
     lista_equipos = cursor.fetchall()
-    
-    # 3. LA MAGIA: Cambiamos a LEFT JOIN para incluir a los jugadores huérfanos
-    # COALESCE cambia los valores vacíos (NULL) por textos por defecto
+
+    cursor.execute("SELECT id_division, nombre FROM subdivisiones ORDER BY id_division ASC")
+    subdivisiones = cursor.fetchall()
+
+    equipos_db = {eq['nombre_equipo']: [] for eq in lista_equipos}
+
     query = """
-        SELECT 
-            COALESCE(e.id_equipo, 0) AS id_equipo, 
+        SELECT
+            COALESCE(e.id_equipo, 0) AS id_equipo,
             COALESCE(e.nombre_equipo, 'Nuevos (Sin Equipo)') AS nombre_equipo,
             j.id_jugador, j.nombres, j.apellidos,
             COALESCE(f.posicion, 'Por definir') AS posicion
@@ -767,16 +760,15 @@ def modulo_equipos():
     """
     cursor.execute(query)
     resultados = cursor.fetchall()
-    
+
     cursor.close()
     conexion.close()
-    
-    equipos_db = {}
+
     for fila in resultados:
         equipo_nombre = fila['nombre_equipo']
         if equipo_nombre not in equipos_db:
             equipos_db[equipo_nombre] = []
-            
+
         equipos_db[equipo_nombre].append({
             "id_jugador": fila['id_jugador'],
             "id_equipo": fila['id_equipo'],
@@ -784,15 +776,82 @@ def modulo_equipos():
             "apellidos": fila['apellidos'],
             "posicion": fila['posicion']
         })
-        
+
+    if not equipos_db.get('Nuevos (Sin Equipo)'):
+        equipos_db.pop('Nuevos (Sin Equipo)', None)
+
+    return equipos_db, lista_equipos, subdivisiones
+
+def render_modulo_equipos(error=None):
+    id_rol = obtener_id_rol_sesion()
+    es_admin = id_rol in [1, 2]
+    es_entrenador = id_rol in [1, 2, 3] if id_rol else False
+    puede_crear_equipo = id_rol in [1, 2, 3]
+    equipos_db, lista_equipos, subdivisiones = obtener_datos_equipos()
+
     return render_template(
         'equipos.html',
         equipos=equipos_db,
         es_entrenador=es_entrenador,
         es_admin=es_admin,
+        puede_crear_equipo=puede_crear_equipo,
         id_rol=id_rol,
-        lista_equipos=lista_equipos
+        lista_equipos=lista_equipos,
+        subdivisiones=subdivisiones,
+        error=error
     )
+
+@app.route('/equipos')
+def modulo_equipos():
+    if not usuario_tiene_sesion():
+        return redirect('/')
+
+    return render_modulo_equipos()
+
+@app.route('/nuevo-equipo', methods=['POST'])
+def nuevo_equipo():
+    if not usuario_tiene_sesion():
+        return redirect('/')
+    if obtener_id_rol_sesion() not in [1, 2, 3]:
+        return redirect(panel_por_rol(obtener_id_rol_sesion()))
+
+    nombre_equipo = request.form.get('nombre_equipo', '').strip()
+    id_division = request.form.get('id_division')
+
+    if not nombre_equipo:
+        return render_modulo_equipos(error='El nombre del equipo es obligatorio.')
+    if not id_division:
+        return render_modulo_equipos(error='Debes seleccionar una subdivisión.')
+
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+
+    cursor.execute("SELECT id_division FROM subdivisiones WHERE id_division = %s", (id_division,))
+    if not cursor.fetchone():
+        cursor.close()
+        conexion.close()
+        return render_modulo_equipos(error='La subdivisión seleccionada no es válida.')
+
+    cursor.execute("SELECT id_equipo FROM equipo WHERE nombre_equipo = %s", (nombre_equipo,))
+    if cursor.fetchone():
+        cursor.close()
+        conexion.close()
+        return render_modulo_equipos(error='Ya existe un equipo con ese nombre.')
+
+    cursor.execute("SELECT COALESCE(MAX(id_equipo), 0) + 1 AS nuevo_id FROM equipo")
+    nuevo_id = cursor.fetchone()['nuevo_id']
+
+    cursor = conexion.cursor()
+    cursor.execute(
+        "INSERT INTO equipo (id_equipo, id_division, nombre_equipo) VALUES (%s, %s, %s)",
+        (nuevo_id, id_division, nombre_equipo)
+    )
+
+    conexion.commit()
+    cursor.close()
+    conexion.close()
+
+    return redirect('/equipos')
 
 # ==========================================
 # RUTAS DE ACCIÓN: MOVER Y ELIMINAR JUGADOR

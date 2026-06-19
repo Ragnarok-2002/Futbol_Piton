@@ -42,6 +42,17 @@
 </head>
 <body class="bg-gradient-to-br from-negro-carbon via-negro-carbon to-naranja-fuego/10 min-h-screen text-blanco-humo font-sans flex flex-col md:flex-row relative">
 
+    <div id="toastAlerta" class="fixed top-5 right-5 z-[60] transform transition-all duration-500 translate-x-full opacity-0">
+        <div class="glass-effect bg-red-900/40 border-l-4 border-red-500 p-5 rounded-2xl shadow-2xl flex items-center gap-4">
+            <div class="text-3xl">⚠️</div>
+            <div>
+                <h4 class="font-bold text-blanco-humo text-sm tracking-wide">Acción Requerida</h4>
+                <p id="textoToast" class="text-xs text-naranja-suave mt-1">Aquí va el error</p>
+            </div>
+            <button onclick="cerrarToast()" class="ml-4 text-gris-claro hover:text-white font-bold text-lg">&times;</button>
+        </div>
+    </div>
+
     {% if es_admin %}
     <aside class="w-full md:w-64 bg-gris-carbon/50 border-r border-white/5 flex flex-col justify-between p-6 glass-effect z-10 md:sticky md:top-0 md:h-screen">
         <div class="space-y-8">
@@ -162,8 +173,8 @@
                 <h1 class="text-3xl font-black tracking-tight"><span class="text-naranja-fuego">Plantillas y</span> Equipos</h1>
                 <p class="text-gris-claro text-sm mt-1">Consulta y organiza las plantillas por categoría.</p>
             </div>
-            {% if es_entrenador %}
-            <button class="bg-naranja-fuego hover:bg-orange-700 text-blanco-humo font-bold py-3 px-6 rounded-2xl shadow-lg transition-all hover:-translate-y-1">
+            {% if puede_crear_equipo %}
+            <button type="button" onclick="abrirModalNuevoEquipo()" class="bg-naranja-fuego hover:bg-orange-700 text-blanco-humo font-bold py-3 px-6 rounded-2xl shadow-lg transition-all hover:-translate-y-1">
                 + Crear Equipo Nuevo
             </button>
             {% endif %}
@@ -218,6 +229,37 @@
         </div>
     </main>
 
+    {% if puede_crear_equipo %}
+    <div id="modalNuevoEquipo" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="glass-effect rounded-3xl p-8 max-w-md w-full shadow-2xl border border-naranja-fuego/30 transform scale-100 transition-all">
+            <h2 class="text-xl font-black text-blanco-humo mb-2 border-b border-white/10 pb-4">Crear Equipo Nuevo</h2>
+            <p class="text-gris-claro text-xs mb-6">Registra un nuevo equipo y asígnalo a una subdivisión de la escuela.</p>
+
+            <form id="formNuevoEquipo" action="/nuevo-equipo" method="POST" class="space-y-4" onsubmit="return validarFormularioNuevoEquipo(event)">
+                <div class="space-y-2">
+                    <label class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Nombre del Equipo</label>
+                    <input type="text" id="nuevo_nombre_equipo" name="nombre_equipo" required maxlength="100" placeholder="Ej: AAA Sub-20 B" class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Subdivisión</label>
+                    <select id="nuevo_id_division" name="id_division" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                        <option value="" disabled selected>Selecciona una subdivisión...</option>
+                        {% for sub in subdivisiones %}
+                            <option value="{{ sub.id_division }}">{{ sub.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="flex gap-3 pt-4 border-t border-white/10">
+                    <button type="button" onclick="cerrarModal('modalNuevoEquipo')" class="w-1/2 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold text-gris-claro transition-all">CANCELAR</button>
+                    <button type="submit" class="w-1/2 py-3 bg-naranja-fuego hover:bg-orange-700 rounded-xl text-xs font-black text-blanco-humo transition-all shadow-lg shadow-naranja-fuego/20">CREAR EQUIPO</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
     <div id="modalMover" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
         <div class="glass-effect rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-amarillo-volt/30 transform scale-100 transition-all">
             <h2 class="text-xl font-black text-blanco-humo mb-1">Transferir Jugador</h2>
@@ -259,6 +301,48 @@
     </div>
 
     <script>
+        function mostrarToast(mensaje) {
+            document.getElementById('textoToast').innerText = mensaje;
+            const toast = document.getElementById('toastAlerta');
+            toast.classList.remove('translate-x-full', 'opacity-0');
+            setTimeout(cerrarToast, 6000);
+        }
+
+        function cerrarToast() {
+            const toast = document.getElementById('toastAlerta');
+            toast.classList.add('translate-x-full', 'opacity-0');
+        }
+
+        {% if error %}
+        window.onload = function() {
+            mostrarToast("{{ error }}");
+            {% if puede_crear_equipo %}
+            abrirModalNuevoEquipo();
+            {% endif %}
+        };
+        {% endif %}
+
+        function abrirModalNuevoEquipo() {
+            document.getElementById('modalNuevoEquipo').classList.remove('hidden');
+        }
+
+        function validarFormularioNuevoEquipo(event) {
+            const nombre = document.getElementById('nuevo_nombre_equipo').value.trim();
+            const division = document.getElementById('nuevo_id_division').value;
+
+            if (!nombre) {
+                event.preventDefault();
+                mostrarToast('El nombre del equipo es obligatorio.');
+                return false;
+            }
+            if (!division) {
+                event.preventDefault();
+                mostrarToast('Debes seleccionar una subdivisión.');
+                return false;
+            }
+            return true;
+        }
+
         function cambiarEquipo(idSeleccionado) {
             document.querySelectorAll('.contenido-equipo').forEach(div => div.classList.add('hidden'));
             document.querySelectorAll('.btn-tab').forEach(btn => {
