@@ -69,6 +69,16 @@ def validar_edad_acudiente(fecha_nacimiento):
         return False, 'No tiene la mayoría de edad para ser acudiente/tutor. Debe ser mayor de 18 años.'
     return True, None
 
+def validar_edad_jugador(fecha_nacimiento):
+    if not fecha_nacimiento:
+        return False, 'La fecha de nacimiento es obligatoria para registrar un jugador.'
+    edad = calcular_edad(fecha_nacimiento)
+    if edad < 10:
+        return False, 'Aún no tienes la edad mínima (10 años). Te invitamos a inscribirte en nuestra escuela aliada JUNIOR.'
+    if edad > 22:
+        return False, 'Superaste la edad máxima (22 años). Te invitamos a inscribirte en nuestra escuela aliada MASTER.'
+    return True, None
+
 # ==========================================
 # MÓDULO: REGISTRO/NUEVO USUARIO (JUGADOR O ACUDIENTE)
 # ==========================================
@@ -101,14 +111,10 @@ def registro_publico():
             es_valido, mensaje_error = validar_edad_acudiente(fecha_nacimiento)
             if not es_valido:
                 return render_template('registro.html', error=mensaje_error)
-        elif fecha_nacimiento:
-            edad = calcular_edad(fecha_nacimiento)
-
-            if id_rol == '4':  # Reglas exclusivas para JUGADORES
-                if edad < 10:
-                    return render_template('registro.html', error='Aún no tienes la edad mínima (10 años). Te invitamos a inscribirte en nuestra escuela aliada JUNIOR.')
-                elif edad > 22:
-                    return render_template('registro.html', error='Superaste la edad máxima (22 años). Te invitamos a inscribirte en nuestra escuela aliada MASTER.')
+        elif id_rol == '4':
+            es_valido, mensaje_error = validar_edad_jugador(fecha_nacimiento)
+            if not es_valido:
+                return render_template('registro.html', error=mensaje_error)
 
         # --------------------------------------------------------
         # SI PASA LAS PRUEBAS, GUARDAMOS NORMALMENTE
@@ -288,17 +294,12 @@ def actualizar_perfil():
 # ==========================================
 # MÓDULO: GESTIÓN DE JUGADORES (VISTA)
 # ==========================================
-@app.route('/jugadores')
-def gestion_jugadores():
-    if 'id_usuario' not in session:
-        return redirect('/')
-
+def obtener_lista_jugadores():
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
-    
-    # Hacemos JOIN con usuario para traer el ESTADO de la cuenta y su ID
+
     query = """
-        SELECT j.id_jugador, j.documento, j.nombres, j.apellidos, 
+        SELECT j.id_jugador, j.documento, j.nombres, j.apellidos,
                j.telefono, j.email, j.fecha_nacimiento, j.fecha_registro,
                a.nombre AS nombre_acudiente, a.apellido AS apellido_acudiente,
                u.estado, u.id_usuario
@@ -308,11 +309,23 @@ def gestion_jugadores():
     """
     cursor.execute(query)
     jugadores = cursor.fetchall()
-    
+
     cursor.close()
     conexion.close()
-    
-    return render_template('gestion_jugadores.html', jugadores=jugadores)
+
+    return jugadores
+
+def render_gestion_jugadores(error=None):
+    return render_template('gestion_jugadores.html', jugadores=obtener_lista_jugadores(), error=error)
+
+@app.route('/jugadores')
+def gestion_jugadores():
+    if not usuario_tiene_sesion():
+        return redirect('/')
+    if obtener_id_rol_sesion() not in [1, 2]:
+        return redirect(panel_por_rol(obtener_id_rol_sesion()))
+
+    return render_gestion_jugadores()
 
 # ==========================================
 # MÓDULO: GESTIÓN DE ACUDIENTES (VISTA)
@@ -517,8 +530,61 @@ def borrar_acudiente_admin():
     return redirect('/acudientes')
 
 # ==========================================
-# RUTAS DE ACCIÓN: EDITAR Y BORRAR JUGADORES
+# RUTAS DE ACCIÓN: CREAR, EDITAR Y BORRAR JUGADORES
 # ==========================================
+@app.route('/nuevo-jugador-admin', methods=['POST'])
+def nuevo_jugador_admin():
+    if not usuario_tiene_sesion():
+        return redirect('/')
+    if obtener_id_rol_sesion() not in [1, 2]:
+        return redirect(panel_por_rol(obtener_id_rol_sesion()))
+
+    documento = request.form.get('documento')
+    nombres = request.form.get('nombres')
+    apellidos = request.form.get('apellidos')
+    telefono = request.form.get('telefono')
+    email = request.form.get('email')
+    contrasena = request.form.get('password')
+    fecha_nacimiento = request.form.get('fecha_nacimiento')
+    id_rol = '4'
+
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+
+    cursor.execute("SELECT id_usuario FROM usuario WHERE usuario = %s OR email = %s", (documento, email))
+    if cursor.fetchone():
+        cursor.close()
+        conexion.close()
+        return render_gestion_jugadores(error='Estos datos (Documento o Email) ya están registrados en la escuela.')
+
+    es_valido, mensaje_error = validar_edad_jugador(fecha_nacimiento)
+    if not es_valido:
+        cursor.close()
+        conexion.close()
+        return render_gestion_jugadores(error=mensaje_error)
+
+    cursor = conexion.cursor()
+
+    cursor.execute(
+        "INSERT INTO usuario (id_rol, usuario, contrasena, email, estado) VALUES (%s, %s, %s, %s, %s)",
+        (id_rol, documento, contrasena, email, 'Activo')
+    )
+    id_usuario_nuevo = cursor.lastrowid
+
+    cursor.execute(
+        """
+        INSERT INTO jugador (id_usuario, id_rol, documento, nombres, apellidos, fecha_nacimiento, telefono, email, fecha_registro)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, CURDATE())
+        """,
+        (id_usuario_nuevo, id_rol, documento, nombres, apellidos, fecha_nacimiento, telefono, email)
+    )
+
+    conexion.commit()
+    cursor.close()
+    conexion.close()
+
+    return redirect('/jugadores')
+
 @app.route('/editar-jugador-admin', methods=['POST'])
 def editar_jugador_admin():
     # 1. Recogemos los datos del formulario modal

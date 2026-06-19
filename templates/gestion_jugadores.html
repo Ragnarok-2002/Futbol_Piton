@@ -33,6 +33,17 @@
 </head>
 <body class="bg-gradient-to-br from-negro-carbon via-negro-carbon to-naranja-fuego/10 min-h-screen text-blanco-humo font-sans flex flex-col md:flex-row relative">
 
+    <div id="toastAlerta" class="fixed top-5 right-5 z-[60] transform transition-all duration-500 translate-x-full opacity-0">
+        <div class="glass-effect bg-red-900/40 border-l-4 border-red-500 p-5 rounded-2xl shadow-2xl flex items-center gap-4">
+            <div class="text-3xl">⚠️</div>
+            <div>
+                <h4 class="font-bold text-blanco-humo text-sm tracking-wide">Acción Requerida</h4>
+                <p id="textoToast" class="text-xs text-naranja-suave mt-1">Aquí va el error</p>
+            </div>
+            <button onclick="cerrarToast()" class="ml-4 text-gris-claro hover:text-white font-bold text-lg">&times;</button>
+        </div>
+    </div>
+
     <aside class="w-full md:w-64 bg-gris-carbon/50 border-r border-white/5 flex flex-col justify-between p-6 glass-effect z-10 md:sticky md:top-0 md:h-screen">
         <div class="space-y-8">
             <div class="flex items-center gap-3">
@@ -88,7 +99,7 @@
                     <input type="text" id="buscadorJugadores" onkeyup="filtrarTabla()" placeholder="Buscar por documento o nombre..." class="w-full bg-negro-carbon text-blanco-humo pl-12 pr-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt transition-all shadow-inner">
                 </div>
                 
-                <button class="bg-naranja-fuego hover:bg-orange-700 text-blanco-humo font-bold py-3 px-6 rounded-2xl shadow-lg transition-all duration-300 hover:-translate-y-1 focus:ring-2 focus:ring-amarillo-volt whitespace-nowrap">
+                <button type="button" onclick="abrirModalNuevo()" class="bg-naranja-fuego hover:bg-orange-700 text-blanco-humo font-bold py-3 px-6 rounded-2xl shadow-lg transition-all duration-300 hover:-translate-y-1 focus:ring-2 focus:ring-amarillo-volt whitespace-nowrap">
                     + Nuevo Jugador
                 </button>
             </div>
@@ -157,6 +168,57 @@
         </div>
     </main>
 
+    <div id="modalNuevo" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
+        <div class="glass-effect rounded-3xl p-8 max-w-2xl w-full shadow-2xl border border-naranja-fuego/30 my-8">
+            <h2 class="text-xl font-black text-blanco-humo mb-2 border-b border-white/10 pb-4">Registrar Nuevo Jugador</h2>
+            <p class="text-gris-claro text-xs mb-6">Crea la cuenta de un jugador independiente. Los datos deben coincidir con el registro público.</p>
+
+            <form id="formNuevoJugador" action="/nuevo-jugador-admin" method="POST" class="space-y-4" onsubmit="return validarFormularioNuevoJugador(event)">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Documento</label>
+                        <input type="text" id="nuevo_documento" name="documento" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Contraseña</label>
+                        <input type="password" id="nuevo_password" name="password" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Nombres</label>
+                        <input type="text" id="nuevo_nombres" name="nombres" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Apellidos</label>
+                        <input type="text" id="nuevo_apellidos" name="apellidos" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Teléfono</label>
+                        <input type="text" id="nuevo_telefono" name="telefono" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Email</label>
+                        <input type="email" id="nuevo_email" name="email" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Fecha de Nacimiento</label>
+                        <input type="date" id="nuevo_fecha_nacimiento" name="fecha_nacimiento" required max="" onclick="this.max=new Date().toISOString().split('T')[0]" class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-6 border-t border-white/10">
+                    <button type="button" onclick="cerrarModal('modalNuevo')" class="w-1/2 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold text-gris-claro transition-all">CANCELAR</button>
+                    <button type="button" onclick="validarYRegistrarJugador()" class="w-1/2 py-3 bg-naranja-fuego hover:bg-orange-700 rounded-xl text-xs font-black text-blanco-humo transition-all shadow-lg shadow-naranja-fuego/20">REGISTRAR JUGADOR</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="modalEditar" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
         <div class="glass-effect rounded-3xl p-8 max-w-lg w-full shadow-2xl border border-amarillo-volt/30 transform scale-100 transition-all">
             <h2 class="text-xl font-black text-blanco-humo mb-6 border-b border-white/10 pb-4">Editar Jugador</h2>
@@ -220,6 +282,75 @@
     </div>
 
     <script>
+        function mostrarToast(mensaje) {
+            document.getElementById('textoToast').innerText = mensaje;
+            const toast = document.getElementById('toastAlerta');
+            toast.classList.remove('translate-x-full', 'opacity-0');
+            setTimeout(cerrarToast, 6000);
+        }
+
+        function cerrarToast() {
+            const toast = document.getElementById('toastAlerta');
+            toast.classList.add('translate-x-full', 'opacity-0');
+        }
+
+        {% if error %}
+        window.onload = function() {
+            mostrarToast("{{ error }}");
+            abrirModalNuevo();
+        };
+        {% endif %}
+
+        function abrirModalNuevo() {
+            document.getElementById('modalNuevo').classList.remove('hidden');
+        }
+
+        function calcularEdad(fechaNacimiento) {
+            const partes = fechaNacimiento.split('-');
+            const fechaNac = new Date(partes[0], partes[1] - 1, partes[2]);
+            const hoy = new Date();
+            let edad = hoy.getFullYear() - fechaNac.getFullYear();
+            const mes = hoy.getMonth() - fechaNac.getMonth();
+            if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
+                edad--;
+            }
+            return edad;
+        }
+
+        function validarFormularioNuevoJugador(event) {
+            event.preventDefault();
+
+            const documento = document.getElementById('nuevo_documento').value.trim();
+            const nombres = document.getElementById('nuevo_nombres').value.trim();
+            const apellidos = document.getElementById('nuevo_apellidos').value.trim();
+            const telefono = document.getElementById('nuevo_telefono').value.trim();
+            const email = document.getElementById('nuevo_email').value.trim();
+            const password = document.getElementById('nuevo_password').value.trim();
+            const fechaNacimiento = document.getElementById('nuevo_fecha_nacimiento').value.trim();
+
+            if (!documento || !nombres || !apellidos || !telefono || !email || !password || !fechaNacimiento) {
+                mostrarToast('Por favor, llena toda la información. Todos los campos son obligatorios.');
+                return false;
+            }
+
+            const edad = calcularEdad(fechaNacimiento);
+            if (edad < 10) {
+                mostrarToast('Aún no tienes la edad mínima (10 años). Te invitamos a inscribirte en nuestra escuela aliada JUNIOR para los más pequeños.');
+                return false;
+            }
+            if (edad > 22) {
+                mostrarToast('Superaste la edad máxima (22 años). Te invitamos a inscribirte en nuestra escuela aliada MASTER para seguir creciendo.');
+                return false;
+            }
+
+            event.target.submit();
+            return false;
+        }
+
+        function validarYRegistrarJugador() {
+            document.getElementById('formNuevoJugador').requestSubmit();
+        }
+
         // ================= FUNCIÓN DE BÚSQUEDA EN VIVO =================
         function filtrarTabla() {
             // 1. Capturamos lo que el usuario escribe y lo pasamos a minúsculas
