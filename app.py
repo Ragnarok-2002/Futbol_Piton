@@ -4,10 +4,26 @@ from flask import Flask, render_template, request, redirect, session, url_for
 import mysql.connector
 import calendar
 from datetime import datetime, date
+import os
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 # Clave secreta obligatoria en Flask para manejar sesiones en el futuro
 app.secret_key = 'clave_secreta_escuela_futbol'
+
+# ==========================================
+# CONFIGURACIÓN DE SUBIDA DE ARCHIVOS
+# ==========================================
+UPLOAD_FOLDER = os.path.join('static', 'uploads', 'pagos')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024 # Límite de 5MB por imagen
+
+# Crear la carpeta automáticamente si no existe
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+def archivo_permitido(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # ==========================================
 # 1. CONFIGURACIÓN DE CONEXIÓN A LA BASE DE DATOS
@@ -1752,6 +1768,105 @@ def registrar_asistencias():
     if id_jugador_vista:
         params += f'&id_jugador={id_jugador_vista}'
     return redirect(f'/asistencias?{params}&guardado=1')
+
+# ==========================================
+# MÓDULO: FINANZAS Y SOPORTES DE PAGO
+# ==========================================
+@app.route('/finanzas')
+def modulo_finanzas():
+    if not usuario_tiene_sesion():
+        return redirect('/')
+        
+    id_rol = obtener_id_rol_sesion()
+    id_usuario = session['id_usuario']
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    
+    # ---------------------------------------------------------
+    # VISTA PARA JUGADOR (4) Y ACUDIENTE (5) - SUBIR SOPORTES
+    # ---------------------------------------------------------
+    if id_rol in [4, 5]:
+        jugadores_disponibles = []
+        if id_rol == 4:
+            cursor.execute("SELECT id_jugador, nombres, apellidos FROM jugador WHERE id_usuario = %s", (id_usuario,))
+            jugadores_disponibles = cursor.fetchall()
+        elif id_rol == 5:
+            id_acudiente = obtener_id_acudiente_sesion()
+            if id_acudiente:
+                cursor.execute("SELECT id_jugador, nombres, apellidos FROM jugador WHERE id_acudiente = %s", (id_acudiente,))
+                jugadores_disponibles = cursor.fetchall()
+
+        # Obtener el historial de pagos que han subido
+        query_historial = """
+            SELECT sp.id_soporte, sp.mes_correspondiente, sp.fecha_subida, sp.estado, sp.archivo_ruta,
+                   j.nombres, j.apellidos
+            FROM soporte_pago sp
+            JOIN jugador j ON sp.id_jugador = j.id_jugador
+            WHERE sp.id_usuario_sube = %s
+            ORDER BY sp.fecha_subida DESC
+        """
+        cursor.execute(query_historial, (id_usuario,))
+        historial = cursor.fetchall()
+        cursor.close()
+        conexion.close()
+        
+        return render_template('finanzas_pagos.html', id_rol=id_rol, jugadores=jugadores_disponibles, historial=historial)
+
+    # ---------------------------------------------------------
+    # VISTA PARA ADMIN (1, 2) Y ENTRENADOR (3) - REPORTE
+    # ---------------------------------------------------------
+    elif id_rol in [1, 2, 3]:
+        query_reporte = """
+            SELECT sp.id_soporte, sp.mes_correspondiente, sp.fecha_subida, sp.estado, sp.archivo_ruta,
+                   j.nombres AS j_nombres, j.apellidos AS j_apellidos, j.documento,
+                   u.usuario AS usuario_subio
+            FROM soporte_pago sp
+            JOIN jugador j ON sp.id_jugador = j.id_jugador
+            JOIN usuario u ON sp.id_usuario_sube = u.id_usuario
+            ORDER BY sp.fecha_subida DESC
+        """
+        cursor.execute(query_reporte)
+        reporte = cursor.fetchall()
+        cursor.close()
+        conexion.close()
+        
+        return render_template('finanzas_reporte.html', id_rol=id_rol, reporte=reporte)
+
+@app.route('/subir-pago', methods=['POST'])
+def subir_pago():
+    if not usuario_tiene_sesion() or obtener_id_rol_sesion() not in [4, 5]:
+        return redirect('/')
+
+    id_jugador = request.form.get('id_jugador')
+    mes = request.form.get('mes')
+    archivo = request.files.get('comprobante')
+
+    if not archivo or archivo.filename == '':
+        return redirect('/finanzas?error=No se seleccionó ningún archivo')
+
+    if archivo and archivo_permitido(archivo.filename):
+        # Asegurar el nombre y guardar con un timestamp para evitar sobreescrituras
+        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+        filename = secure_filename(f"{timestamp}_{archivo.filename}")
+        ruta_guardado = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        archivo.save(ruta_guardado)
+
+        # Guardar en base de datos la ruta relativa para usarla en HTML
+        ruta_db = f"uploads/pagos/{filename}"
+        
+        conexion = obtener_conexion()
+        cursor = conexion.cursor()
+        cursor.execute("""
+            INSERT INTO soporte_pago (id_jugador, id_usuario_sube, mes_correspondiente, archivo_ruta)
+            VALUES (%s, %s, %s, %s)
+        """, (id_jugador, session['id_usuario'], mes, ruta_db))
+        conexion.commit()
+        cursor.close()
+        conexion.close()
+
+        return redirect('/finanzas?exito=Comprobante subido correctamente')
+    
+    return redirect('/finanzas?error=Formato no permitido. Solo JPG y PNG')
 
 # ==========================================
 # INICIALIZADOR DEL PROYECTO (¡SIEMPRE AL FINAL!)
