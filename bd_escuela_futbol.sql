@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 19-06-2026 a las 18:38:23
+-- Tiempo de generación: 23-06-2026 a las 15:21:32
 -- Versión del servidor: 10.4.32-MariaDB
--- Versión de PHP: 8.2.12
+-- Versión de PHP: 8.0.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -129,7 +129,14 @@ INSERT INTO `asistencia` (`id_asistencia`, `id_entrenamiento`, `id_jugador`, `id
 (34, 20, 22, 5, 1, NULL),
 (35, 20, 23, 5, 1, NULL),
 (36, 20, 24, 5, 1, NULL),
-(37, 20, 25, 5, 1, NULL);
+(37, 20, 25, 5, 1, NULL),
+(38, 21, 29, 5, 0, NULL),
+(39, 21, 23, 5, 0, NULL),
+(40, 21, 22, 5, 2, 'eps'),
+(41, 21, 24, 5, 1, NULL),
+(42, 21, 21, 5, 0, NULL),
+(43, 21, 25, 5, 1, NULL),
+(44, 22, 34, 6, 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -294,7 +301,9 @@ INSERT INTO `entrenamiento` (`id_entrenamiento`, `id_entrenador`, `id_equipo`, `
 (17, 4, 2, '2025-01-28', 'Cancha Principal', 'Porteros'),
 (18, 5, 1, '2025-02-03', 'Cancha Principal', 'General'),
 (19, 5, 3, '2025-02-04', 'Cancha Auxiliar', 'General'),
-(20, 5, 5, '2025-02-05', 'Cancha Principal', 'General');
+(20, 5, 5, '2025-02-05', 'Cancha Principal', 'General'),
+(21, 1, 5, '2026-06-23', 'Cancha Principal', 'General'),
+(22, 1, 6, '2026-06-23', 'Cancha Principal', 'General');
 
 -- --------------------------------------------------------
 
@@ -362,7 +371,7 @@ CREATE TABLE `ficha_jugador` (
 --
 
 INSERT INTO `ficha_jugador` (`id_jugador`, `id_equipo`, `id_estado`, `posicion`, `estatura`, `peso`, `apodo`) VALUES
-(1, 1, 1, 'Delantero', 1.78, 72.00, NULL),
+(1, 1, 1, 'Delantero', 1.78, 72.00, 'apodo'),
 (2, 1, 1, 'Mediocampista', 1.74, 68.00, NULL),
 (3, 1, 1, 'Defensa', 1.76, 70.00, NULL),
 (4, 1, 1, 'Defensa', 1.75, 71.00, NULL),
@@ -390,6 +399,7 @@ INSERT INTO `ficha_jugador` (`id_jugador`, `id_equipo`, `id_estado`, `posicion`,
 (26, 2, 1, 'Por definir', 0.00, 0.00, NULL),
 (27, 4, 1, 'Por definir', 0.00, 0.00, NULL),
 (29, 5, 1, 'Por definir', 0.00, 0.00, NULL),
+(32, 4, 1, 'Por definir', 0.00, 0.00, NULL),
 (33, 3, 1, 'Por definir', 0.00, 0.00, NULL),
 (34, 6, 1, 'Por definir', 0.00, 0.00, NULL);
 
@@ -568,6 +578,22 @@ INSERT INTO `rol` (`id_rol`, `nombre_rol`) VALUES
 (3, 'entrenador'),
 (4, 'jugador'),
 (5, 'acudiente');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `soporte_pago`
+--
+
+CREATE TABLE `soporte_pago` (
+  `id_soporte` int(11) NOT NULL,
+  `id_jugador` int(11) NOT NULL,
+  `id_usuario_sube` int(11) NOT NULL,
+  `mes_correspondiente` varchar(50) NOT NULL,
+  `archivo_ruta` varchar(255) NOT NULL,
+  `fecha_subida` datetime DEFAULT current_timestamp(),
+  `estado` varchar(20) DEFAULT 'Pendiente'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -769,6 +795,14 @@ ALTER TABLE `rol`
   ADD PRIMARY KEY (`id_rol`);
 
 --
+-- Indices de la tabla `soporte_pago`
+--
+ALTER TABLE `soporte_pago`
+  ADD PRIMARY KEY (`id_soporte`),
+  ADD KEY `id_jugador` (`id_jugador`),
+  ADD KEY `id_usuario_sube` (`id_usuario_sube`);
+
+--
 -- Indices de la tabla `subdivisiones`
 --
 ALTER TABLE `subdivisiones`
@@ -796,6 +830,12 @@ ALTER TABLE `acudiente`
 --
 ALTER TABLE `jugador`
   MODIFY `id_jugador` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
+
+--
+-- AUTO_INCREMENT de la tabla `soporte_pago`
+--
+ALTER TABLE `soporte_pago`
+  MODIFY `id_soporte` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `usuario`
@@ -869,6 +909,13 @@ ALTER TABLE `jugador`
 --
 ALTER TABLE `pago`
   ADD CONSTRAINT `pago_ibfk_1` FOREIGN KEY (`id_jugador`) REFERENCES `jugador` (`id_jugador`);
+
+--
+-- Filtros para la tabla `soporte_pago`
+--
+ALTER TABLE `soporte_pago`
+  ADD CONSTRAINT `soporte_pago_ibfk_1` FOREIGN KEY (`id_jugador`) REFERENCES `jugador` (`id_jugador`),
+  ADD CONSTRAINT `soporte_pago_ibfk_2` FOREIGN KEY (`id_usuario_sube`) REFERENCES `usuario` (`id_usuario`);
 
 --
 -- Filtros para la tabla `usuario`
