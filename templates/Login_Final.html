@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión - Escuela de Fútbol</title>
+    <title>Iniciar Sesión - System Pro Futbol</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         // Configuración oficial de los colores del sistema de diseño
@@ -38,11 +38,11 @@
     <div class="glass-effect w-full max-w-md p-8 rounded-3xl shadow-2xl transition-all duration-300 hover:border-white/15">
         
         <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-naranja-fuego to-orange-700 text-blanco-humo text-3xl font-black mb-3 shadow-lg shadow-naranja-fuego/20">
-                ⚽
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-negro-carbon/80 mb-3 shadow-lg shadow-naranja-fuego/20 overflow-hidden">
+                <img src="{{ url_for('static', filename='img/logo-escudo.png') }}" alt="System Pro Futbol" class="w-16 h-16 object-contain">
             </div>
-            <h1 class="text-blanco-humo text-3xl font-black tracking-tight mb-1">PANEL DE CONTROL</h1>
-            <p class="text-gris-claro text-sm font-medium">Gestión Deportiva • Escuela de Fútbol</p>
+            <h1 class="text-blanco-humo text-3xl font-black tracking-tight mb-1">System Pro Futbol</h1>
+            <p class="text-gris-claro text-sm font-medium">Gestión Deportiva • Panel de Control</p>
         </div>
 
         <form action="/login" method="POST" class="space-y-6">

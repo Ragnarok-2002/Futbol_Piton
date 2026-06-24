@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Jugadores - Escuela de Fútbol</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'negro-carbon': '#1A1A1A',
+                        'gris-carbon': '#252525',
+                        'naranja-fuego': '#E65100',
+                        'naranja-suave': '#FFF3E0',
+                        'blanco-humo': '#F5F5F5',
+                        'amarillo-volt': '#EEFF41',
+                        'gris-claro': '#B3B3B3'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-effect {
+            background: rgba(37, 37, 37, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-negro-carbon via-negro-carbon to-naranja-fuego/10 min-h-screen text-blanco-humo font-sans flex flex-col md:flex-row relative">
+
+    {% set pagina_activa = 'mis_jugadores' %}
+    {% include 'partials/sidebar.html' %}
+
+    <main class="flex-1 p-6 md:p-10 space-y-8 overflow-y-auto">
+        <header>
+            <h1 class="text-2xl md:text-3xl font-black mb-1"><span class="text-naranja-fuego">Mis</span> Jugadores</h1>
+            <p class="text-sm text-gris-claro">Consulta los datos de tus representados. Si el jugador es menor de edad, puedes actualizar su información personal.</p>
+        </header>
+
+        {% if error %}
+        <div class="glass-effect p-4 rounded-2xl border border-red-500/30 text-red-400 text-sm">{{ error }}</div>
+        {% endif %}
+
+        {% if jugadores %}
+        <div class="glass-effect rounded-3xl overflow-hidden shadow-2xl">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-white/5 text-naranja-suave text-xs uppercase tracking-widest border-b border-white/10">
+                            <th class="p-5 font-bold">Estado</th>
+                            <th class="p-5 font-bold">Doc.</th>
+                            <th class="p-5 font-bold">Jugador</th>
+                            <th class="p-5 font-bold">Contacto</th>
+                            <th class="p-5 font-bold">Edad / Nacimiento</th>
+                            <th class="p-5 font-bold text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5 text-sm">
+                        {% for jugador in jugadores %}
+                        <tr class="hover:bg-white/5 transition-all duration-300 group">
+                            <td class="p-5">
+                                {% if jugador.estado|lower == 'activo' %}
+                                    <span class="bg-green-500/10 text-green-500 font-bold px-3 py-1 rounded-lg text-xs uppercase">Activo</span>
+                                {% else %}
+                                    <span class="bg-red-500/10 text-red-500 font-bold px-3 py-1 rounded-lg text-xs uppercase">Inactivo</span>
+                                {% endif %}
+                            </td>
+                            <td class="p-5 text-gris-claro font-mono text-xs">{{ jugador.documento }}</td>
+                            <td class="p-5 font-bold text-blanco-humo">{{ jugador.nombres }} {{ jugador.apellidos }}</td>
+                            <td class="p-5">
+                                <div class="text-blanco-humo">{{ jugador.telefono or 'Sin teléfono' }}</div>
+                                <div class="text-xs text-gris-claro mt-0.5">{{ jugador.email or 'Sin email' }}</div>
+                            </td>
+                            <td class="p-5">
+                                <div class="text-blanco-humo">{{ jugador.edad }} años</div>
+                                <div class="text-xs text-gris-claro mt-0.5">🎂 {{ jugador.fecha_nacimiento }}</div>
+                            </td>
+                            <td class="p-5 text-center">
+                                <div class="flex justify-center gap-2 flex-wrap">
+                                    <a href="/ficha-tecnica/{{ jugador.id_jugador }}"
+                                       class="text-naranja-fuego hover:text-white transition-colors font-bold text-xs uppercase bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 hover:border-naranja-fuego">
+                                        Ficha
+                                    </a>
+                                    {% if jugador.puede_editar %}
+                                    <button onclick="abrirModalEditar('{{ jugador.id_jugador }}', '{{ jugador.nombres }}', '{{ jugador.apellidos }}', '{{ jugador.telefono or '' }}', '{{ jugador.email or '' }}')"
+                                            class="text-amarillo-volt hover:text-white transition-colors font-bold text-xs uppercase bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 hover:border-amarillo-volt">
+                                        Editar
+                                    </button>
+                                    {% else %}
+                                    <span class="text-gris-claro text-xs italic px-2">Mayor de edad</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="glass-effect p-8 rounded-3xl border border-white/5 text-center">
+            <p class="text-gris-claro">Aún no tienes jugadores vinculados a tu cuenta.</p>
+            <p class="text-xs text-naranja-suave mt-2">Pídele al administrador o entrenador que enlace a tus representados con tu perfil.</p>
+        </div>
+        {% endif %}
+    </main>
+
+    <div id="modalEditar" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="glass-effect rounded-3xl p-8 max-w-lg w-full shadow-2xl border border-amarillo-volt/30">
+            <h2 class="text-xl font-black text-blanco-humo mb-2 border-b border-white/10 pb-4">Editar Jugador</h2>
+            <p class="text-gris-claro text-xs mb-6">Solo puedes modificar datos de jugadores menores de 18 años a tu cargo.</p>
+
+            <form action="/editar-jugador-acudiente" method="POST" class="space-y-4">
+                <input type="hidden" name="id_jugador" id="edit_id_jugador">
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Nombres</label>
+                        <input type="text" name="nombres" id="edit_nombres" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Apellidos</label>
+                        <input type="text" name="apellidos" id="edit_apellidos" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Teléfono</label>
+                        <input type="text" name="telefono" id="edit_telefono" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-naranja-suave text-xs font-bold uppercase">Email</label>
+                        <input type="email" name="email" id="edit_email" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-4 border-t border-white/10">
+                    <button type="button" onclick="cerrarModal()" class="w-1/2 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold text-gris-claro transition-all">CANCELAR</button>
+                    <button type="submit" class="w-1/2 py-3 bg-amarillo-volt hover:bg-yellow-300 rounded-xl text-xs font-black text-negro-carbon transition-all">GUARDAR</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function abrirModalEditar(id, nombres, apellidos, telefono, email) {
+            document.getElementById('edit_id_jugador').value = id;
+            document.getElementById('edit_nombres').value = nombres;
+            document.getElementById('edit_apellidos').value = apellidos;
+            document.getElementById('edit_telefono').value = telefono;
+            document.getElementById('edit_email').value = email;
+            document.getElementById('modalEditar').classList.remove('hidden');
+        }
+        function cerrarModal() {
+            document.getElementById('modalEditar').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

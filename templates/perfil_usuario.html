@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi acceso - Escuela de Fútbol</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'negro-carbon': '#1A1A1A', 'gris-carbon': '#252525', 'naranja-fuego': '#E65100',
+                        'naranja-suave': '#FFF3E0', 'blanco-humo': '#F5F5F5', 'amarillo-volt': '#EEFF41', 'gris-claro': '#B3B3B3'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-effect { background: rgba(37, 37, 37, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-negro-carbon via-negro-carbon to-naranja-fuego/10 min-h-screen text-blanco-humo font-sans flex flex-col md:flex-row">
+
+    {% set pagina_activa = 'perfil' %}
+    {% include 'partials/sidebar.html' %}
+
+    <main class="flex-1 p-6 md:p-10 flex items-start justify-center overflow-y-auto">
+        <div class="glass-effect w-full max-w-md p-8 rounded-3xl shadow-2xl border border-white/5 mt-4 md:mt-10">
+            <h1 class="text-blanco-humo text-2xl font-black tracking-tight mb-1">
+                {% if solo_contrasena %}🔐 Cambiar contraseña{% else %}⚙️ Configurar acceso{% endif %}
+            </h1>
+            <p class="text-gris-claro text-xs mb-6">
+                {% if solo_contrasena %}
+                    Tu usuario de ingreso es tu <strong class="text-naranja-suave">documento de identidad</strong> y no se puede modificar. Solo actualiza tu contraseña.
+                {% else %}
+                    Modifica tus credenciales de acceso al sistema.
+                {% endif %}
+            </p>
+
+            {% if exito %}
+            <div class="mb-4 glass-effect border-l-4 border-green-500 p-3 rounded-xl text-sm text-green-400">{{ exito }}</div>
+            {% endif %}
+            {% if error %}
+            <div class="mb-4 glass-effect border-l-4 border-red-500 p-3 rounded-xl text-sm text-naranja-suave">{{ error }}</div>
+            {% endif %}
+
+            <form action="/actualizar-perfil" method="POST" class="space-y-5">
+                <div class="space-y-2">
+                    <label class="block text-naranja-suave text-xs font-bold tracking-wider uppercase">Usuario de ingreso</label>
+                    <input type="text" value="{{ cuenta.usuario }}" readonly
+                           class="w-full bg-negro-carbon/50 text-gris-claro px-4 py-3.5 rounded-2xl border border-white/10 text-sm cursor-not-allowed">
+                    {% if solo_contrasena %}
+                    <p class="text-[10px] text-gris-claro">Este valor es tu documento y permanece fijo.</p>
+                    {% endif %}
+                </div>
+
+                {% if not solo_contrasena %}
+                <div class="space-y-2">
+                    <label for="username" class="block text-naranja-suave text-xs font-bold tracking-wider uppercase">Nuevo nombre de usuario</label>
+                    <input type="text" id="username" name="username" required value="{{ cuenta.usuario }}"
+                           class="w-full bg-negro-carbon text-blanco-humo px-4 py-3.5 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt transition-all">
+                </div>
+                {% endif %}
+
+                <div class="space-y-2">
+                    <label for="password" class="text-naranja-suave text-xs font-bold tracking-wider uppercase block">Nueva contraseña</label>
+                    <input type="password" id="password" name="password" required minlength="4" placeholder="Escribe tu nueva clave"
+                           class="w-full bg-negro-carbon text-blanco-humo px-4 py-3.5 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt transition-all">
+                </div>
+
+                <button type="submit" class="w-full bg-amarillo-volt text-negro-carbon font-black text-sm tracking-wide py-4 px-6 rounded-2xl shadow-lg transition-all duration-300 hover:scale-[1.02]">
+                    GUARDAR CAMBIOS
+                </button>
+            </form>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,7 @@
+{% macro nav_item(href, icon, label, key, activa) %}
+<a href="{{ href }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 group
+    {% if activa == key %}bg-naranja-fuego text-blanco-humo font-bold shadow-lg shadow-naranja-fuego/20
+    {% else %}text-gris-claro hover:text-blanco-humo hover:bg-white/5{% endif %}">
+    <span class="{% if activa != key %}group-hover:text-amarillo-volt transition-colors{% endif %}">{{ icon }}</span> {{ label }}
+</a>
+{% endmacro %}
