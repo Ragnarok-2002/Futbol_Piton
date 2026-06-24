@@ -3,7 +3,7 @@
 from flask import Flask, render_template, request, redirect, session, url_for
 import mysql.connector
 import calendar
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import os
 from urllib.parse import quote
 from werkzeug.utils import secure_filename
@@ -1819,6 +1819,299 @@ def registrar_asistencias():
     if id_jugador_vista:
         params += f'&id_jugador={id_jugador_vista}'
     return redirect(f'/asistencias?{params}&guardado=1')
+
+# ==========================================
+# MÓDULO: ENTRENAMIENTOS (CALENDARIO)
+# ==========================================
+
+def asegurar_columna_hora_entrenamiento():
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT COUNT(*) AS existe
+        FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = 'entrenamiento'
+          AND COLUMN_NAME = 'hora'
+    """)
+    if cursor.fetchone()['existe'] == 0:
+        cursor = conexion.cursor()
+        cursor.execute("ALTER TABLE entrenamiento ADD COLUMN hora TIME DEFAULT NULL")
+        conexion.commit()
+    cursor.close()
+    conexion.close()
+
+def formatear_hora_entrenamiento(hora):
+    if not hora:
+        return 'Por definir'
+    if isinstance(hora, timedelta):
+        total = int(hora.total_seconds())
+        horas, resto = divmod(total, 3600)
+        minutos = resto // 60
+        return f"{horas:02d}:{minutos:02d}"
+    if hasattr(hora, 'strftime'):
+        return hora.strftime('%H:%M')
+    texto = str(hora)
+    return texto[:5] if len(texto) >= 5 else texto
+
+def obtener_lista_entrenadores():
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT id_entrenador, nombres, apellidos, especialidad
+        FROM entrenador
+        ORDER BY apellidos ASC, nombres ASC
+    """)
+    entrenadores = cursor.fetchall()
+    cursor.close()
+    conexion.close()
+    return entrenadores
+
+def obtener_equipos_filtro_entrenamientos(id_rol):
+    if id_rol in [1, 2, 3]:
+        return None
+
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    equipos = []
+
+    if id_rol == 4:
+        cursor.execute("""
+            SELECT DISTINCT f.id_equipo
+            FROM jugador j
+            JOIN ficha_jugador f ON j.id_jugador = f.id_jugador
+            WHERE j.id_usuario = %s AND f.id_equipo IS NOT NULL
+        """, (session['id_usuario'],))
+        equipos = [fila['id_equipo'] for fila in cursor.fetchall()]
+    elif id_rol == 5:
+        id_acudiente = obtener_id_acudiente_sesion()
+        if id_acudiente:
+            cursor.execute("""
+                SELECT DISTINCT f.id_equipo
+                FROM jugador j
+                JOIN ficha_jugador f ON j.id_jugador = f.id_jugador
+                WHERE j.id_acudiente = %s AND f.id_equipo IS NOT NULL
+            """, (id_acudiente,))
+            equipos = [fila['id_equipo'] for fila in cursor.fetchall()]
+
+    cursor.close()
+    conexion.close()
+    return equipos
+
+def obtener_entrenamientos_mes(anio, mes, equipos_filtro=None):
+    asegurar_columna_hora_entrenamiento()
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+
+    query = """
+        SELECT e.id_entrenamiento, e.fecha, e.hora, e.ubicacion, e.tipo_entrenamiento,
+               eq.nombre_equipo, eq.id_equipo,
+               ent.nombres AS ent_nombres, ent.apellidos AS ent_apellidos, ent.especialidad AS ent_especialidad
+        FROM entrenamiento e
+        JOIN equipo eq ON e.id_equipo = eq.id_equipo
+        JOIN entrenador ent ON e.id_entrenador = ent.id_entrenador
+        WHERE YEAR(e.fecha) = %s AND MONTH(e.fecha) = %s
+    """
+    params = [anio, mes]
+
+    if equipos_filtro is not None:
+        if not equipos_filtro:
+            cursor.close()
+            conexion.close()
+            return {}
+        placeholders = ','.join(['%s'] * len(equipos_filtro))
+        query += f" AND e.id_equipo IN ({placeholders})"
+        params.extend(equipos_filtro)
+
+    query += " ORDER BY e.fecha ASC, e.hora ASC"
+    cursor.execute(query, tuple(params))
+    filas = cursor.fetchall()
+    cursor.close()
+    conexion.close()
+
+    por_fecha = {}
+    for fila in filas:
+        clave = fila['fecha'].strftime('%Y-%m-%d') if hasattr(fila['fecha'], 'strftime') else str(fila['fecha'])
+        fila['hora_texto'] = formatear_hora_entrenamiento(fila.get('hora'))
+        fila['entrenador_nombre'] = f"{fila['ent_nombres']} {fila['ent_apellidos']}"
+        por_fecha.setdefault(clave, []).append(fila)
+    return por_fecha
+
+def construir_calendario_entrenamientos(anio, mes, entrenamientos_por_fecha):
+    semanas = []
+    for semana in calendar.Calendar(firstweekday=0).monthdatescalendar(anio, mes):
+        dias = []
+        for dia in semana:
+            if dia.month != mes:
+                dias.append({'vacio': True})
+                continue
+            clave = dia.strftime('%Y-%m-%d')
+            entrenamientos = entrenamientos_por_fecha.get(clave, [])
+            dias.append({
+                'vacio': False,
+                'dia': dia.day,
+                'fecha': clave,
+                'tiene_entrenamiento': len(entrenamientos) > 0,
+                'cantidad': len(entrenamientos),
+                'es_hoy': dia == date.today(),
+            })
+        semanas.append(dias)
+    return semanas
+
+def preparar_entrenamientos_vista(entrenamientos_por_fecha):
+    datos = {}
+    for fecha, lista in entrenamientos_por_fecha.items():
+        datos[fecha] = [{
+            'hora': e['hora_texto'],
+            'tipo': e['tipo_entrenamiento'],
+            'ubicacion': e['ubicacion'],
+            'equipo': e['nombre_equipo'],
+            'entrenador': e['entrenador_nombre'],
+            'especialidad_entrenador': e.get('ent_especialidad') or ''
+        } for e in lista]
+    return datos
+
+def render_entrenamientos(error=None, exito=None):
+    if not usuario_tiene_sesion():
+        return redirect('/')
+
+    id_rol = obtener_id_rol_sesion()
+    if id_rol not in [1, 2, 3, 4, 5]:
+        return redirect(panel_por_rol(id_rol))
+
+    hoy = date.today()
+    try:
+        mes = int(request.args.get('mes', hoy.month))
+        anio = int(request.args.get('anio', hoy.year))
+    except (TypeError, ValueError):
+        mes, anio = hoy.month, hoy.year
+    mes = max(1, min(12, mes))
+
+    puede_programar = id_rol in [1, 2, 3]
+    equipos_filtro = obtener_equipos_filtro_entrenamientos(id_rol)
+
+    if id_rol in [4, 5] and equipos_filtro is not None and not equipos_filtro:
+        return render_template(
+            'entrenamientos.html',
+            id_rol=id_rol,
+            puede_programar=False,
+            sin_equipo=True,
+            mes=mes,
+            anio=anio,
+            nombre_mes=MESES_ES[mes],
+            entrenamientos_datos={},
+            error=error,
+            exito=exito
+        )
+
+    entrenamientos_por_fecha = obtener_entrenamientos_mes(anio, mes, equipos_filtro)
+    semanas = construir_calendario_entrenamientos(anio, mes, entrenamientos_por_fecha)
+    entrenamientos_datos = preparar_entrenamientos_vista(entrenamientos_por_fecha)
+
+    mes_anterior = mes - 1 if mes > 1 else 12
+    anio_anterior = anio if mes > 1 else anio - 1
+    mes_siguiente = mes + 1 if mes < 12 else 1
+    anio_siguiente = anio if mes < 12 else anio + 1
+
+    equipos = obtener_lista_equipos() if puede_programar else []
+    entrenadores = obtener_lista_entrenadores() if puede_programar and id_rol in [1, 2] else []
+    id_entrenador_sesion = obtener_id_entrenador_sesion()
+
+    return render_template(
+        'entrenamientos.html',
+        id_rol=id_rol,
+        puede_programar=puede_programar,
+        sin_equipo=False,
+        mes=mes,
+        anio=anio,
+        nombre_mes=MESES_ES[mes],
+        mes_anterior=mes_anterior,
+        anio_anterior=anio_anterior,
+        mes_siguiente=mes_siguiente,
+        anio_siguiente=anio_siguiente,
+        semanas=semanas,
+        entrenamientos_datos=entrenamientos_datos,
+        equipos=equipos,
+        entrenadores=entrenadores,
+        especialidades=ESPECIALIDADES_ENTRENADOR,
+        id_entrenador_sesion=id_entrenador_sesion,
+        hoy=hoy.strftime('%Y-%m-%d'),
+        error=error,
+        exito=exito
+    )
+
+@app.route('/entrenamientos')
+def modulo_entrenamientos():
+    return render_entrenamientos(
+        error=request.args.get('error'),
+        exito=request.args.get('exito')
+    )
+
+@app.route('/entrenamientos/programar', methods=['POST'])
+def programar_entrenamiento():
+    if not usuario_tiene_sesion():
+        return redirect('/')
+    id_rol = obtener_id_rol_sesion()
+    if id_rol not in [1, 2, 3]:
+        return redirect(panel_por_rol(id_rol))
+
+    fecha = request.form.get('fecha', '').strip()
+    hora = request.form.get('hora', '').strip()
+    id_equipo = request.form.get('id_equipo')
+    tipo_entrenamiento = request.form.get('tipo_entrenamiento', '').strip()
+    ubicacion = request.form.get('ubicacion', 'Cancha Principal').strip() or 'Cancha Principal'
+    mes = request.form.get('mes')
+    anio = request.form.get('anio')
+
+    if not fecha or not hora or not id_equipo or not tipo_entrenamiento:
+        return redirect(f'/entrenamientos?mes={mes}&anio={anio}&error={quote("Completa fecha, hora, equipo y especialidad")}')
+
+    if tipo_entrenamiento not in ESPECIALIDADES_ENTRENADOR:
+        return redirect(f'/entrenamientos?mes={mes}&anio={anio}&error={quote("Especialidad no válida")}')
+
+    try:
+        datetime.strptime(fecha, '%Y-%m-%d')
+        datetime.strptime(hora, '%H:%M')
+    except ValueError:
+        return redirect(f'/entrenamientos?mes={mes}&anio={anio}&error={quote("Fecha u hora con formato inválido")}')
+
+    if id_rol == 3:
+        id_entrenador = obtener_id_entrenador_sesion()
+        if not id_entrenador:
+            return redirect(f'/entrenamientos?mes={mes}&anio={anio}&error={quote("No se encontró tu perfil de entrenador")}')
+    else:
+        id_entrenador = request.form.get('id_entrenador')
+        if not id_entrenador:
+            return redirect(f'/entrenamientos?mes={mes}&anio={anio}&error={quote("Selecciona el entrenador responsable")}')
+
+    asegurar_columna_hora_entrenamiento()
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    cursor.execute(
+        "SELECT id_entrenamiento FROM entrenamiento WHERE id_equipo = %s AND fecha = %s",
+        (id_equipo, fecha)
+    )
+    existente = cursor.fetchone()
+
+    if existente:
+        cursor.execute("""
+            UPDATE entrenamiento
+            SET id_entrenador = %s, hora = %s, ubicacion = %s, tipo_entrenamiento = %s
+            WHERE id_entrenamiento = %s
+        """, (id_entrenador, hora, ubicacion, tipo_entrenamiento, existente['id_entrenamiento']))
+    else:
+        cursor.execute("SELECT COALESCE(MAX(id_entrenamiento), 0) + 1 AS nuevo_id FROM entrenamiento")
+        nuevo_id = cursor.fetchone()['nuevo_id']
+        cursor.execute("""
+            INSERT INTO entrenamiento (id_entrenamiento, id_entrenador, id_equipo, fecha, hora, ubicacion, tipo_entrenamiento)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (nuevo_id, id_entrenador, id_equipo, fecha, hora, ubicacion, tipo_entrenamiento))
+
+    conexion.commit()
+    cursor.close()
+    conexion.close()
+
+    return redirect(f'/entrenamientos?mes={mes}&anio={anio}&exito={quote("Entrenamiento programado correctamente")}')
 
 # ==========================================
 # MÓDULO: FINANZAS Y SOPORTES DE PAGO
