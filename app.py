@@ -3,6 +3,7 @@
 from flask import Flask, render_template, request, redirect, session, url_for
 import mysql.connector
 import calendar
+import re
 from datetime import datetime, date, timedelta
 import os
 from urllib.parse import quote
@@ -139,6 +140,73 @@ def calcular_edad(fecha_nacimiento):
     fecha_hoy = datetime.now()
     return fecha_hoy.year - nacimiento.year - ((fecha_hoy.month, fecha_hoy.day) < (nacimiento.month, nacimiento.day))
 
+REGEX_SOLO_NUMEROS = re.compile(r'^\d+$')
+REGEX_SOLO_LETRAS = re.compile(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s-]+$')
+
+def validar_solo_numeros(valor, nombre_campo='Este campo'):
+    valor = (valor or '').strip()
+    if not valor:
+        return False, f'{nombre_campo} es obligatorio.'
+    if not REGEX_SOLO_NUMEROS.match(valor):
+        return False, f'{nombre_campo} solo puede contener números.'
+    return True, valor
+
+def validar_solo_letras(valor, nombre_campo='Este campo'):
+    valor = (valor or '').strip()
+    if not valor:
+        return False, f'{nombre_campo} es obligatorio.'
+    if not REGEX_SOLO_LETRAS.match(valor):
+        return False, f'{nombre_campo} solo puede contener letras.'
+    return True, valor
+
+def validar_campos_persona(telefono, documento=None, nombres=None, apellidos=None, nombre=None, apellido=None):
+    datos = {}
+
+    if documento is not None:
+        ok, documento = validar_solo_numeros(documento, 'El documento')
+        if not ok:
+            return False, documento, None
+        datos['documento'] = documento
+
+    ok, telefono = validar_solo_numeros(telefono, 'El teléfono')
+    if not ok:
+        return False, telefono, None
+    datos['telefono'] = telefono
+
+    if nombres is not None:
+        ok, nombres = validar_solo_letras(nombres, 'Los nombres')
+        if not ok:
+            return False, nombres, None
+        datos['nombres'] = nombres
+    if apellidos is not None:
+        ok, apellidos = validar_solo_letras(apellidos, 'Los apellidos')
+        if not ok:
+            return False, apellidos, None
+        datos['apellidos'] = apellidos
+    if nombre is not None:
+        ok, nombre = validar_solo_letras(nombre, 'El nombre')
+        if not ok:
+            return False, nombre, None
+        datos['nombre'] = nombre
+    if apellido is not None:
+        ok, apellido = validar_solo_letras(apellido, 'El apellido')
+        if not ok:
+            return False, apellido, None
+        datos['apellido'] = apellido
+
+    return True, None, datos
+
+def validar_numero_decimal(valor, nombre_campo):
+    if valor is None or str(valor).strip() == '':
+        return False, f'{nombre_campo} es obligatorio.'
+    try:
+        numero = float(str(valor).replace(',', '.'))
+    except ValueError:
+        return False, f'{nombre_campo} debe ser un número válido.'
+    if numero < 0:
+        return False, f'{nombre_campo} debe ser un valor positivo.'
+    return True, numero
+
 def validar_edad_acudiente(fecha_nacimiento):
     if not fecha_nacimiento:
         return False, 'La fecha de nacimiento es obligatoria para registrar un acudiente.'
@@ -179,6 +247,10 @@ def validar_apodo_ficha(apodo):
         return False, 'Solo se permite una palabra (apodo, nombre o apellido).'
     if len(apodo) > 30:
         return False, 'El nombre en ficha no puede superar 30 caracteres.'
+    if re.search(r'\d', apodo):
+        return False, 'El nombre en ficha no puede contener números.'
+    if not REGEX_SOLO_LETRAS.match(apodo):
+        return False, 'El nombre en ficha solo puede contener letras.'
     return True, apodo
 
 def asegurar_columna_apodo_ficha():
@@ -369,6 +441,16 @@ def registro_publico():
         email = request.form.get('email')
         contrasena = request.form.get('password')
         fecha_nacimiento = request.form.get('fecha_nacimiento')
+
+        es_valido, mensaje_error, datos_persona = validar_campos_persona(
+            telefono, documento=documento, nombres=nombres, apellidos=apellidos
+        )
+        if not es_valido:
+            return render_template('registro.html', error=mensaje_error)
+        documento = datos_persona['documento']
+        telefono = datos_persona['telefono']
+        nombres = datos_persona['nombres']
+        apellidos = datos_persona['apellidos']
 
         # --------------------------------------------------------
         # BLOQUE DE PRUEBAS QA (VALIDACIONES DE SEGURIDAD Y NEGOCIO)
@@ -568,6 +650,12 @@ def actualizar_perfil():
             cursor.close()
             conexion.close()
             return redirect(f'/mi-perfil?error={quote("El nombre de usuario no puede estar vacío")}')
+        es_valido, mensaje_error = validar_solo_numeros(nuevo_usuario, 'El documento de usuario')
+        if not es_valido:
+            cursor.close()
+            conexion.close()
+            return redirect(f'/mi-perfil?error={quote(mensaje_error)}')
+        nuevo_usuario = mensaje_error
         cursor.execute(
             "UPDATE usuario SET usuario = %s, contrasena = %s WHERE id_usuario = %s",
             (nuevo_usuario, nueva_contrasena, id_usuario_actual)
@@ -709,6 +797,16 @@ def nuevo_acudiente_admin():
     fecha_nacimiento = request.form.get('fecha_nacimiento')
     id_rol = '5'
 
+    es_valido, mensaje_error, datos_persona = validar_campos_persona(
+        telefono, documento=documento, nombres=nombres, apellidos=apellidos
+    )
+    if not es_valido:
+        return render_gestion_acudientes(error=mensaje_error)
+    documento = datos_persona['documento']
+    telefono = datos_persona['telefono']
+    nombres = datos_persona['nombres']
+    apellidos = datos_persona['apellidos']
+
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
 
@@ -784,6 +882,16 @@ def editar_acudiente_admin():
     email = request.form.get('email')
     estado = request.form.get('estado')
 
+    es_valido, mensaje_error, datos_persona = validar_campos_persona(
+        telefono, documento=documento, nombre=nombre, apellido=apellido
+    )
+    if not es_valido:
+        return render_gestion_acudientes(error=mensaje_error)
+    documento = datos_persona['documento']
+    telefono = datos_persona['telefono']
+    nombre = datos_persona['nombre']
+    apellido = datos_persona['apellido']
+
     conexion = obtener_conexion()
     cursor = conexion.cursor()
 
@@ -847,6 +955,16 @@ def nuevo_jugador_admin():
     fecha_nacimiento = request.form.get('fecha_nacimiento')
     id_rol = '4'
 
+    es_valido, mensaje_error, datos_persona = validar_campos_persona(
+        telefono, documento=documento, nombres=nombres, apellidos=apellidos
+    )
+    if not es_valido:
+        return render_gestion_jugadores(error=mensaje_error)
+    documento = datos_persona['documento']
+    telefono = datos_persona['telefono']
+    nombres = datos_persona['nombres']
+    apellidos = datos_persona['apellidos']
+
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
 
@@ -899,6 +1017,15 @@ def editar_jugador_admin():
     telefono = request.form.get('telefono')
     email = request.form.get('email')
     estado = request.form.get('estado')
+
+    es_valido, mensaje_error, datos_persona = validar_campos_persona(
+        telefono, nombres=nombres, apellidos=apellidos
+    )
+    if not es_valido:
+        return render_gestion_jugadores(error=mensaje_error)
+    telefono = datos_persona['telefono']
+    nombres = datos_persona['nombres']
+    apellidos = datos_persona['apellidos']
 
     conexion = obtener_conexion()
     cursor = conexion.cursor()
@@ -1034,7 +1161,8 @@ def mis_jugadores():
 
     return render_template(
         'mis_jugadores.html',
-        jugadores=obtener_jugadores_por_acudiente(id_acudiente)
+        jugadores=obtener_jugadores_por_acudiente(id_acudiente),
+        error=request.args.get('error')
     )
 
 @app.route('/editar-jugador-acudiente', methods=['POST'])
@@ -1049,6 +1177,16 @@ def editar_jugador_acudiente():
     apellidos = request.form.get('apellidos')
     telefono = request.form.get('telefono')
     email = request.form.get('email')
+
+    es_valido, mensaje_error, datos_persona = validar_campos_persona(
+        telefono, nombres=nombres, apellidos=apellidos
+    )
+    if not es_valido:
+        return redirect(f'/mis-jugadores?error={quote(mensaje_error)}')
+
+    nombres = datos_persona['nombres']
+    apellidos = datos_persona['apellidos']
+    telefono = datos_persona['telefono']
 
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
@@ -1355,6 +1493,16 @@ def nuevo_entrenador_admin():
     especialidad = request.form.get('especialidad')
     id_rol = '3'
 
+    es_valido, mensaje_error, datos_persona = validar_campos_persona(
+        telefono, documento=documento, nombres=nombres, apellidos=apellidos
+    )
+    if not es_valido:
+        return render_gestion_entrenadores(error=mensaje_error)
+    documento = datos_persona['documento']
+    telefono = datos_persona['telefono']
+    nombres = datos_persona['nombres']
+    apellidos = datos_persona['apellidos']
+
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
 
@@ -1431,6 +1579,16 @@ def editar_entrenador_admin():
     email = request.form.get('email')
     especialidad = request.form.get('especialidad')
     estado = request.form.get('estado')
+
+    es_valido, mensaje_error, datos_persona = validar_campos_persona(
+        telefono, documento=documento, nombres=nombres, apellidos=apellidos
+    )
+    if not es_valido:
+        return render_gestion_entrenadores(error=mensaje_error)
+    documento = datos_persona['documento']
+    telefono = datos_persona['telefono']
+    nombres = datos_persona['nombres']
+    apellidos = datos_persona['apellidos']
 
     es_valido, mensaje_error = validar_especialidad_entrenador(especialidad)
     if not es_valido:
@@ -1556,13 +1714,16 @@ def guardar_ficha_tecnica():
     if posicion not in POSICIONES_JUGADOR:
         return render_ficha_tecnica(id_jugador, error='La posición seleccionada no es válida.')
 
-    try:
-        estatura_val = float(estatura)
-        peso_val = float(peso)
-        if estatura_val < 0 or estatura_val > 2.50 or peso_val < 0 or peso_val > 200:
-            raise ValueError
-    except (TypeError, ValueError):
-        return render_ficha_tecnica(id_jugador, error='Estatura o peso no válidos.')
+    es_valido, resultado_estatura = validar_numero_decimal(estatura, 'La estatura')
+    if not es_valido:
+        return render_ficha_tecnica(id_jugador, error=resultado_estatura)
+    es_valido, resultado_peso = validar_numero_decimal(peso, 'El peso')
+    if not es_valido:
+        return render_ficha_tecnica(id_jugador, error=resultado_peso)
+    estatura_val = resultado_estatura
+    peso_val = resultado_peso
+    if estatura_val > 2.50 or peso_val > 200:
+        return render_ficha_tecnica(id_jugador, error='Estatura o peso fuera del rango permitido.')
 
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)

@@ -228,11 +228,11 @@
 
                     <div class="space-y-2">
                         <label class="text-amarillo-volt text-xs font-bold uppercase">Nombre en Ficha (una sola palabra)</label>
-                        <input type="text" name="apodo" id="inputApodo" maxlength="30" required
+                        <input pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s-]+" title="Solo letras" type="text" name="apodo" id="inputApodo" maxlength="30" required
                                value="{{ jugador.apodo or (jugador.apellidos.split()[0] if jugador.apellidos else '') }}"
                                placeholder="Apodo, nombre o apellido"
                                oninput="actualizarPreview()"
-                               class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                               class="solo-letras w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
                         <p class="text-xs text-gris-claro">Ej: Gómez, Juan, ElCrack — sin espacios.</p>
                     </div>
 
@@ -308,6 +308,11 @@
             if (apodo.split(/\s+/).length > 1) {
                 event.preventDefault();
                 alert('Solo se permite una palabra en el nombre de la ficha.');
+                return false;
+            }
+            if (/\d/.test(apodo) || !/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ-]+$/.test(apodo)) {
+                event.preventDefault();
+                alert('El nombre en ficha solo puede contener letras.');
                 return false;
             }
             return true;

@@ -65,7 +65,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div class="space-y-2">
                     <label class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Documento</label>
-                    <input type="text" id="documento" name="documento" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none">
+                    <input inputmode="numeric" pattern="[0-9]+" title="Solo números" type="text" id="documento" name="documento" required class="solo-numeros w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none">
                 </div>
                 <div class="space-y-2">
                     <label class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Contraseña</label>
@@ -76,18 +76,18 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div class="space-y-2">
                     <label class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Nombres</label>
-                    <input type="text" id="nombres" name="nombres" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none">
+                    <input pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s-]+" title="Solo letras" type="text" id="nombres" name="nombres" required class="solo-letras w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none">
                 </div>
                 <div class="space-y-2">
                     <label class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Apellidos</label>
-                    <input type="text" id="apellidos" name="apellidos" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none">
+                    <input pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s-]+" title="Solo letras" type="text" id="apellidos" name="apellidos" required class="solo-letras w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none">
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div class="space-y-2">
                     <label class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Teléfono</label>
-                    <input type="text" id="telefono" name="telefono" class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none">
+                    <input inputmode="numeric" pattern="[0-9]+" title="Solo números" type="text" id="telefono" name="telefono" class="solo-numeros w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none">
                 </div>
                 <div class="space-y-2">
                     <label class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Email</label>
@@ -226,5 +226,6 @@
             document.getElementById('formularioRegistro').submit();
         }
     </script>
+    <script src="{{ url_for('static', filename='js/validacion_campos.js') }}"></script>
 </body>
 </html>

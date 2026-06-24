@@ -137,7 +137,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-2">
                         <label class="text-naranja-suave text-xs font-bold uppercase">Documento</label>
-                        <input type="text" id="nuevo_documento" name="documento" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                        <input inputmode="numeric" pattern="[0-9]+" title="Solo números" type="text" id="nuevo_documento" name="documento" required class="solo-numeros w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
                     </div>
                     <div class="space-y-2">
                         <label class="text-naranja-suave text-xs font-bold uppercase">Contraseña</label>
@@ -148,18 +148,18 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-2">
                         <label class="text-naranja-suave text-xs font-bold uppercase">Nombres</label>
-                        <input type="text" id="nuevo_nombres" name="nombres" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                        <input pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s-]+" title="Solo letras" type="text" id="nuevo_nombres" name="nombres" required class="solo-letras w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
                     </div>
                     <div class="space-y-2">
                         <label class="text-naranja-suave text-xs font-bold uppercase">Apellidos</label>
-                        <input type="text" id="nuevo_apellidos" name="apellidos" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                        <input pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s-]+" title="Solo letras" type="text" id="nuevo_apellidos" name="apellidos" required class="solo-letras w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="space-y-2">
                         <label class="text-naranja-suave text-xs font-bold uppercase">Teléfono</label>
-                        <input type="text" id="nuevo_telefono" name="telefono" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                        <input inputmode="numeric" pattern="[0-9]+" title="Solo números" type="text" id="nuevo_telefono" name="telefono" required class="solo-numeros w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
                     </div>
                     <div class="space-y-2">
                         <label class="text-naranja-suave text-xs font-bold uppercase">Email</label>
@@ -198,21 +198,21 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-2">
                         <label class="text-naranja-suave text-xs font-bold uppercase">Nombres</label>
-                        <input type="text" name="nombres" id="edit_nombres" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                        <input pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s-]+" title="Solo letras" type="text" name="nombres" id="edit_nombres" required class="solo-letras w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
                     </div>
                     <div class="space-y-2">
                         <label class="text-naranja-suave text-xs font-bold uppercase">Apellidos</label>
-                        <input type="text" name="apellidos" id="edit_apellidos" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                        <input pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s-]+" title="Solo letras" type="text" name="apellidos" id="edit_apellidos" required class="solo-letras w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
                     </div>
                 </div>
                 <div class="space-y-2">
                     <label class="text-naranja-suave text-xs font-bold uppercase">Documento</label>
-                    <input type="text" name="documento" id="edit_documento" class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                    <input inputmode="numeric" pattern="[0-9]+" title="Solo números" type="text" name="documento" id="edit_documento" class="solo-numeros w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-2">
                         <label class="text-naranja-suave text-xs font-bold uppercase">Teléfono</label>
-                        <input type="text" name="telefono" id="edit_telefono" class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                        <input inputmode="numeric" pattern="[0-9]+" title="Solo números" type="text" name="telefono" id="edit_telefono" class="solo-numeros w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
                     </div>
                     <div class="space-y-2">
                         <label class="text-naranja-suave text-xs font-bold uppercase">Email</label>

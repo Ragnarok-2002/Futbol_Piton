@@ -59,8 +59,8 @@
                 {% if not solo_contrasena %}
                 <div class="space-y-2">
                     <label for="username" class="block text-naranja-suave text-xs font-bold tracking-wider uppercase">Nuevo nombre de usuario</label>
-                    <input type="text" id="username" name="username" required value="{{ cuenta.usuario }}"
-                           class="w-full bg-negro-carbon text-blanco-humo px-4 py-3.5 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt transition-all">
+                    <input inputmode="numeric" pattern="[0-9]+" title="Solo números" type="text" id="username" name="username" required value="{{ cuenta.usuario }}"
+                           class="solo-numeros w-full bg-negro-carbon text-blanco-humo px-4 py-3.5 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt transition-all">
                 </div>
                 {% endif %}
 
