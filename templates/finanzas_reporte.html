@@ -12,6 +12,13 @@
                     colors: {
                         'negro-carbon': '#1A1A1A', 'gris-carbon': '#252525', 'naranja-fuego': '#E65100',
                         'naranja-suave': '#FFF3E0', 'blanco-humo': '#F5F5F5', 'amarillo-volt': '#EEFF41', 'gris-claro': '#B3B3B3'
+                    },
+                    animation: { 'fade-in': 'fadeIn 0.4s ease-out' },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        }
                     }
                 }
             }
@@ -52,33 +59,128 @@
     </aside>
 
     <main class="flex-1 p-6 md:p-10 space-y-8 overflow-y-auto">
-        <header class="flex justify-between items-center">
+        <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
             <div>
                 <h1 class="text-2xl md:text-3xl font-black"><span class="text-naranja-fuego">Reporte</span> Financiero</h1>
-                <p class="text-gris-claro text-sm mt-1">Auditoría visual de los soportes de pago subidos por las familias.</p>
+                <p class="text-gris-claro text-sm mt-1">Revisa los comprobantes por mes y valida los pagos de las familias.</p>
             </div>
+            {% if reporte %}
+            <div class="relative w-full lg:w-96">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-xl">🔍</div>
+                <input type="text" id="buscadorPagos" onkeyup="filtrarPagos()" placeholder="Buscar por documento, jugador o quien subió..." class="w-full bg-negro-carbon text-blanco-humo pl-12 pr-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt transition-all shadow-inner">
+            </div>
+            {% endif %}
         </header>
 
-        {% if reporte %}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {% for fila in reporte %}
-            <div class="glass-effect p-5 rounded-3xl border border-white/5 flex flex-col gap-3 group">
-                <div class="w-full h-48 bg-negro-carbon rounded-2xl overflow-hidden border border-white/10 relative cursor-pointer" onclick="abrirVisor('{{ url_for('static', filename=fila.archivo_ruta) }}')">
-                    <img src="{{ url_for('static', filename=fila.archivo_ruta) }}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500">
-                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span class="text-white font-bold bg-naranja-fuego/80 px-4 py-2 rounded-xl backdrop-blur-sm">🔍 Ampliar Recibo</span>
-                    </div>
+        {% if error %}
+        <div class="glass-effect border-l-4 border-red-500 p-4 rounded-2xl text-sm text-naranja-suave">{{ error }}</div>
+        {% endif %}
+        {% if exito %}
+        <div class="glass-effect border-l-4 border-green-500 p-4 rounded-2xl text-sm text-green-400">{{ exito }}</div>
+        {% endif %}
+
+        {% if reporte_por_mes %}
+        <div class="flex flex-wrap gap-3 border-b border-white/10 pb-6" id="tabsMeses">
+            {% for mes in reporte_por_mes %}
+            <button id="btn-mes-{{ loop.index }}"
+                    onclick="cambiarMes({{ loop.index }})"
+                    data-mes-tab="{{ mes.clave }}"
+                    class="btn-tab-mes {% if loop.index == 1 %}bg-amarillo-volt text-negro-carbon scale-105 shadow-lg shadow-amarillo-volt/20{% else %}bg-white/5 text-blanco-humo hover:bg-white/10{% endif %} font-black py-3 px-5 rounded-2xl transition-all duration-300 text-sm">
+                {{ mes.etiqueta }}
+                <span class="ml-1 opacity-70">({{ mes.pagos|length }})</span>
+            </button>
+            {% endfor %}
+        </div>
+
+        <div>
+            {% for mes in reporte_por_mes %}
+            <div id="mes-{{ loop.index }}" class="contenido-mes {% if loop.index != 1 %}hidden{% endif %} animate-fade-in" data-mes-panel="{{ mes.clave }}">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+                    <h2 class="text-2xl font-black text-blanco-humo">
+                        {{ mes.etiqueta }}
+                        <span class="text-sm font-normal text-gris-claro ml-2">({{ mes.pagos|length }} comprobante{{ 's' if mes.pagos|length != 1 else '' }})</span>
+                    </h2>
+                    {% set pendientes = mes.pagos | selectattr('estado', 'equalto', 'Pendiente') | list | length %}
+                    {% if pendientes > 0 %}
+                    <span class="text-xs font-bold uppercase tracking-wider bg-yellow-500/10 text-yellow-500 px-3 py-1.5 rounded-xl border border-yellow-500/20">
+                        {{ pendientes }} pendiente{{ 's' if pendientes != 1 else '' }}
+                    </span>
+                    {% endif %}
                 </div>
-                
-                <div class="space-y-1">
-                    <div class="flex justify-between items-start">
-                        <p class="font-bold text-sm text-blanco-humo leading-tight">{{ fila.j_nombres }} {{ fila.j_apellidos }}</p>
-                        <span class="text-xs bg-amarillo-volt/10 text-amarillo-volt font-black px-2 py-0.5 rounded-lg border border-amarillo-volt/20">{{ fila.mes_correspondiente }}</span>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {% for fila in mes.pagos %}
+                    <div class="tarjeta-pago glass-effect p-5 rounded-3xl border border-white/5 flex flex-col gap-3 group"
+                         data-busqueda="{{ fila.j_nombres }} {{ fila.j_apellidos }} {{ fila.documento }} {{ fila.usuario_subio }} {{ fila.estado }}">
+                        <div class="w-full h-48 bg-negro-carbon rounded-2xl overflow-hidden border border-white/10 relative cursor-pointer" onclick="abrirVisor('{{ url_for('static', filename=fila.archivo_ruta) }}')">
+                            <img src="{{ url_for('static', filename=fila.archivo_ruta) }}" alt="Recibo" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500">
+                            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <span class="text-white font-bold bg-naranja-fuego/80 px-4 py-2 rounded-xl backdrop-blur-sm">🔍 Ampliar Recibo</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2 flex-1">
+                            <div class="flex justify-between items-start gap-2">
+                                <p class="font-bold text-sm text-blanco-humo leading-tight">{{ fila.j_nombres }} {{ fila.j_apellidos }}</p>
+                                <span class="shrink-0 inline-block px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider
+                                    {% if fila.estado == 'Pendiente' %}bg-yellow-500/10 text-yellow-500 border border-yellow-500/20
+                                    {% elif fila.estado == 'Aprobado' %}bg-green-500/10 text-green-500 border border-green-500/20
+                                    {% else %}bg-red-500/10 text-red-500 border border-red-500/20{% endif %}">
+                                    {{ fila.estado }}
+                                </span>
+                            </div>
+                            <p class="text-[11px] text-gris-claro">Doc: <span class="font-mono text-naranja-suave">{{ fila.documento }}</span></p>
+                            <p class="text-[11px] text-gris-claro border-t border-white/10 pt-2">Subido por: <span class="text-blanco-humo">{{ fila.usuario_subio }}</span></p>
+                            <p class="text-[10px] text-gris-claro/70">{{ fila.fecha_subida.strftime('%d/%m/%Y %H:%M') if fila.fecha_subida else '' }}</p>
+                        </div>
+
+                        {% if puede_gestionar %}
+                        <div class="pt-3 border-t border-white/10 flex flex-col gap-2">
+                            {% if fila.estado == 'Pendiente' %}
+                            <div class="flex gap-2">
+                                <form action="/finanzas/estado" method="POST" class="flex-1">
+                                    <input type="hidden" name="id_soporte" value="{{ fila.id_soporte }}">
+                                    <input type="hidden" name="estado" value="Aprobado">
+                                    <button type="submit" class="w-full py-2.5 bg-green-500/20 hover:bg-green-500 text-green-400 hover:text-white text-xs font-bold rounded-xl transition-all border border-green-500/30">
+                                        ✓ APROBAR
+                                    </button>
+                                </form>
+                                <form action="/finanzas/estado" method="POST" class="flex-1">
+                                    <input type="hidden" name="id_soporte" value="{{ fila.id_soporte }}">
+                                    <input type="hidden" name="estado" value="Rechazado">
+                                    <button type="submit" class="w-full py-2.5 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white text-xs font-bold rounded-xl transition-all border border-red-500/30">
+                                        ✕ RECHAZAR
+                                    </button>
+                                </form>
+                            </div>
+                            {% elif fila.estado == 'Rechazado' %}
+                            <form action="/finanzas/estado" method="POST">
+                                <input type="hidden" name="id_soporte" value="{{ fila.id_soporte }}">
+                                <input type="hidden" name="estado" value="Aprobado">
+                                <button type="submit" class="w-full py-2.5 bg-green-500/20 hover:bg-green-500 text-green-400 hover:text-white text-xs font-bold rounded-xl transition-all border border-green-500/30">
+                                    ✓ APROBAR DE TODAS FORMAS
+                                </button>
+                            </form>
+                            {% else %}
+                            <form action="/finanzas/estado" method="POST">
+                                <input type="hidden" name="id_soporte" value="{{ fila.id_soporte }}">
+                                <input type="hidden" name="estado" value="Pendiente">
+                                <button type="submit" class="w-full py-2.5 bg-white/5 hover:bg-yellow-500/20 text-gris-claro hover:text-yellow-500 text-xs font-bold rounded-xl transition-all border border-white/10">
+                                    ↩ VOLVER A PENDIENTE
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                        {% elif id_rol == 3 %}
+                        <p class="text-[10px] text-gris-claro/60 text-center pt-2 border-t border-white/10">Solo lectura — contacta al administrador para validar</p>
+                        {% endif %}
                     </div>
-                    <p class="text-[11px] text-gris-claro">Doc: <span class="font-mono text-naranja-suave">{{ fila.documento }}</span></p>
-                    <p class="text-[11px] text-gris-claro border-t border-white/10 pt-2 mt-2">Subido por: <span class="text-blanco-humo">{{ fila.usuario_subio }}</span></p>
-                    <p class="text-[10px] text-gris-claro/70">{{ fila.fecha_subida.strftime('%d/%m/%Y %H:%M') if fila.fecha_subida else '' }}</p>
+                    {% endfor %}
                 </div>
+
+                <p class="sin-resultados-mes hidden text-gris-claro text-sm glass-effect p-6 rounded-2xl border border-white/5 text-center mt-4">
+                    No hay comprobantes que coincidan con tu búsqueda en este mes.
+                </p>
             </div>
             {% endfor %}
         </div>
@@ -89,17 +191,63 @@
         {% endif %}
     </main>
 
-    <!-- Modal Visor de Imagen -->
     <div id="modalVisor" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md p-4" onclick="cerrarVisor()">
         <button class="absolute top-6 right-6 text-white text-4xl font-black hover:text-naranja-fuego transition-colors z-50">&times;</button>
         <img id="imagenCompleta" src="" class="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl border border-white/10" onclick="event.stopPropagation()">
     </div>
 
     <script>
+        function cambiarMes(idSeleccionado) {
+            document.querySelectorAll('.contenido-mes').forEach(div => div.classList.add('hidden'));
+            document.querySelectorAll('.btn-tab-mes').forEach(btn => {
+                btn.classList.remove('bg-amarillo-volt', 'text-negro-carbon', 'scale-105', 'shadow-lg', 'shadow-amarillo-volt/20');
+                btn.classList.add('bg-white/5', 'text-blanco-humo');
+            });
+            document.getElementById('mes-' + idSeleccionado).classList.remove('hidden');
+            const btnActivo = document.getElementById('btn-mes-' + idSeleccionado);
+            btnActivo.classList.remove('bg-white/5', 'text-blanco-humo');
+            btnActivo.classList.add('bg-amarillo-volt', 'text-negro-carbon', 'scale-105', 'shadow-lg', 'shadow-amarillo-volt/20');
+        }
+
+        function filtrarPagos() {
+            const input = (document.getElementById('buscadorPagos')?.value || '').toLowerCase().trim();
+            let primerMesVisible = null;
+
+            document.querySelectorAll('.contenido-mes').forEach(panel => {
+                let visiblesEnMes = 0;
+                panel.querySelectorAll('.tarjeta-pago').forEach(tarjeta => {
+                    const texto = (tarjeta.getAttribute('data-busqueda') || '').toLowerCase();
+                    const coincide = !input || texto.includes(input);
+                    tarjeta.classList.toggle('hidden', !coincide);
+                    if (coincide) visiblesEnMes++;
+                });
+
+                const aviso = panel.querySelector('.sin-resultados-mes');
+                if (aviso) aviso.classList.toggle('hidden', visiblesEnMes > 0);
+
+                const tab = document.querySelector(`[data-mes-tab="${panel.getAttribute('data-mes-panel')}"]`);
+                if (tab) {
+                    tab.style.display = (!input || visiblesEnMes > 0) ? '' : 'none';
+                    if (visiblesEnMes > 0 && primerMesVisible === null) {
+                        primerMesVisible = panel.id.replace('mes-', '');
+                    }
+                }
+            });
+
+            if (input && primerMesVisible) {
+                const panelActivo = document.querySelector('.contenido-mes:not(.hidden)');
+                const activoId = panelActivo ? panelActivo.id.replace('mes-', '') : null;
+                if (activoId !== primerMesVisible) {
+                    cambiarMes(parseInt(primerMesVisible, 10));
+                }
+            }
+        }
+
         function abrirVisor(ruta) {
             document.getElementById('imagenCompleta').src = ruta;
             document.getElementById('modalVisor').classList.remove('hidden');
         }
+
         function cerrarVisor() {
             document.getElementById('modalVisor').classList.add('hidden');
         }

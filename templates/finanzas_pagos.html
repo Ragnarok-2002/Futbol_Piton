@@ -12,6 +12,13 @@
                     colors: {
                         'negro-carbon': '#1A1A1A', 'gris-carbon': '#252525', 'naranja-fuego': '#E65100',
                         'naranja-suave': '#FFF3E0', 'blanco-humo': '#F5F5F5', 'amarillo-volt': '#EEFF41', 'gris-claro': '#B3B3B3'
+                    },
+                    animation: { 'fade-in': 'fadeIn 0.4s ease-out' },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        }
                     }
                 }
             }
@@ -19,6 +26,11 @@
     </script>
     <style>
         .glass-effect { background: rgba(37, 37, 37, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .hidden { display: none; }
+        .btn-mes-cal { transition: all 0.2s ease; }
+        .btn-mes-cal:hover:not(:disabled) { background: rgba(230, 81, 0, 0.25); border-color: rgba(230, 81, 0, 0.5); }
+        .btn-mes-cal.activo { background: #E65100; color: #F5F5F5; border-color: #E65100; font-weight: 800; }
+        .btn-mes-cal:disabled { opacity: 0.25; cursor: not-allowed; }
     </style>
 </head>
 <body class="bg-gradient-to-br from-negro-carbon via-negro-carbon to-naranja-fuego/10 min-h-screen text-blanco-humo font-sans flex flex-col md:flex-row">
@@ -50,6 +62,13 @@
             <p class="text-gris-claro text-sm mt-1">Sube aquí las capturas de tus transferencias o recibos mensuales.</p>
         </header>
 
+        {% if error %}
+        <div class="glass-effect border-l-4 border-red-500 p-4 rounded-2xl text-sm text-naranja-suave">{{ error }}</div>
+        {% endif %}
+        {% if exito %}
+        <div class="glass-effect border-l-4 border-green-500 p-4 rounded-2xl text-sm text-green-400">{{ exito }}</div>
+        {% endif %}
+
         <section class="glass-effect rounded-3xl p-6 border border-naranja-fuego/30 max-w-2xl">
             <form action="/subir-pago" method="POST" enctype="multipart/form-data" class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -61,9 +80,24 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="space-y-2">
+                    <div class="space-y-2 relative" id="contenedorSelectorMes">
                         <label class="text-naranja-suave text-xs font-bold uppercase">Mes Correspondiente</label>
-                        <input type="month" name="mes" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                        <button type="button" id="btnAbrirMes" onclick="toggleSelectorMes()"
+                                class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt transition-all flex items-center justify-between gap-3 text-left">
+                            <span id="textoMesSeleccionado" class="text-gris-claro">Toca para elegir el mes del pago...</span>
+                            <span class="text-xl shrink-0">📅</span>
+                        </button>
+                        <input type="hidden" name="mes" id="inputMes" required>
+
+                        <div id="panelSelectorMes" class="hidden absolute left-0 right-0 top-full mt-2 z-30 glass-effect rounded-3xl border border-naranja-fuego/30 p-5 shadow-2xl shadow-black/40">
+                            <div class="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+                                <button type="button" onclick="cambiarAnioCalendario(-1)" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-naranja-fuego/30 text-blanco-humo font-black transition-all">◀</button>
+                                <span id="anioCalendario" class="text-lg font-black text-amarillo-volt tracking-wide"></span>
+                                <button type="button" onclick="cambiarAnioCalendario(1)" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-naranja-fuego/30 text-blanco-humo font-black transition-all">▶</button>
+                            </div>
+                            <p class="text-[11px] text-gris-claro mb-3 text-center">Selecciona el mes al que corresponde este pago</p>
+                            <div id="grillaMeses" class="grid grid-cols-3 gap-2"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -80,25 +114,43 @@
 
         <section>
             <h2 class="text-xl font-bold tracking-wide border-b border-white/10 pb-2 mb-4">Mi Historial de Subidas</h2>
-            {% if historial %}
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {% for pago in historial %}
-                <div class="glass-effect p-4 rounded-3xl border border-white/5 flex flex-col gap-3 group">
-                    <div class="w-full h-40 bg-negro-carbon rounded-2xl overflow-hidden border border-white/10 relative">
-                        <img src="{{ url_for('static', filename=pago.archivo_ruta) }}" alt="Recibo" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-3">
-                            <span class="text-amarillo-volt font-black uppercase text-xs">{{ pago.mes_correspondiente }}</span>
+
+            {% if historial_por_mes %}
+            <div class="flex flex-wrap gap-3 border-b border-white/10 pb-6 mb-6">
+                {% for mes in historial_por_mes %}
+                <button id="btn-hist-{{ loop.index }}"
+                        onclick="cambiarMesHistorial({{ loop.index }})"
+                        class="btn-tab-hist {% if loop.index == 1 %}bg-amarillo-volt text-negro-carbon scale-105 shadow-lg shadow-amarillo-volt/20{% else %}bg-white/5 text-blanco-humo hover:bg-white/10{% endif %} font-black py-3 px-5 rounded-2xl transition-all duration-300 text-sm">
+                    {{ mes.etiqueta }}
+                    <span class="ml-1 opacity-70">({{ mes.pagos|length }})</span>
+                </button>
+                {% endfor %}
+            </div>
+
+            <div>
+                {% for mes in historial_por_mes %}
+                <div id="hist-{{ loop.index }}" class="contenido-hist {% if loop.index != 1 %}hidden{% endif %} animate-fade-in">
+                    <h3 class="text-lg font-bold text-gris-claro mb-4">{{ mes.etiqueta }}</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {% for pago in mes.pagos %}
+                        <div class="glass-effect p-4 rounded-3xl border border-white/5 flex flex-col gap-3 group">
+                            <div class="w-full h-40 bg-negro-carbon rounded-2xl overflow-hidden border border-white/10 relative cursor-pointer" onclick="abrirVisor('{{ url_for('static', filename=pago.archivo_ruta) }}')">
+                                <img src="{{ url_for('static', filename=pago.archivo_ruta) }}" alt="Recibo" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
+                            </div>
+                            <div>
+                                <p class="font-bold text-sm">{{ pago.nombres }} {{ pago.apellidos }}</p>
+                                <p class="text-xs text-gris-claro">Subido el: {{ pago.fecha_subida.strftime('%d/%m/%Y') if pago.fecha_subida else '' }}</p>
+                            </div>
+                            <div class="mt-auto pt-3 border-t border-white/10">
+                                <span class="inline-block px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider
+                                    {% if pago.estado == 'Pendiente' %}bg-yellow-500/10 text-yellow-500
+                                    {% elif pago.estado == 'Aprobado' %}bg-green-500/10 text-green-500
+                                    {% else %}bg-red-500/10 text-red-500{% endif %}">
+                                    {{ pago.estado }}
+                                </span>
+                            </div>
                         </div>
-                    </div>
-                    <div>
-                        <p class="font-bold text-sm">{{ pago.nombres }} {{ pago.apellidos }}</p>
-                        <p class="text-xs text-gris-claro">Subido el: {{ pago.fecha_subida.strftime('%d/%m/%Y') if pago.fecha_subida else '' }}</p>
-                    </div>
-                    <div class="mt-auto pt-3 border-t border-white/10">
-                        <span class="inline-block px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider 
-                            {% if pago.estado == 'Pendiente' %}bg-yellow-500/10 text-yellow-500{% elif pago.estado == 'Aprobado' %}bg-green-500/10 text-green-500{% else %}bg-red-500/10 text-red-500{% endif %}">
-                            {{ pago.estado }}
-                        </span>
+                        {% endfor %}
                     </div>
                 </div>
                 {% endfor %}
@@ -108,5 +160,105 @@
             {% endif %}
         </section>
     </main>
+
+    <div id="modalVisor" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md p-4" onclick="cerrarVisor()">
+        <button class="absolute top-6 right-6 text-white text-4xl font-black hover:text-naranja-fuego transition-colors z-50">&times;</button>
+        <img id="imagenCompleta" src="" class="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl border border-white/10" onclick="event.stopPropagation()">
+    </div>
+
+    <script>
+        const NOMBRES_MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        const NOMBRES_MESES_LARGOS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        const hoy = new Date();
+        let anioVista = hoy.getFullYear();
+        let mesSeleccionado = null;
+        let anioSeleccionado = null;
+
+        function esMesPermitido(anio, mes) {
+            const limiteInferior = hoy.getFullYear() - 2;
+            if (anio < limiteInferior) return false;
+            if (anio > hoy.getFullYear()) return false;
+            if (anio === hoy.getFullYear() && mes > hoy.getMonth() + 1) return false;
+            return true;
+        }
+
+        function renderCalendarioMeses() {
+            document.getElementById('anioCalendario').textContent = anioVista;
+            const grilla = document.getElementById('grillaMeses');
+            grilla.innerHTML = '';
+
+            NOMBRES_MESES.forEach((nombre, index) => {
+                const mes = index + 1;
+                const permitido = esMesPermitido(anioVista, mes);
+                const activo = mesSeleccionado === mes && anioSeleccionado === anioVista;
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.disabled = !permitido;
+                btn.textContent = nombre;
+                btn.className = `btn-mes-cal py-3 rounded-xl border border-white/10 text-xs font-bold ${activo ? 'activo' : 'text-blanco-humo'}`;
+                if (permitido) {
+                    btn.onclick = () => seleccionarMes(anioVista, mes);
+                }
+                grilla.appendChild(btn);
+            });
+        }
+
+        function seleccionarMes(anio, mes) {
+            mesSeleccionado = mes;
+            anioSeleccionado = anio;
+            const valor = `${anio}-${String(mes).padStart(2, '0')}`;
+            document.getElementById('inputMes').value = valor;
+            document.getElementById('textoMesSeleccionado').textContent = `${NOMBRES_MESES_LARGOS[mes - 1]} ${anio}`;
+            document.getElementById('textoMesSeleccionado').classList.remove('text-gris-claro');
+            document.getElementById('textoMesSeleccionado').classList.add('text-blanco-humo', 'font-bold');
+            document.getElementById('panelSelectorMes').classList.add('hidden');
+            renderCalendarioMeses();
+        }
+
+        function cambiarAnioCalendario(delta) {
+            const nuevoAnio = anioVista + delta;
+            const limiteInferior = hoy.getFullYear() - 2;
+            if (nuevoAnio < limiteInferior || nuevoAnio > hoy.getFullYear()) return;
+            anioVista = nuevoAnio;
+            renderCalendarioMeses();
+        }
+
+        function toggleSelectorMes() {
+            document.getElementById('panelSelectorMes').classList.toggle('hidden');
+        }
+
+        document.addEventListener('click', (event) => {
+            const contenedor = document.getElementById('contenedorSelectorMes');
+            if (contenedor && !contenedor.contains(event.target)) {
+                document.getElementById('panelSelectorMes').classList.add('hidden');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            anioVista = hoy.getFullYear();
+            seleccionarMes(hoy.getFullYear(), hoy.getMonth() + 1);
+        });
+
+        function cambiarMesHistorial(idSeleccionado) {
+            document.querySelectorAll('.contenido-hist').forEach(div => div.classList.add('hidden'));
+            document.querySelectorAll('.btn-tab-hist').forEach(btn => {
+                btn.classList.remove('bg-amarillo-volt', 'text-negro-carbon', 'scale-105', 'shadow-lg', 'shadow-amarillo-volt/20');
+                btn.classList.add('bg-white/5', 'text-blanco-humo');
+            });
+            document.getElementById('hist-' + idSeleccionado).classList.remove('hidden');
+            const btnActivo = document.getElementById('btn-hist-' + idSeleccionado);
+            btnActivo.classList.remove('bg-white/5', 'text-blanco-humo');
+            btnActivo.classList.add('bg-amarillo-volt', 'text-negro-carbon', 'scale-105', 'shadow-lg', 'shadow-amarillo-volt/20');
+        }
+
+        function abrirVisor(ruta) {
+            document.getElementById('imagenCompleta').src = ruta;
+            document.getElementById('modalVisor').classList.remove('hidden');
+        }
+
+        function cerrarVisor() {
+            document.getElementById('modalVisor').classList.add('hidden');
+        }
+    </script>
 </body>
 </html>

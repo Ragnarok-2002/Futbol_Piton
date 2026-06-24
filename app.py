@@ -5,6 +5,7 @@ import mysql.connector
 import calendar
 from datetime import datetime, date
 import os
+from urllib.parse import quote
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -24,6 +25,56 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def archivo_permitido(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+NOMBRES_MESES = {
+    1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril',
+    5: 'Mayo', 6: 'Junio', 7: 'Julio', 8: 'Agosto',
+    9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'
+}
+
+def formatear_mes_pago(mes_str):
+    if not mes_str:
+        return 'Sin mes'
+    try:
+        partes = mes_str.split('-')
+        anio = partes[0]
+        mes_num = int(partes[1])
+        return f"{NOMBRES_MESES.get(mes_num, mes_str)} {anio}"
+    except (ValueError, IndexError):
+        return mes_str
+
+def agrupar_soportes_por_mes(soportes):
+    grupos = {}
+    for soporte in soportes:
+        mes = soporte.get('mes_correspondiente') or 'sin-mes'
+        grupos.setdefault(mes, []).append(soporte)
+
+    resultado = []
+    for mes in sorted(grupos.keys(), reverse=True):
+        resultado.append({
+            'clave': mes,
+            'etiqueta': formatear_mes_pago(mes) if mes != 'sin-mes' else 'Sin mes',
+            'pagos': grupos[mes]
+        })
+    return resultado
+
+def validar_mes_pago(mes_str):
+    """Valida formato YYYY-MM y que no sea un mes futuro."""
+    if not mes_str or len(mes_str) != 7 or mes_str[4] != '-':
+        return False, 'Selecciona un mes válido del calendario'
+    try:
+        anio = int(mes_str[:4])
+        mes_num = int(mes_str[5:7])
+    except ValueError:
+        return False, 'Selecciona un mes válido del calendario'
+    if mes_num < 1 or mes_num > 12:
+        return False, 'Selecciona un mes válido del calendario'
+    hoy = datetime.now()
+    if anio > hoy.year or (anio == hoy.year and mes_num > hoy.month):
+        return False, 'No puedes seleccionar un mes futuro'
+    if anio < hoy.year - 2:
+        return False, 'El mes seleccionado es demasiado antiguo'
+    return True, mes_str
 
 # ==========================================
 # 1. CONFIGURACIÓN DE CONEXIÓN A LA BASE DE DATOS
@@ -1807,10 +1858,19 @@ def modulo_finanzas():
         """
         cursor.execute(query_historial, (id_usuario,))
         historial = cursor.fetchall()
+        historial_por_mes = agrupar_soportes_por_mes(historial)
         cursor.close()
         conexion.close()
         
-        return render_template('finanzas_pagos.html', id_rol=id_rol, jugadores=jugadores_disponibles, historial=historial)
+        return render_template(
+            'finanzas_pagos.html',
+            id_rol=id_rol,
+            jugadores=jugadores_disponibles,
+            historial=historial,
+            historial_por_mes=historial_por_mes,
+            error=request.args.get('error'),
+            exito=request.args.get('exito')
+        )
 
     # ---------------------------------------------------------
     # VISTA PARA ADMIN (1, 2) Y ENTRENADOR (3) - REPORTE
@@ -1827,10 +1887,20 @@ def modulo_finanzas():
         """
         cursor.execute(query_reporte)
         reporte = cursor.fetchall()
+        reporte_por_mes = agrupar_soportes_por_mes(reporte)
+        puede_gestionar = id_rol in [1, 2]
         cursor.close()
         conexion.close()
         
-        return render_template('finanzas_reporte.html', id_rol=id_rol, reporte=reporte)
+        return render_template(
+            'finanzas_reporte.html',
+            id_rol=id_rol,
+            reporte=reporte,
+            reporte_por_mes=reporte_por_mes,
+            puede_gestionar=puede_gestionar,
+            error=request.args.get('error'),
+            exito=request.args.get('exito')
+        )
 
     cursor.close()
     conexion.close()
@@ -1844,6 +1914,13 @@ def subir_pago():
     id_jugador = request.form.get('id_jugador')
     mes = request.form.get('mes')
     archivo = request.files.get('comprobante')
+
+    mes_valido, resultado_mes = validar_mes_pago(mes)
+    if not mes_valido:
+        return redirect(f'/finanzas?error={quote(resultado_mes)}')
+
+    if not id_jugador:
+        return redirect('/finanzas?error=Debes seleccionar un jugador')
 
     if not archivo or archivo.filename == '':
         return redirect('/finanzas?error=No se seleccionó ningún archivo')
@@ -1863,7 +1940,7 @@ def subir_pago():
         cursor.execute("""
             INSERT INTO soporte_pago (id_jugador, id_usuario_sube, mes_correspondiente, archivo_ruta)
             VALUES (%s, %s, %s, %s)
-        """, (id_jugador, session['id_usuario'], mes, ruta_db))
+        """, (id_jugador, session['id_usuario'], resultado_mes, ruta_db))
         conexion.commit()
         cursor.close()
         conexion.close()
@@ -1871,6 +1948,34 @@ def subir_pago():
         return redirect('/finanzas?exito=Comprobante subido correctamente')
     
     return redirect('/finanzas?error=Formato no permitido. Solo JPG y PNG')
+
+@app.route('/finanzas/estado', methods=['POST'])
+def actualizar_estado_pago():
+    if not usuario_tiene_sesion() or obtener_id_rol_sesion() not in [1, 2]:
+        return redirect('/')
+
+    id_soporte = request.form.get('id_soporte')
+    estado = request.form.get('estado')
+
+    if estado not in ('Aprobado', 'Rechazado', 'Pendiente'):
+        return redirect('/finanzas?error=Estado no válido')
+
+    conexion = obtener_conexion()
+    cursor = conexion.cursor()
+    cursor.execute(
+        "UPDATE soporte_pago SET estado = %s WHERE id_soporte = %s",
+        (estado, id_soporte)
+    )
+    conexion.commit()
+    cursor.close()
+    conexion.close()
+
+    mensajes = {
+        'Aprobado': 'Comprobante marcado como aprobado',
+        'Rechazado': 'Comprobante marcado como rechazado',
+        'Pendiente': 'Comprobante devuelto a pendiente'
+    }
+    return redirect(f'/finanzas?exito={quote(mensajes[estado])}')
 
 # ==========================================
 # INICIALIZADOR DEL PROYECTO (¡SIEMPRE AL FINAL!)
