@@ -36,7 +36,15 @@
                 </div>
             </div>
             <nav class="space-y-2 hidden md:block">
-                <a href="{% if id_rol == 3 %}/modulo-entrenador{% else %}/dashboard-admin{% endif %}" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:bg-white/5 rounded-2xl transition-all"><span>🏠</span> Inicio</a>
+                {% if id_rol == 3 %}
+                <a href="/modulo-entrenador" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:bg-white/5 rounded-2xl transition-all"><span>🏠</span> Inicio</a>
+                <a href="/equipos" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:bg-white/5 rounded-2xl transition-all"><span>🛡️</span> Equipos</a>
+                {% else %}
+                <a href="/dashboard-admin" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:bg-white/5 rounded-2xl transition-all"><span>🏠</span> Inicio</a>
+                <a href="/jugadores" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:bg-white/5 rounded-2xl transition-all"><span>👥</span> Jugadores</a>
+                <a href="/equipos" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:bg-white/5 rounded-2xl transition-all"><span>🛡️</span> Equipos</a>
+                <a href="/asistencias" class="flex items-center gap-3 px-4 py-3 text-gris-claro hover:bg-white/5 rounded-2xl transition-all"><span>📋</span> Asistencias</a>
+                {% endif %}
                 <a href="/finanzas" class="flex items-center gap-3 px-4 py-3 bg-naranja-fuego text-blanco-humo font-bold rounded-2xl transition-all shadow-lg shadow-naranja-fuego/20"><span>💰</span> Finanzas</a>
             </nav>
         </div>

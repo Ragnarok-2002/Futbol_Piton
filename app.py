@@ -1832,6 +1832,10 @@ def modulo_finanzas():
         
         return render_template('finanzas_reporte.html', id_rol=id_rol, reporte=reporte)
 
+    cursor.close()
+    conexion.close()
+    return redirect(panel_por_rol(id_rol))
+
 @app.route('/subir-pago', methods=['POST'])
 def subir_pago():
     if not usuario_tiene_sesion() or obtener_id_rol_sesion() not in [4, 5]:
