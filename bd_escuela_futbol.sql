@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 23-06-2026 a las 15:21:32
+-- Tiempo de generación: 24-06-2026 a las 18:10:26
 -- Versión del servidor: 10.4.32-MariaDB
--- Versión de PHP: 8.0.30
+-- Versión de PHP: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -257,9 +257,9 @@ CREATE TABLE `entrenador` (
 
 INSERT INTO `entrenador` (`id_entrenador`, `id_usuario`, `id_rol`, `nombres`, `apellidos`, `documento`, `fecha_nacimiento`, `telefono`, `email`, `especialidad`) VALUES
 (1, 4, 3, 'Carlos', 'Ríos Mendoza', '1010000001', '1990-08-20', '3151230001', 'carlos.rios@escuelaaaa.com', 'Delanteros'),
-(2, 5, 3, 'Jorge', 'Méndez Castaño', '1010000002', '1990-08-20', '3151230002', 'jorge.mendez@escuelaaaa.com', 'Mediocampistas'),
+(2, 5, 3, 'JorgeE', 'Méndez Castaño', '123456778899', '1990-08-20', '3151230002', 'jorgeE@escuelaaaa.com', 'Mediocampistas'),
 (3, 6, 3, 'Andrés', 'Vargas Ortega', '1010000003', '1990-08-20', '3151230003', 'andres.vargas@escuelaaaa.com', 'Defensas'),
-(4, 7, 3, 'Luis', 'Pérez Acevedo', '1010000004', '1990-08-20', '3151230004', 'luis.perez@escuelaaaa.com', 'Porteros'),
+(4, 7, 3, 'Luis', 'Pérez Acevedo', '', '1990-08-20', '', '', 'Porteros'),
 (5, 8, 3, 'Miguel', 'Torres Suárez', '1010000005', '1990-08-20', '3151230005', 'miguel.torres@escuelaaaa.com', 'General');
 
 -- --------------------------------------------------------
@@ -273,38 +273,39 @@ CREATE TABLE `entrenamiento` (
   `id_entrenador` int(11) NOT NULL,
   `id_equipo` int(11) NOT NULL,
   `fecha` date NOT NULL,
-  `hora` time DEFAULT NULL,
   `ubicacion` varchar(100) NOT NULL,
-  `tipo_entrenamiento` varchar(100) NOT NULL
+  `tipo_entrenamiento` varchar(100) NOT NULL,
+  `hora` time DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `entrenamiento`
 --
 
-INSERT INTO `entrenamiento` (`id_entrenamiento`, `id_entrenador`, `id_equipo`, `fecha`, `ubicacion`, `tipo_entrenamiento`) VALUES
-(1, 1, 1, '2025-01-06', 'Cancha Principal', 'Delanteros'),
-(2, 1, 2, '2025-01-07', 'Cancha Auxiliar', 'Delanteros'),
-(3, 1, 3, '2025-01-08', 'Cancha Principal', 'Delanteros'),
-(4, 1, 4, '2025-01-09', 'Cancha Auxiliar', 'Delanteros'),
-(5, 1, 5, '2025-01-10', 'Cancha Principal', 'Delanteros'),
-(6, 2, 1, '2025-01-13', 'Cancha Auxiliar', 'Mediocampistas'),
-(7, 2, 2, '2025-01-14', 'Cancha Principal', 'Mediocampistas'),
-(8, 2, 3, '2025-01-15', 'Cancha Auxiliar', 'Mediocampistas'),
-(9, 2, 4, '2025-01-16', 'Cancha Principal', 'Mediocampistas'),
-(10, 2, 5, '2025-01-17', 'Cancha Auxiliar', 'Mediocampistas'),
-(11, 3, 1, '2025-01-20', 'Cancha Principal', 'Defensas'),
-(12, 3, 2, '2025-01-21', 'Cancha Auxiliar', 'Defensas'),
-(13, 3, 3, '2025-01-22', 'Cancha Principal', 'Defensas'),
-(14, 3, 4, '2025-01-23', 'Cancha Auxiliar', 'Defensas'),
-(15, 3, 5, '2025-01-24', 'Cancha Principal', 'Defensas'),
-(16, 4, 1, '2025-01-27', 'Cancha Auxiliar', 'Porteros'),
-(17, 4, 2, '2025-01-28', 'Cancha Principal', 'Porteros'),
-(18, 5, 1, '2025-02-03', 'Cancha Principal', 'General'),
-(19, 5, 3, '2025-02-04', 'Cancha Auxiliar', 'General'),
-(20, 5, 5, '2025-02-05', 'Cancha Principal', 'General'),
-(21, 1, 5, '2026-06-23', 'Cancha Principal', 'General'),
-(22, 1, 6, '2026-06-23', 'Cancha Principal', 'General');
+INSERT INTO `entrenamiento` (`id_entrenamiento`, `id_entrenador`, `id_equipo`, `fecha`, `ubicacion`, `tipo_entrenamiento`, `hora`) VALUES
+(1, 1, 1, '2025-01-06', 'Cancha Principal', 'Delanteros', NULL),
+(2, 1, 2, '2025-01-07', 'Cancha Auxiliar', 'Delanteros', NULL),
+(3, 1, 3, '2025-01-08', 'Cancha Principal', 'Delanteros', NULL),
+(4, 1, 4, '2025-01-09', 'Cancha Auxiliar', 'Delanteros', NULL),
+(5, 1, 5, '2025-01-10', 'Cancha Principal', 'Delanteros', NULL),
+(6, 2, 1, '2025-01-13', 'Cancha Auxiliar', 'Mediocampistas', NULL),
+(7, 2, 2, '2025-01-14', 'Cancha Principal', 'Mediocampistas', NULL),
+(8, 2, 3, '2025-01-15', 'Cancha Auxiliar', 'Mediocampistas', NULL),
+(9, 2, 4, '2025-01-16', 'Cancha Principal', 'Mediocampistas', NULL),
+(10, 2, 5, '2025-01-17', 'Cancha Auxiliar', 'Mediocampistas', NULL),
+(11, 3, 1, '2025-01-20', 'Cancha Principal', 'Defensas', NULL),
+(12, 3, 2, '2025-01-21', 'Cancha Auxiliar', 'Defensas', NULL),
+(13, 3, 3, '2025-01-22', 'Cancha Principal', 'Defensas', NULL),
+(14, 3, 4, '2025-01-23', 'Cancha Auxiliar', 'Defensas', NULL),
+(15, 3, 5, '2025-01-24', 'Cancha Principal', 'Defensas', NULL),
+(16, 4, 1, '2025-01-27', 'Cancha Auxiliar', 'Porteros', NULL),
+(17, 4, 2, '2025-01-28', 'Cancha Principal', 'Porteros', NULL),
+(18, 5, 1, '2025-02-03', 'Cancha Principal', 'General', NULL),
+(19, 5, 3, '2025-02-04', 'Cancha Auxiliar', 'General', NULL),
+(20, 5, 5, '2025-02-05', 'Cancha Principal', 'General', NULL),
+(21, 1, 5, '2026-06-23', 'Cancha Principal', 'General', NULL),
+(22, 1, 6, '2026-06-23', 'Cancha Principal', 'General', NULL),
+(23, 5, 5, '2026-07-01', 'Cancha Principalaaaaaaa', 'General', '02:15:00');
 
 -- --------------------------------------------------------
 
@@ -461,7 +462,8 @@ INSERT INTO `jugador` (`id_jugador`, `id_acudiente`, `id_usuario`, `id_rol`, `no
 (31, NULL, 65, 4, 'pepe', 'galindo', '2026-06-13', '3332224466', 'galindo@gmail.com', '455', '2026-06-13'),
 (32, NULL, 66, 4, 'juan', 'lopez', '2004-07-14', '3332224477', 'lopez@gmail.com', '741', '2026-06-13'),
 (33, NULL, 67, 4, 'messi', 'chiquito', '2016-02-10', '3332224488', 'messi10@gmail.com', '963', '2026-06-14'),
-(34, 23, 72, 4, 'luis', 'cabezas', '2009-11-19', '12345678999', 'lucABEZAS@78.COM', '7412', '2026-06-19');
+(34, 23, 72, 4, 'luis', 'cabezas', '2009-11-19', '12345678999', 'lucABEZAS@78.COM', '7412', '2026-06-19'),
+(35, NULL, 73, 4, '554542542452', '435442452', '2015-12-31', 'fsfvfvfdff', 'ssvfsfv', '11111111111', '2026-06-24');
 
 -- --------------------------------------------------------
 
@@ -596,6 +598,14 @@ CREATE TABLE `soporte_pago` (
   `estado` varchar(20) DEFAULT 'Pendiente'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Volcado de datos para la tabla `soporte_pago`
+--
+
+INSERT INTO `soporte_pago` (`id_soporte`, `id_jugador`, `id_usuario_sube`, `mes_correspondiente`, `archivo_ruta`, `fecha_subida`, `estado`) VALUES
+(1, 1, 9, '1222-04', 'uploads/pagos/20260624072941_fifa.png', '2026-06-24 07:29:41', 'Pendiente'),
+(2, 1, 9, '2026-05', 'uploads/pagos/20260624090439_chaqueta.jpeg', '2026-06-24 09:04:39', 'Aprobado');
+
 -- --------------------------------------------------------
 
 --
@@ -642,7 +652,7 @@ INSERT INTO `usuario` (`id_usuario`, `id_rol`, `usuario`, `contrasena`, `email`,
 (2, 1, 'alexander_acevedo', 'hashed_pass_SA2', 'alexander.acevedo@escuelaaaa.com', 'activo'),
 (3, 2, 'admin_escuela', 'hashed_pass_002', 'admin@escuelaaaa.com', 'activo'),
 (4, 3, 'ent_delanteros', 'hashed_pass_003', 'carlos.rios@escuelaaaa.com', 'activo'),
-(5, 3, 'ent_mediocampis', 'hashed_pass_004', 'jorge.mendez@escuelaaaa.com', 'activo'),
+(5, 3, '123456778899', 'hashed_pass_004', 'jorgeE@escuelaaaa.com', 'Activo'),
 (6, 3, 'ent_defensas', 'hashed_pass_005', 'andres.vargas@escuelaaaa.com', 'activo'),
 (7, 3, 'ent_porteros', 'hashed_pass_006', 'luis.perez@escuelaaaa.com', 'activo'),
 (8, 3, 'ent_general', 'hashed_pass_007', 'miguel.torres@escuelaaaa.com', 'activo'),
@@ -693,7 +703,7 @@ INSERT INTO `usuario` (`id_usuario`, `id_rol`, `usuario`, `contrasena`, `email`,
 (53, 5, 'acu_020', 'hashed_pass_052', 'tutor.leon@gmail.com', 'activo'),
 (54, 5, 'acu_021', 'hashed_pass_053', 'padre.salazar@gmail.com', 'activo'),
 (55, 5, 'acu_022', 'hashed_pass_054', 'madre.ceron@gmail.com', 'activo'),
-(56, 5, 'acu_023', 'hashed_pass_055', 'padre.acosta@gmail.com', 'Inactivo'),
+(56, 5, 'acu_023', 'hashed_pass_055', 'padre.acosta@gmail.com', 'Activo'),
 (57, 5, 'acu_024', 'hashed_pass_056', 'madre.mendoza@gmail.com', 'activo'),
 (58, 5, 'acu_025', 'hashed_pass_057', 'tutor.zapata@gmail.com', 'activo'),
 (59, 4, '777', '666', '', 'Activo'),
@@ -706,7 +716,8 @@ INSERT INTO `usuario` (`id_usuario`, `id_rol`, `usuario`, `contrasena`, `email`,
 (67, 4, '963', '369', 'messi10@gmail.com', 'Activo'),
 (68, 5, '852', '258', 'padre10@gmail.com', 'Activo'),
 (71, 5, '123456', '4567', 'andriuZ@gmail.com', 'Activo'),
-(72, 4, '7412', '789654', 'lucABEZAS@78.COM', 'Activo');
+(72, 4, '7412', '789654', 'lucABEZAS@78.COM', 'Activo'),
+(73, 4, '11111111111', '010', 'ssvfsfv', 'Activo');
 
 --
 -- Índices para tablas volcadas
@@ -830,19 +841,19 @@ ALTER TABLE `acudiente`
 -- AUTO_INCREMENT de la tabla `jugador`
 --
 ALTER TABLE `jugador`
-  MODIFY `id_jugador` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
+  MODIFY `id_jugador` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
 
 --
 -- AUTO_INCREMENT de la tabla `soporte_pago`
 --
 ALTER TABLE `soporte_pago`
-  MODIFY `id_soporte` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_soporte` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `usuario`
 --
 ALTER TABLE `usuario`
-  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=73;
+  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=74;
 
 --
 -- Restricciones para tablas volcadas
