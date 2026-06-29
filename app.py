@@ -143,6 +143,29 @@ def calcular_edad(fecha_nacimiento):
 REGEX_SOLO_NUMEROS = re.compile(r'^\d+$')
 REGEX_SOLO_LETRAS = re.compile(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s-]+$')
 
+# ==========================================
+# NUEVO: LISTA BLANCA DE CORREOS
+# ==========================================
+DOMINIOS_PERMITIDOS = [
+    'gmail.com', 
+    'outlook.com', 
+    'hotmail.com', 
+    'yahoo.com', 
+    'misena.edu.co', 
+    'sena.edu.co'
+]
+
+def validar_correo(email):
+    email = (email or '').strip().lower()
+    if not email or '@' not in email:
+        return False, 'El formato del correo electrónico no es válido.'
+    
+    dominio = email.split('@')[-1]
+    if dominio not in DOMINIOS_PERMITIDOS:
+        return False, f'El dominio @{dominio} no está permitido. Usa un correo real (ej: gmail.com).'
+    
+    return True, email
+
 def validar_solo_numeros(valor, nombre_campo='Este campo'):
     valor = (valor or '').strip()
     if not valor:
@@ -431,16 +454,22 @@ def obtener_estados_jugador():
 def registro_publico():
     if request.method == 'POST':
         conexion = obtener_conexion()
-        cursor = conexion.cursor(dictionary=True) # Usamos dictionary para las validaciones      
-        # Recogemos los datos del formulario
+        cursor = conexion.cursor(dictionary=True)      
+        
         id_rol = request.form.get('rol') 
         documento = request.form.get('documento')
         nombres = request.form.get('nombres')
         apellidos = request.form.get('apellidos')
         telefono = request.form.get('telefono')
-        email = request.form.get('email')
+        email_input = request.form.get('email')
         contrasena = request.form.get('password')
         fecha_nacimiento = request.form.get('fecha_nacimiento')
+
+        # VALIDACIÓN DEL CORREO
+        es_correo_valido, msj_correo = validar_correo(email_input)
+        if not es_correo_valido:
+            return render_template('registro.html', error=msj_correo)
+        email = msj_correo
 
         es_valido, mensaje_error, datos_persona = validar_campos_persona(
             telefono, documento=documento, nombres=nombres, apellidos=apellidos
@@ -452,16 +481,10 @@ def registro_publico():
         nombres = datos_persona['nombres']
         apellidos = datos_persona['apellidos']
 
-        # --------------------------------------------------------
-        # BLOQUE DE PRUEBAS QA (VALIDACIONES DE SEGURIDAD Y NEGOCIO)
-        # --------------------------------------------------------
-        
-        # 1. Validar que no existan clones
         cursor.execute("SELECT id_usuario FROM usuario WHERE usuario = %s OR email = %s", (documento, email))
         if cursor.fetchone():
             return render_template('registro.html', error='Estos datos (Documento o Email) ya están registrados en la escuela.')
 
-        # 2. REGLAS DE NEGOCIO: Edades por Rol
         if id_rol == '5':
             es_valido, mensaje_error = validar_edad_acudiente(fecha_nacimiento)
             if not es_valido:
@@ -471,24 +494,20 @@ def registro_publico():
             if not es_valido:
                 return render_template('registro.html', error=mensaje_error)
 
-        # --------------------------------------------------------
-        # SI PASA LAS PRUEBAS, GUARDAMOS NORMALMENTE
-        # --------------------------------------------------------
-        cursor = conexion.cursor() # Volvemos al cursor normal para los inserts
+        cursor = conexion.cursor() 
         
-        # Creamos la cuenta de usuario
         cursor.execute("INSERT INTO usuario (id_rol, usuario, contrasena, email, estado) VALUES (%s, %s, %s, %s, %s)",
                        (id_rol, documento, contrasena, email, 'Activo'))
         id_usuario_nuevo = cursor.lastrowid
         
-        if id_rol == '4': # Jugador
+        if id_rol == '4':
             query_jugador = """
                 INSERT INTO jugador (id_usuario, id_rol, documento, nombres, apellidos, fecha_nacimiento, telefono, email, fecha_registro)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, CURDATE())
             """
             cursor.execute(query_jugador, (id_usuario_nuevo, id_rol, documento, nombres, apellidos, fecha_nacimiento, telefono, email))
             
-        elif id_rol == '5': # Acudiente
+        elif id_rol == '5': 
             query_acudiente = """
                 INSERT INTO acudiente (id_usuario, id_rol, nombre, apellido, documento, fecha_nacimiento, telefono, email)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
@@ -508,20 +527,13 @@ def registro_publico():
 # ==========================================
 @app.route('/')
 def home():
-    # Flask buscará automáticamente este archivo dentro de la carpeta 'templates'
     return render_template('Login_Final.html')
 
-# ==========================================
-# MÓDULO: CERRAR SESIÓN
-# ==========================================
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect('/')
 
-# ==========================================
-# 3. RUTA DEL PROCESO DE LOGIN
-# ==========================================
 @app.route('/login', methods=['POST'])
 def login():
     usuario_ingresado = request.form.get('username')
@@ -530,7 +542,6 @@ def login():
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
     
-    # Buscamos en la columna 'usuario' O en la columna 'email'
     query = "SELECT * FROM usuario WHERE (usuario = %s OR email = %s) AND contrasena = %s"
     cursor.execute(query, (usuario_ingresado, usuario_ingresado, contrasena_ingresada))
     cuenta = cursor.fetchone()
@@ -539,23 +550,22 @@ def login():
     conexion.close()
     
     if cuenta:
-        # Guardamos en sesión quién inició sesión y su rol para la navegación
         session['id_usuario'] = cuenta['id_usuario']
         session['id_rol'] = cuenta['id_rol']
         
         id_rol = cuenta['id_rol']
         
-        # Redirecciones según el rol exacto
         if id_rol == 4:
             return redirect('/dashboard-jugador')
-        elif id_rol == 5: # Asumiendo que 5 es Acudiente
+        elif id_rol == 5:
             return redirect('/modulo-acudiente')
-        elif id_rol == 3: # Asumiendo que 3 es Entrenador
+        elif id_rol == 3:
             return redirect('/modulo-entrenador')
         else:
-            return redirect('/dashboard-admin') # Administradores
+            return redirect('/dashboard-admin') 
     else:
         return "<h3>Usuario o contraseña incorrectos.</h3><p>Por favor, regresa e intenta de nuevo.</p>"
+
 # ==========================================
 # 4. VISTAS DE LOS DASHBOARDS
 # ==========================================
@@ -567,21 +577,15 @@ def dashboard_admin():
         return redirect(panel_por_rol(obtener_id_rol_sesion()))
     return render_template('dashboard_admin.html')
 
-# ==========================================
-# MÓDULO: DASHBOARD DEL ENTRENADOR
-# ==========================================
 @app.route('/modulo-entrenador')
 def dashboard_entrenador():
-    # Validación de seguridad: debe tener una sesión activa
     if 'id_usuario' not in session:
         return redirect('/')
         
     id_usuario_actual = session['id_usuario']
-    
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
     
-    # Hacemos el JOIN para traer sus datos de contacto y credenciales
     query_entrenador = """
         SELECT e.id_entrenador, e.nombres, e.apellidos, e.telefono,
                u.usuario AS documento, u.email 
@@ -601,7 +605,7 @@ def dashboard_entrenador():
     return render_template('dashboard_entrenador.html', entrenador=datos_entrenador)
 
 # ==========================================
-# 5. MÓDULO: MI PERFIL / ACCESO
+# 5. MÓDULO: MI PERFIL / ACC পুনরাACTUALIZAR
 # ==========================================
 @app.route('/mi-perfil')
 def mi_perfil():
@@ -678,7 +682,6 @@ def actualizar_perfil():
 def obtener_lista_jugadores():
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
-
     query = """
         SELECT j.id_jugador, j.documento, j.nombres, j.apellidos,
                j.telefono, j.email, j.fecha_nacimiento, j.fecha_registro,
@@ -690,10 +693,8 @@ def obtener_lista_jugadores():
     """
     cursor.execute(query)
     jugadores = cursor.fetchall()
-
     cursor.close()
     conexion.close()
-
     return jugadores
 
 def render_gestion_jugadores(error=None, jugadores=None, es_admin=True):
@@ -711,7 +712,6 @@ def gestion_jugadores():
     id_rol = obtener_id_rol_sesion()
     if id_rol not in [1, 2, 3]:
         return redirect(panel_por_rol(id_rol))
-
     return render_gestion_jugadores(es_admin=id_rol in [1, 2])
 
 # ==========================================
@@ -720,7 +720,6 @@ def gestion_jugadores():
 def obtener_lista_acudientes():
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
-
     query = """
         SELECT a.id_acudiente, a.id_usuario, a.nombre, a.apellido, a.documento,
                a.telefono, a.email, a.fecha_nacimiento, u.estado,
@@ -733,16 +732,13 @@ def obtener_lista_acudientes():
     """
     cursor.execute(query)
     acudientes = cursor.fetchall()
-
     cursor.close()
     conexion.close()
-
     return acudientes
 
 def obtener_lista_jugadores_vinculacion():
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
-
     query = """
         SELECT j.id_jugador, j.nombres, j.apellidos, j.documento, j.id_acudiente,
                CONCAT(a.nombre, ' ', a.apellido) AS nombre_acudiente_actual
@@ -752,10 +748,8 @@ def obtener_lista_jugadores_vinculacion():
     """
     cursor.execute(query)
     jugadores = cursor.fetchall()
-
     cursor.close()
     conexion.close()
-
     return jugadores
 
 def render_gestion_acudientes(error=None):
@@ -775,7 +769,6 @@ def gestion_acudientes():
         return redirect('/')
     if obtener_id_rol_sesion() not in [1, 2, 3]:
         return redirect(panel_por_rol(obtener_id_rol_sesion()))
-
     return render_gestion_acudientes()
 
 # ==========================================
@@ -792,10 +785,16 @@ def nuevo_acudiente_admin():
     nombres = request.form.get('nombres')
     apellidos = request.form.get('apellidos')
     telefono = request.form.get('telefono')
-    email = request.form.get('email')
+    email_input = request.form.get('email')
     contrasena = request.form.get('password')
     fecha_nacimiento = request.form.get('fecha_nacimiento')
     id_rol = '5'
+
+    # VALIDACIÓN DEL CORREO
+    es_correo_valido, msj_correo = validar_correo(email_input)
+    if not es_correo_valido:
+        return render_gestion_acudientes(error=msj_correo)
+    email = msj_correo
 
     es_valido, mensaje_error, datos_persona = validar_campos_persona(
         telefono, documento=documento, nombres=nombres, apellidos=apellidos
@@ -856,19 +855,15 @@ def vincular_jugadores_acudiente():
 
     conexion = obtener_conexion()
     cursor = conexion.cursor()
-
     cursor.execute("UPDATE jugador SET id_acudiente = NULL WHERE id_acudiente = %s", (id_acudiente,))
-
     for id_jugador in jugadores_seleccionados:
         cursor.execute(
             "UPDATE jugador SET id_acudiente = %s WHERE id_jugador = %s",
             (id_acudiente, id_jugador)
         )
-
     conexion.commit()
     cursor.close()
     conexion.close()
-
     return redirect('/acudientes')
 
 @app.route('/editar-acudiente-admin', methods=['POST'])
@@ -879,8 +874,14 @@ def editar_acudiente_admin():
     apellido = request.form.get('apellido')
     documento = request.form.get('documento')
     telefono = request.form.get('telefono')
-    email = request.form.get('email')
+    email_input = request.form.get('email')
     estado = request.form.get('estado')
+
+    # VALIDACIÓN DEL CORREO
+    es_correo_valido, msj_correo = validar_correo(email_input)
+    if not es_correo_valido:
+        return render_gestion_acudientes(error=msj_correo)
+    email = msj_correo
 
     es_valido, mensaje_error, datos_persona = validar_campos_persona(
         telefono, documento=documento, nombre=nombre, apellido=apellido
@@ -910,7 +911,6 @@ def editar_acudiente_admin():
     conexion.commit()
     cursor.close()
     conexion.close()
-
     return redirect('/acudientes')
 
 @app.route('/borrar-acudiente-admin', methods=['POST'])
@@ -919,11 +919,9 @@ def borrar_acudiente_admin():
 
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
-
     cursor.execute("SELECT id_usuario FROM acudiente WHERE id_acudiente = %s", (id_acudiente,))
     resultado = cursor.fetchone()
 
-    # Desvinculamos jugadores antes de borrar para evitar Error 1451
     cursor.execute("UPDATE jugador SET id_acudiente = NULL WHERE id_acudiente = %s", (id_acudiente,))
     cursor.execute("DELETE FROM acudiente WHERE id_acudiente = %s", (id_acudiente,))
 
@@ -933,7 +931,6 @@ def borrar_acudiente_admin():
     conexion.commit()
     cursor.close()
     conexion.close()
-
     return redirect('/acudientes')
 
 # ==========================================
@@ -950,10 +947,16 @@ def nuevo_jugador_admin():
     nombres = request.form.get('nombres')
     apellidos = request.form.get('apellidos')
     telefono = request.form.get('telefono')
-    email = request.form.get('email')
+    email_input = request.form.get('email')
     contrasena = request.form.get('password')
     fecha_nacimiento = request.form.get('fecha_nacimiento')
     id_rol = '4'
+
+    # VALIDACIÓN DEL CORREO
+    es_correo_valido, msj_correo = validar_correo(email_input)
+    if not es_correo_valido:
+        return render_gestion_jugadores(error=msj_correo)
+    email = msj_correo
 
     es_valido, mensaje_error, datos_persona = validar_campos_persona(
         telefono, documento=documento, nombres=nombres, apellidos=apellidos
@@ -981,7 +984,6 @@ def nuevo_jugador_admin():
         return render_gestion_jugadores(error=mensaje_error)
 
     cursor = conexion.cursor()
-
     cursor.execute(
         "INSERT INTO usuario (id_rol, usuario, contrasena, email, estado) VALUES (%s, %s, %s, %s, %s)",
         (id_rol, documento, contrasena, email, 'Activo')
@@ -1009,14 +1011,19 @@ def editar_jugador_admin():
     if obtener_id_rol_sesion() not in [1, 2]:
         return redirect(panel_por_rol(obtener_id_rol_sesion()))
 
-    # 1. Recogemos los datos del formulario modal
     id_jugador = request.form.get('id_jugador')
     id_usuario = request.form.get('id_usuario')
     nombres = request.form.get('nombres')
     apellidos = request.form.get('apellidos')
     telefono = request.form.get('telefono')
-    email = request.form.get('email')
+    email_input = request.form.get('email')
     estado = request.form.get('estado')
+
+    # VALIDACIÓN DEL CORREO
+    es_correo_valido, msj_correo = validar_correo(email_input)
+    if not es_correo_valido:
+        return render_gestion_jugadores(error=msj_correo)
+    email = msj_correo
 
     es_valido, mensaje_error, datos_persona = validar_campos_persona(
         telefono, nombres=nombres, apellidos=apellidos
@@ -1030,14 +1037,12 @@ def editar_jugador_admin():
     conexion = obtener_conexion()
     cursor = conexion.cursor()
 
-    # 2. Actualizamos los datos personales en la tabla jugador
     cursor.execute("""
         UPDATE jugador 
         SET nombres = %s, apellidos = %s, telefono = %s, email = %s 
         WHERE id_jugador = %s
     """, (nombres, apellidos, telefono, email, id_jugador))
 
-    # 3. Actualizamos el estado de acceso y el email en la tabla usuario
     cursor.execute("""
         UPDATE usuario 
         SET estado = %s, email = %s
@@ -1047,7 +1052,6 @@ def editar_jugador_admin():
     conexion.commit()
     cursor.close()
     conexion.close()
-    
     return redirect('/jugadores')
 
 @app.route('/borrar-jugador-admin', methods=['POST'])
@@ -1058,15 +1062,12 @@ def borrar_jugador_admin():
         return redirect(panel_por_rol(obtener_id_rol_sesion()))
 
     id_jugador = request.form.get('id_jugador')
-    
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
 
-    # Buscamos el ID del usuario asociado antes de empezar a borrar
     cursor.execute("SELECT id_usuario FROM jugador WHERE id_jugador = %s", (id_jugador,))
     resultado = cursor.fetchone()
 
-    # ELIMINACIÓN EN CASCADA (Orden estricto de hijos a padres para evitar Error 1451)
     cursor.execute("DELETE FROM asistencia WHERE id_jugador = %s", (id_jugador,))
     cursor.execute("DELETE FROM ficha_jugador WHERE id_jugador = %s", (id_jugador,))
     cursor.execute("DELETE FROM detalle_pago WHERE id_pago IN (SELECT id_pago FROM pago WHERE id_jugador = %s)", (id_jugador,))
@@ -1079,7 +1080,6 @@ def borrar_jugador_admin():
     conexion.commit()
     cursor.close()
     conexion.close()
-
     return redirect('/jugadores')
 
 # ==========================================
@@ -1091,11 +1091,9 @@ def dashboard_jugador():
         return redirect('/')
         
     id_usuario_actual = session['id_usuario']
-    
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
     
-    # IMPORTANTE: Ahora también traemos la fecha_nacimiento y el id_acudiente
     query = """
         SELECT nombres, apellidos, documento, email, telefono, fecha_nacimiento, id_acudiente 
         FROM jugador 
@@ -1103,26 +1101,20 @@ def dashboard_jugador():
     """
     cursor.execute(query, (id_usuario_actual,))
     datos_jugador = cursor.fetchone()
-    
     cursor.close()
     conexion.close()
     
     if not datos_jugador:
         return "Error: No se encontraron los datos de este jugador."
         
-    # LÓGICA DE BLOQUEO PARA MENORES SIN ACUDIENTE
     nacimiento = datos_jugador['fecha_nacimiento']
-    # En caso de que MySQL lo devuelva como texto, lo pasamos a fecha
     if isinstance(nacimiento, str):
         nacimiento = datetime.strptime(nacimiento, '%Y-%m-%d').date()
         
     fecha_hoy = datetime.now().date()
     edad = fecha_hoy.year - nacimiento.year - ((fecha_hoy.month, fecha_hoy.day) < (nacimiento.month, nacimiento.day))
-    
-    # La regla: Está bloqueado SI tiene menos de 18 años Y (and) su id_acudiente es nulo (None)
     bloqueado = (edad < 18) and (datos_jugador['id_acudiente'] is None)
         
-    # Le mandamos la variable 'bloqueado' al HTML para que decida qué mostrar
     return render_template('dashboard_jugador.html', jugador=datos_jugador, bloqueado=bloqueado)
 
 @app.route('/mi-acudiente')
@@ -1176,7 +1168,13 @@ def editar_jugador_acudiente():
     nombres = request.form.get('nombres')
     apellidos = request.form.get('apellidos')
     telefono = request.form.get('telefono')
-    email = request.form.get('email')
+    email_input = request.form.get('email')
+
+    # VALIDACIÓN DEL CORREO
+    es_correo_valido, msj_correo = validar_correo(email_input)
+    if not es_correo_valido:
+        return redirect(f'/mis-jugadores?error={quote(msj_correo)}')
+    email = msj_correo
 
     es_valido, mensaje_error, datos_persona = validar_campos_persona(
         telefono, nombres=nombres, apellidos=apellidos
@@ -1212,7 +1210,6 @@ def editar_jugador_acudiente():
     conexion.commit()
     cursor.close()
     conexion.close()
-
     return redirect('/mis-jugadores')
 
 # ==========================================
@@ -1224,11 +1221,9 @@ def dashboard_acudiente():
         return redirect('/')
         
     id_usuario_actual = session['id_usuario']
-    
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
     
-    # Hacemos un JOIN con la tabla usuario para traer el email y el documento (que es el nombre de usuario)
     query_acudiente = """
         SELECT a.id_acudiente, a.nombre, a.apellido, a.telefono,
                u.usuario AS documento, u.email 
@@ -1244,7 +1239,6 @@ def dashboard_acudiente():
         conexion.close()
         return "Error: No se encontraron los datos de este acudiente."
 
-    # Buscamos a los jugadores que están a su cargo
     query_hijos = """
         SELECT id_jugador, nombres, apellidos, documento, fecha_nacimiento
         FROM jugador
@@ -1264,7 +1258,6 @@ def dashboard_acudiente():
 def obtener_datos_equipos():
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
-
     cursor.execute("SELECT id_equipo, nombre_equipo FROM equipo ORDER BY nombre_equipo ASC")
     lista_equipos = cursor.fetchall()
 
@@ -1294,7 +1287,6 @@ def obtener_datos_equipos():
         equipo_nombre = fila['nombre_equipo']
         if equipo_nombre not in equipos_db:
             equipos_db[equipo_nombre] = []
-
         equipos_db[equipo_nombre].append({
             "id_jugador": fila['id_jugador'],
             "id_equipo": fila['id_equipo'],
@@ -1331,7 +1323,6 @@ def render_modulo_equipos(error=None):
 def modulo_equipos():
     if not usuario_tiene_sesion():
         return redirect('/')
-
     return render_modulo_equipos()
 
 @app.route('/nuevo-equipo', methods=['POST'])
@@ -1372,11 +1363,9 @@ def nuevo_equipo():
         "INSERT INTO equipo (id_equipo, id_division, nombre_equipo) VALUES (%s, %s, %s)",
         (nuevo_id, id_division, nombre_equipo)
     )
-
     conexion.commit()
     cursor.close()
     conexion.close()
-
     return redirect('/equipos')
 
 # ==========================================
@@ -1390,15 +1379,12 @@ def mover_jugador():
     conexion = obtener_conexion()
     cursor = conexion.cursor()
     
-    # Verificamos si el jugador ya tiene una ficha creada o si está en ceros
     cursor.execute("SELECT id_jugador FROM ficha_jugador WHERE id_jugador = %s", (id_jugador,))
     tiene_ficha = cursor.fetchone()
     
     if tiene_ficha:
-        # Si ya tiene, simplemente lo cambiamos de equipo (UPDATE)
         cursor.execute("UPDATE ficha_jugador SET id_equipo = %s WHERE id_jugador = %s", (nuevo_equipo, id_jugador))
     else:
-        # Si es nuevo, le CREAMOS su ficha (INSERT) asignándole estado 1 (Disponible)
         cursor.execute("""
             INSERT INTO ficha_jugador (id_jugador, id_equipo, id_estado, posicion, estatura, peso) 
             VALUES (%s, %s, 1, 'Por definir', 0.00, 0.00)
@@ -1407,20 +1393,17 @@ def mover_jugador():
     conexion.commit()
     cursor.close()
     conexion.close()
-    
     return redirect('/equipos')
 
 @app.route('/eliminar-jugador', methods=['POST'])
 def eliminar_jugador():
     id_jugador = request.form.get('id_jugador')
-    
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
     
     cursor.execute("SELECT id_usuario FROM jugador WHERE id_jugador = %s", (id_jugador,))
     resultado = cursor.fetchone()
     
-    # Eliminación en cascada segura
     cursor.execute("DELETE FROM ficha_jugador WHERE id_jugador = %s", (id_jugador,))
     cursor.execute("DELETE FROM pago WHERE id_jugador = %s", (id_jugador,))
     cursor.execute("DELETE FROM jugador WHERE id_jugador = %s", (id_jugador,))
@@ -1430,7 +1413,6 @@ def eliminar_jugador():
     conexion.commit()
     cursor.close()
     conexion.close()
-    
     return redirect('/equipos')
 
 # ==========================================
@@ -1439,7 +1421,6 @@ def eliminar_jugador():
 def obtener_lista_entrenadores(solo_activos=False):
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
-
     query = """
         SELECT e.id_entrenador, e.id_usuario, e.documento, e.nombres, e.apellidos,
                e.telefono, e.email, e.especialidad, e.fecha_nacimiento, u.estado
@@ -1451,10 +1432,8 @@ def obtener_lista_entrenadores(solo_activos=False):
     query += " ORDER BY e.apellidos ASC, e.nombres ASC"
     cursor.execute(query)
     entrenadores = cursor.fetchall()
-
     cursor.close()
     conexion.close()
-
     return entrenadores
 
 def render_gestion_entrenadores(error=None, es_admin=True):
@@ -1473,7 +1452,6 @@ def gestion_entrenadores():
     id_rol = obtener_id_rol_sesion()
     if id_rol not in [1, 2, 3]:
         return redirect(panel_por_rol(id_rol))
-
     return render_gestion_entrenadores(es_admin=id_rol in [1, 2])
 
 @app.route('/nuevo-entrenador-admin', methods=['POST'])
@@ -1487,11 +1465,17 @@ def nuevo_entrenador_admin():
     nombres = request.form.get('nombres')
     apellidos = request.form.get('apellidos')
     telefono = request.form.get('telefono')
-    email = request.form.get('email')
+    email_input = request.form.get('email')
     contrasena = request.form.get('password')
     fecha_nacimiento = request.form.get('fecha_nacimiento')
     especialidad = request.form.get('especialidad')
     id_rol = '3'
+
+    # VALIDACIÓN DEL CORREO
+    es_correo_valido, msj_correo = validar_correo(email_input)
+    if not es_correo_valido:
+        return render_gestion_entrenadores(error=msj_correo)
+    email = msj_correo
 
     es_valido, mensaje_error, datos_persona = validar_campos_persona(
         telefono, documento=documento, nombres=nombres, apellidos=apellidos
@@ -1505,7 +1489,6 @@ def nuevo_entrenador_admin():
 
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
-
     cursor.execute("SELECT id_usuario FROM usuario WHERE usuario = %s OR email = %s", (documento, email))
     if cursor.fetchone():
         cursor.close()
@@ -1525,7 +1508,6 @@ def nuevo_entrenador_admin():
         return render_gestion_entrenadores(error=mensaje_error)
 
     cursor = conexion.cursor()
-
     cursor.execute(
         "INSERT INTO usuario (id_rol, usuario, contrasena, email, estado) VALUES (%s, %s, %s, %s, %s)",
         (id_rol, documento, contrasena, email, 'Activo')
@@ -1546,7 +1528,6 @@ def nuevo_entrenador_admin():
     conexion.commit()
     cursor.close()
     conexion.close()
-
     return redirect('/entrenadores')
 
 @app.route('/cuerpo-tecnico')
@@ -1555,7 +1536,6 @@ def cuerpo_tecnico():
         return redirect('/')
     if obtener_id_rol_sesion() not in [4, 5]:
         return redirect(panel_por_rol(obtener_id_rol_sesion()))
-
     id_rol = obtener_id_rol_sesion()
     return render_template(
         'cuerpo_tecnico.html',
@@ -1576,9 +1556,15 @@ def editar_entrenador_admin():
     apellidos = request.form.get('apellidos')
     documento = request.form.get('documento')
     telefono = request.form.get('telefono')
-    email = request.form.get('email')
+    email_input = request.form.get('email')
     especialidad = request.form.get('especialidad')
     estado = request.form.get('estado')
+
+    # VALIDACIÓN DEL CORREO
+    es_correo_valido, msj_correo = validar_correo(email_input)
+    if not es_correo_valido:
+        return render_gestion_entrenadores(error=msj_correo)
+    email = msj_correo
 
     es_valido, mensaje_error, datos_persona = validar_campos_persona(
         telefono, documento=documento, nombres=nombres, apellidos=apellidos
@@ -1610,7 +1596,6 @@ def editar_entrenador_admin():
     conexion.commit()
     cursor.close()
     conexion.close()
-
     return redirect('/entrenadores')
 
 @app.route('/borrar-entrenador-admin', methods=['POST'])
@@ -1621,23 +1606,19 @@ def borrar_entrenador_admin():
         return redirect(panel_por_rol(obtener_id_rol_sesion()))
 
     id_entrenador = request.form.get('id_entrenador')
-
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
-
     cursor.execute("SELECT id_usuario FROM entrenador WHERE id_entrenador = %s", (id_entrenador,))
     resultado = cursor.fetchone()
 
     cursor.execute("DELETE FROM entrenamiento WHERE id_entrenador = %s", (id_entrenador,))
     cursor.execute("DELETE FROM entrenador WHERE id_entrenador = %s", (id_entrenador,))
-
     if resultado:
         cursor.execute("DELETE FROM usuario WHERE id_usuario = %s", (resultado['id_usuario'],))
 
     conexion.commit()
     cursor.close()
     conexion.close()
-
     return redirect('/entrenadores')
 
 # ==========================================
@@ -1666,7 +1647,6 @@ def render_ficha_tecnica(id_jugador, error=None, exito=None):
 def ficha_tecnica_propia():
     if not usuario_tiene_sesion():
         return redirect('/')
-
     id_rol = obtener_id_rol_sesion()
     if id_rol == 4:
         conexion = obtener_conexion()
@@ -1681,7 +1661,6 @@ def ficha_tecnica_propia():
 
     if id_rol in [1, 2, 3]:
         return redirect('/jugadores')
-
     return redirect(panel_por_rol(id_rol))
 
 @app.route('/ficha-tecnica/<int:id_jugador>')
@@ -1697,7 +1676,6 @@ def guardar_ficha_tecnica():
 
     id_jugador = request.form.get('id_jugador')
     datos = obtener_datos_ficha_jugador(id_jugador)
-
     if not datos or not puede_editar_ficha_jugador(datos):
         return redirect(panel_por_rol(obtener_id_rol_sesion()))
 
@@ -1755,14 +1733,11 @@ def guardar_ficha_tecnica():
     conexion.commit()
     cursor.close()
     conexion.close()
-
     return render_ficha_tecnica(id_jugador, exito='Ficha técnica actualizada correctamente.')
 
 # ==========================================
 # MÓDULO: ASISTENCIAS
 # ==========================================
-# asistio: 1 = presente (verde), 0 = ausente (rojo), 2 = justificado (azul)
-
 MESES_ES = [
     '', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
@@ -2119,7 +2094,6 @@ def registrar_asistencias():
     )
 
     jugadores = obtener_jugadores_equipo_para_lista(int(id_equipo))
-
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
 
@@ -2165,7 +2139,6 @@ def registrar_asistencias():
     conexion.commit()
     cursor.close()
     conexion.close()
-
     params = f'mes={mes or date.today().month}&anio={anio or date.today().year}&fecha={fecha}&id_equipo={id_equipo}'
     if id_jugador_vista:
         params += f'&id_jugador={id_jugador_vista}'
@@ -2174,7 +2147,6 @@ def registrar_asistencias():
 # ==========================================
 # MÓDULO: ENTRENAMIENTOS (CALENDARIO)
 # ==========================================
-
 def asegurar_columna_hora_entrenamiento():
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
@@ -2477,9 +2449,6 @@ def modulo_finanzas():
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
     
-    # ---------------------------------------------------------
-    # VISTA PARA JUGADOR (4) Y ACUDIENTE (5) - SUBIR SOPORTES
-    # ---------------------------------------------------------
     if id_rol in [4, 5]:
         jugadores_disponibles = []
         if id_rol == 4:
@@ -2491,7 +2460,6 @@ def modulo_finanzas():
                 cursor.execute("SELECT id_jugador, nombres, apellidos FROM jugador WHERE id_acudiente = %s", (id_acudiente,))
                 jugadores_disponibles = cursor.fetchall()
 
-        # Obtener el historial de pagos que han subido
         query_historial = """
             SELECT sp.id_soporte, sp.mes_correspondiente, sp.fecha_subida, sp.estado, sp.archivo_ruta,
                    j.nombres, j.apellidos
@@ -2516,9 +2484,6 @@ def modulo_finanzas():
             exito=request.args.get('exito')
         )
 
-    # ---------------------------------------------------------
-    # VISTA PARA ADMIN (1, 2) Y ENTRENADOR (3) - REPORTE
-    # ---------------------------------------------------------
     elif id_rol in [1, 2, 3]:
         query_reporte = """
             SELECT sp.id_soporte, sp.mes_correspondiente, sp.fecha_subida, sp.estado, sp.archivo_ruta,
@@ -2570,13 +2535,11 @@ def subir_pago():
         return redirect('/finanzas?error=No se seleccionó ningún archivo')
 
     if archivo and archivo_permitido(archivo.filename):
-        # Asegurar el nombre y guardar con un timestamp para evitar sobreescrituras
         timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
         filename = secure_filename(f"{timestamp}_{archivo.filename}")
         ruta_guardado = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         archivo.save(ruta_guardado)
 
-        # Guardar en base de datos la ruta relativa para usarla en HTML
         ruta_db = f"uploads/pagos/{filename}"
         
         conexion = obtener_conexion()
