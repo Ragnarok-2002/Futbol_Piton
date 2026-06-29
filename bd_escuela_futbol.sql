@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 24-06-2026 a las 18:10:26
+-- Tiempo de generación: 29-06-2026 a las 22:34:20
 -- Versión del servidor: 10.4.32-MariaDB
--- Versión de PHP: 8.2.12
+-- Versión de PHP: 8.0.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -604,7 +604,8 @@ CREATE TABLE `soporte_pago` (
 
 INSERT INTO `soporte_pago` (`id_soporte`, `id_jugador`, `id_usuario_sube`, `mes_correspondiente`, `archivo_ruta`, `fecha_subida`, `estado`) VALUES
 (1, 1, 9, '1222-04', 'uploads/pagos/20260624072941_fifa.png', '2026-06-24 07:29:41', 'Pendiente'),
-(2, 1, 9, '2026-05', 'uploads/pagos/20260624090439_chaqueta.jpeg', '2026-06-24 09:04:39', 'Aprobado');
+(2, 1, 9, '2026-05', 'uploads/pagos/20260624090439_chaqueta.jpeg', '2026-06-24 09:04:39', 'Rechazado'),
+(3, 1, 9, '2026-06', 'uploads/pagos/20260629131836_ejemplo_pago.png', '2026-06-29 13:18:36', 'Aprobado');
 
 -- --------------------------------------------------------
 
@@ -847,7 +848,7 @@ ALTER TABLE `jugador`
 -- AUTO_INCREMENT de la tabla `soporte_pago`
 --
 ALTER TABLE `soporte_pago`
-  MODIFY `id_soporte` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id_soporte` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `usuario`
