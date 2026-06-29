@@ -84,62 +84,23 @@
             {% endif %}
         </section>
 
-        <h2 class="text-xl font-bold tracking-wide border-b border-white/10 pb-2 mt-8">Panel de Opciones</h2>
-        
         {% if hijos %}
-            <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
-                <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-naranja-fuego/50 transition-all duration-300 group flex flex-col justify-between">
-                    <div>
-                        <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-naranja-fuego/20 group-hover:scale-110 transition-all mb-4">⚽</div>
-                        <h3 class="font-bold text-lg text-blanco-humo">Mis Jugadores</h3>
-                        <p class="text-xs text-gris-claro mt-1">Consulta y actualiza los datos de tus representados menores de edad.</p>
-                    </div>
-                    <a href="/mis-jugadores" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-naranja-fuego hover:bg-naranja-fuego hover:text-blanco-humo transition-all duration-300">VER JUGADORES</a>
-                </div>
-
-                <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-amarillo-volt/50 transition-all duration-300 group flex flex-col justify-between">
-                    <div>
-                        <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-amarillo-volt/20 group-hover:scale-110 transition-all mb-4">🫀</div>
-                        <h3 class="font-bold text-lg text-blanco-humo">Fichas Técnicas</h3>
-                        <p class="text-xs text-gris-claro mt-1">Supervisa la información médica y deportiva de tus representados.</p>
-                    </div>
-                    <a href="/ficha-tecnica/{{ hijos[0].id_jugador }}" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt hover:bg-amarillo-volt hover:text-negro-carbon transition-all duration-300">VER FICHAS</a>
-                </div>
-
-                <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-naranja-fuego/50 transition-all duration-300 group flex flex-col justify-between">
-                    <div>
-                        <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-naranja-fuego/20 group-hover:scale-110 transition-all mb-4">🛡️</div>
-                        <h3 class="font-bold text-lg text-blanco-humo">Equipo</h3>
-                        <p class="text-xs text-gris-claro mt-1">Revisa la categoría y compañeros de equipo de tu hijo.</p>
-                    </div>
-                    <a href="/equipos" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-naranja-fuego hover:bg-naranja-fuego hover:text-blanco-humo transition-all duration-300">VER EQUIPO</a>
-                </div>
-
-                <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-amarillo-volt/50 transition-all duration-300 group flex flex-col justify-between">
-                    <div>
-                        <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-amarillo-volt/20 group-hover:scale-110 transition-all mb-4">⏱️</div>
-                        <h3 class="font-bold text-lg text-blanco-humo">Entrenamientos</h3>
-                        <p class="text-xs text-gris-claro mt-1">Controla los horarios, lugares de práctica y la asistencia.</p>
-                    </div>
-                    <a href="/entrenamientos" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt hover:bg-amarillo-volt hover:text-negro-carbon transition-all duration-300">VER CALENDARIO</a>
-                </div>
-
-                <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-naranja-fuego/50 transition-all duration-300 group flex flex-col justify-between">
-                    <div>
-                        <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-naranja-fuego/20 group-hover:scale-110 transition-all mb-4">🧾</div>
-                        <h3 class="font-bold text-lg text-blanco-humo">Soportes de Pago</h3>
-                        <p class="text-xs text-gris-claro mt-1">Gestiona las mensualidades y sube los comprobantes de pago.</p>
-                    </div>
-                    <a href="/finanzas" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-naranja-fuego hover:bg-naranja-fuego hover:text-blanco-humo transition-all duration-300">GESTIONAR PAGOS</a>
-                </div>
-
-                <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-amarillo-volt/50 transition-all duration-300 group flex flex-col justify-between">
-                    <div>
-                        <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-amarillo-volt/20 group-hover:scale-110 transition-all mb-4">👨‍🏫</div>
-                        <h3 class="font-bold text-lg text-blanco-humo">Cuerpo Técnico</h3>
-                        <p class="text-xs text-gris-claro mt-1">Conoce al entrenador asignado y sus datos de contacto institucionales.</p>
-                    </div>
-                    <a href="/cuerpo-tecnico" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt hover:bg-amarillo-volt hover:text-negro-carbon transition-all duration-300">VER PROFESORES</a>
+            <!-- SECCIÓN DE LA CANCHA PRINCIPAL EN NAMEKUSEI -->
+            <section class="glass-effect rounded-3xl border border-white/5 overflow-hidden relative group w-full h-[55vh] min-h-[400px]">
+                <div class="absolute inset-0 bg-gradient-to-t from-negro-carbon via-negro-carbon/40 to-transparent z-10 pointer-events-none"></div>
+                
+                <img src="{{ url_for('static', filename='img/cancha_principal.png') }}" alt="Sede Principal en Namekusei" class="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-1000 z-0">
+                
+                <div class="absolute bottom-0 left-0 p-8 md:p-12 z-20 w-full">
+                    <span class="bg-naranja-fuego text-blanco-humo text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg shadow-naranja-fuego/20">
+                        Sede Principal
+                    </span>
+                    <h2 class="text-4xl md:text-5xl font-black mt-4 text-white drop-shadow-xl">
+                        Estadio Namek
+                    </h2>
+                    <p class="text-gris-claro mt-3 max-w-2xl text-sm md:text-base drop-shadow-md leading-relaxed">
+                        Nuestras instalaciones de alto rendimiento. Próximamente se habilitarán los detalles de ubicación exacta, horarios de acceso y datos de contacto de la sede.
+                    </p>
                 </div>
             </section>
         {% else %}

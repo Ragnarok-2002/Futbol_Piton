@@ -57,61 +57,22 @@
             </div>
         </header>
 
-        <!-- Tarjetas de Gestión para el Entrenador -->
-        <h2 class="text-xl font-bold tracking-wide border-b border-white/10 pb-2 mt-8">Tus Herramientas de Campo</h2>
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
+        <section class="glass-effect rounded-3xl border border-white/5 overflow-hidden relative group w-full h-[55vh] min-h-[400px]">
+            <div class="absolute inset-0 bg-gradient-to-t from-negro-carbon via-negro-carbon/40 to-transparent z-10 pointer-events-none"></div>
             
-            <!-- 1. Jugadores -->
-            <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-naranja-fuego/50 transition-all duration-300 group flex flex-col justify-between">
-                <div>
-                    <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-naranja-fuego/20 group-hover:scale-110 transition-all mb-4">🏃‍♂️</div>
-                    <h3 class="font-bold text-lg text-blanco-humo">Jugadores</h3>
-                    <p class="text-xs text-gris-claro mt-1">Explora el listado completo de deportistas, sus perfiles y fichas técnicas.</p>
-                </div>
-                <a href="#" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-naranja-fuego hover:bg-naranja-fuego hover:text-blanco-humo transition-all duration-300">VER PLANTILLA</a>
+            <img src="{{ url_for('static', filename='img/cancha_principal.png') }}" alt="Sede Principal en Namekusei" class="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-1000 z-0">
+            
+            <div class="absolute bottom-0 left-0 p-8 md:p-12 z-20 w-full">
+                <span class="bg-naranja-fuego text-blanco-humo text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg shadow-naranja-fuego/20">
+                    Sede Principal
+                </span>
+                <h2 class="text-4xl md:text-5xl font-black mt-4 text-white drop-shadow-xl">
+                    Estadio Namek
+                </h2>
+                <p class="text-gris-claro mt-3 max-w-2xl text-sm md:text-base drop-shadow-md leading-relaxed">
+                    Nuestras instalaciones de alto rendimiento. Próximamente se habilitarán los detalles de ubicación exacta, horarios de acceso y datos de contacto de la sede.
+                </p>
             </div>
-
-            <!-- 2. Equipos -->
-            <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-amarillo-volt/50 transition-all duration-300 group flex flex-col justify-between">
-                <div>
-                    <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-amarillo-volt/20 group-hover:scale-110 transition-all mb-4">🛡️</div>
-                    <h3 class="font-bold text-lg text-blanco-humo">Equipos</h3>
-                    <p class="text-xs text-gris-claro mt-1">Gestiona las alineaciones, categorías y formaciones de los equipos a tu cargo.</p>
-                </div>
-                <a href="/equipos" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt hover:bg-amarillo-volt hover:text-negro-carbon transition-all duration-300">GESTIONAR EQUIPOS</a>
-            </div>
-
-            <!-- 3. Asistencia -->
-            <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-naranja-fuego/50 transition-all duration-300 group flex flex-col justify-between">
-                <div>
-                    <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-naranja-fuego/20 group-hover:scale-110 transition-all mb-4">✅</div>
-                    <h3 class="font-bold text-lg text-blanco-humo">Control de Asistencia</h3>
-                    <p class="text-xs text-gris-claro mt-1">Marca las faltas, retardos o asistencias de los jugadores en cada sesión.</p>
-                </div>
-                <a href="/asistencias" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-naranja-fuego hover:bg-naranja-fuego hover:text-blanco-humo transition-all duration-300">TOMAR LISTA</a>
-            </div>
-
-            <!-- 4. Entrenamientos -->
-            <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-amarillo-volt/50 transition-all duration-300 group flex flex-col justify-between">
-                <div>
-                    <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-amarillo-volt/20 group-hover:scale-110 transition-all mb-4">⏱️</div>
-                    <h3 class="font-bold text-lg text-blanco-humo">Entrenamientos</h3>
-                    <p class="text-xs text-gris-claro mt-1">Asigna sesiones tácticas y físicas por equipo o por posición de jugador.</p>
-                </div>
-                <a href="/entrenamientos" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt hover:bg-amarillo-volt hover:text-negro-carbon transition-all duration-300">PROGRAMAR SESIÓN</a>
-            </div>
-
-            <!-- 5. Pagos (Modo Lectura) -->
-            <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-naranja-fuego/50 transition-all duration-300 group flex flex-col justify-between relative overflow-hidden">
-                <div class="absolute -right-4 -top-4 w-16 h-16 bg-white/5 rotate-45"></div>
-                <div>
-                    <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-naranja-fuego/20 group-hover:scale-110 transition-all mb-4">💵</div>
-                    <h3 class="font-bold text-lg text-blanco-humo">Verificación de Pagos</h3>
-                    <p class="text-xs text-gris-claro mt-1">Revisa el estado de solvencia de los jugadores para autorizar su participación.</p>
-                </div>
-                <a href="/finanzas" class="block w-full text-center py-2.5 border border-white/10 text-xs font-bold rounded-xl text-gris-claro hover:bg-white/5 hover:text-blanco-humo transition-all duration-300">VER REPORTE 🔒</a>
-            </div>
-
         </section>
     </main>
 

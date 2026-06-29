@@ -48,44 +48,27 @@
             </a>
         </header>
 
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- SECCIÓN DE LA CANCHA PRINCIPAL EN NAMEKUSEI (Reemplaza la cuadrícula de botones) -->
+        <section class="glass-effect rounded-3xl border border-white/5 overflow-hidden relative group w-full h-[55vh] min-h-[400px]">
+            <!-- Capa de degradado oscuro para que el texto resalte sobre la imagen -->
+            <div class="absolute inset-0 bg-gradient-to-t from-negro-carbon via-negro-carbon/40 to-transparent z-10 pointer-events-none"></div>
             
-            <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-naranja-fuego/50 transition-all duration-300 group flex flex-col justify-between">
-                <div>
-                    <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-naranja-fuego/20 group-hover:scale-110 transition-all mb-4">🏃‍♂️</div>
-                    <h3 class="font-bold text-lg">Jugadores</h3>
-                    <p class="text-xs text-gris-claro mt-1">Inscripciones, fichas médicas y categorías.</p>
-                </div>
-                <a href="/jugadores" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt hover:bg-amarillo-volt hover:text-negro-carbon transition-all duration-300">ADMINISTRAR</a>
+            <!-- Imagen de la cancha -->
+            <!-- Asegúrate de colocar "cancha principal.png" dentro de la carpeta static/img/ de tu proyecto Flask -->
+            <img src="{{ url_for('static', filename='img/cancha_principal.png') }}" alt="Sede Principal en Namekusei" class="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-1000 z-0">
+            
+            <!-- Contenedor para los datos futuros (Nombre, ubicación, etc.) -->
+            <div class="absolute bottom-0 left-0 p-8 md:p-12 z-20 w-full">
+                <span class="bg-naranja-fuego text-blanco-humo text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg shadow-naranja-fuego/20">
+                    Sede Principal
+                </span>
+                <h2 class="text-4xl md:text-5xl font-black mt-4 text-white drop-shadow-xl">
+                    Estadio Namek
+                </h2>
+                <p class="text-gris-claro mt-3 max-w-2xl text-sm md:text-base drop-shadow-md leading-relaxed">
+                    Nuestras instalaciones de alto rendimiento. Próximamente se habilitarán los detalles de ubicación exacta, horarios de acceso y datos de contacto de la sede.
+                </p>
             </div>
-
-            <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-naranja-fuego/50 transition-all duration-300 group flex flex-col justify-between">
-                <div>
-                    <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-naranja-fuego/20 group-hover:scale-110 transition-all mb-4">👨‍👩-👦</div>
-                    <h3 class="font-bold text-lg">Acudientes</h3>
-                    <p class="text-xs text-gris-claro mt-1">Vinculación de padres, datos de contacto y parentesco.</p>
-                </div>
-                <a href="/acudientes" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt hover:bg-amarillo-volt hover:text-negro-carbon transition-all duration-300">ADMINISTRAR</a>
-            </div>
-
-            <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-naranja-fuego/50 transition-all duration-300 group flex flex-col justify-between">
-                <div>
-                    <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-naranja-fuego/20 group-hover:scale-110 transition-all mb-4">📋</div>
-                    <h3 class="font-bold text-lg">Cuerpo Técnico</h3>
-                    <p class="text-xs text-gris-claro mt-1">Asignación de entrenadores a grupos de fútbol.</p>
-                </div>
-                <button class="w-full py-2.5 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt hover:bg-amarillo-volt hover:text-negro-carbon transition-all duration-300">ADMINISTRAR</button>
-            </div>
-
-            <div class="glass-effect p-6 rounded-3xl space-y-4 hover:border-naranja-fuego/50 transition-all duration-300 group flex flex-col justify-between">
-                <div>
-                    <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-naranja-fuego/20 group-hover:scale-110 transition-all mb-4">💵</div>
-                    <h3 class="font-bold text-lg">Finanzas</h3>
-                    <p class="text-xs text-gris-claro mt-1">Control de matrículas, pensiones y recibos de pago.</p>
-                </div>
-                <a href="/finanzas" class="block w-full text-center py-2.5 bg-white/5 text-xs font-bold rounded-xl text-amarillo-volt hover:bg-amarillo-volt hover:text-negro-carbon transition-all duration-300">ADMINISTRAR</a>
-            </div>
-
         </section>
     </main>
 
