@@ -28,204 +28,203 @@
             backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
-        .hidden { display: none; }
     </style>
 </head>
 <body class="bg-gradient-to-br from-negro-carbon via-negro-carbon to-naranja-fuego/10 min-h-screen text-blanco-humo font-sans flex items-center justify-center p-4">
 
-    <div id="toastAlerta" class="fixed top-5 right-5 z-50 transform transition-all duration-500 translate-x-full opacity-0">
-        <div class="glass-effect bg-red-900/40 border-l-4 border-red-500 p-5 rounded-2xl shadow-2xl flex items-center gap-4">
-            <div class="text-3xl">⚠️</div>
+    <!-- Contenedor Principal del Formulario -->
+    <div class="glass-effect p-8 rounded-3xl border border-white/5 w-full max-w-2xl shadow-2xl relative">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-black mb-2">Únete al Equipo</h1>
+            <p class="text-gris-claro text-sm">Crea tu cuenta como jugador o acudiente para empezar.</p>
+        </div>
+
+        <!-- Alertas de Error desde app.py -->
+        {% if error %}
+        <div class="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-xl mb-6 text-center text-sm font-semibold">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form id="registroForm" action="/registro" method="POST" class="space-y-5" onsubmit="validarFormulario(event)"></form>
+            <!-- Select Rol -->
             <div>
-                <h4 class="font-bold text-blanco-humo text-sm tracking-wide">Acción Requerida</h4>
-                <p id="textoToast" class="text-xs text-naranja-suave mt-1">Aquí va el error</p>
-            </div>
-            <button onclick="cerrarToast()" class="ml-4 text-gris-claro hover:text-white font-bold text-lg">&times;</button>
-        </div>
-    </div>
-
-    <div class="glass-effect rounded-3xl p-8 max-w-2xl w-full shadow-2xl relative">
-        
-        <div class="text-center mb-8 border-b border-white/10 pb-6">
-            <h1 class="text-3xl font-black"><span class="text-naranja-fuego">Únete al</span> Equipo</h1>
-            <p class="text-gris-claro text-sm mt-2">Crea tu cuenta como jugador o registra a tu representado.</p>
-        </div>
-
-        <form id="formularioRegistro" action="/registro" method="POST" class="space-y-5">
-            
-            <div class="space-y-2">
-                <label class="text-amarillo-volt text-xs font-bold tracking-wider uppercase">¿Qué rol te vas a asignar?</label>
-                <select id="rol" name="rol" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm focus:border-amarillo-volt focus:ring-1 focus:ring-amarillo-volt outline-none">
-                    <option value="" disabled selected>Selecciona una opción...</option>
+                <label class="block text-sm font-bold text-naranja-suave mb-1">¿Qué rol tienes?</label>
+                <select name="rol" id="rol" required class="w-full bg-gris-carbon border border-white/10 rounded-xl px-4 py-2.5 text-blanco-humo focus:outline-none focus:border-amarillo-volt transition-colors">
+                    <option value="" disabled selected>Selecciona una opción</option>
                     <option value="4">Soy Jugador (Independiente)</option>
                     <option value="5">Soy Acudiente (Padre/Madre/Tutor)</option>
                 </select>
             </div>
 
+            <!-- Grid para campos de dos columnas -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div class="space-y-2">
-                    <label class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Documento</label>
-                    <input inputmode="numeric" pattern="[0-9]+" title="Solo números" type="text" id="documento" name="documento" required class="solo-numeros w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none">
+                <div>
+                    <label class="block text-sm font-bold text-naranja-suave mb-1">Documento de Identidad</label>
+                    <input type="text" name="documento" id="documento" required class="w-full bg-gris-carbon border border-white/10 rounded-xl px-4 py-2.5 text-blanco-humo focus:outline-none focus:border-amarillo-volt transition-colors">
                 </div>
-                <div class="space-y-2">
-                    <label class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Contraseña</label>
-                    <input type="password" id="password" name="password" required class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none">
+                <div>
+                    <label class="block text-sm font-bold text-naranja-suave mb-1">Fecha de Nacimiento</label>
+                    <!-- color-scheme: dark asegura que el calendario nativo del navegador se vea oscuro -->
+                    <input type="date" name="fecha_nacimiento" id="fecha_nacimiento" required class="w-full bg-gris-carbon border border-white/10 rounded-xl px-4 py-2.5 text-blanco-humo focus:outline-none focus:border-amarillo-volt transition-colors" style="color-scheme: dark;">
                 </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div class="space-y-2">
-                    <label class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Nombres</label>
-                    <input pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s-]+" title="Solo letras" type="text" id="nombres" name="nombres" required class="solo-letras w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none">
+                <div>
+                    <label class="block text-sm font-bold text-naranja-suave mb-1">Nombres</label>
+                    <input type="text" name="nombres" id="nombres" required class="w-full bg-gris-carbon border border-white/10 rounded-xl px-4 py-2.5 text-blanco-humo focus:outline-none focus:border-amarillo-volt transition-colors">
                 </div>
-                <div class="space-y-2">
-                    <label class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Apellidos</label>
-                    <input pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s-]+" title="Solo letras" type="text" id="apellidos" name="apellidos" required class="solo-letras w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none">
+                <div>
+                    <label class="block text-sm font-bold text-naranja-suave mb-1">Apellidos</label>
+                    <input type="text" name="apellidos" id="apellidos" required class="w-full bg-gris-carbon border border-white/10 rounded-xl px-4 py-2.5 text-blanco-humo focus:outline-none focus:border-amarillo-volt transition-colors">
                 </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <div class="space-y-2">
-                    <label class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Teléfono</label>
-                    <input inputmode="numeric" pattern="[0-9]+" title="Solo números" type="text" id="telefono" name="telefono" class="solo-numeros w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none">
+                <div>
+                    <label class="block text-sm font-bold text-naranja-suave mb-1">Teléfono</label>
+                    <input type="text" name="telefono" id="telefono" required class="w-full bg-gris-carbon border border-white/10 rounded-xl px-4 py-2.5 text-blanco-humo focus:outline-none focus:border-amarillo-volt transition-colors">
                 </div>
-                <div class="space-y-2">
-                    <label class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Email</label>
-                    <input type="email" id="email" name="email" class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none">
-                </div>
-                <div class="space-y-2">
-                    <label class="text-naranja-suave text-xs font-bold tracking-wider uppercase">Fecha de Nacimiento</label>
-                    <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" max="" onclick="this.max=new Date().toISOString().split('T')[0]" class="w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                <div>
+                    <label class="block text-sm font-bold text-naranja-suave mb-1">Correo Electrónico</label>
+                    <input type="email" name="email" id="email" required class="w-full bg-gris-carbon border border-white/10 rounded-xl px-4 py-2.5 text-blanco-humo focus:outline-none focus:border-amarillo-volt transition-colors" placeholder="ejemplo@gmail.com">
                 </div>
             </div>
 
-            <div class="pt-4 flex gap-4">
-                <a href="/" class="w-1/3 bg-white/5 hover:bg-white/10 text-center text-blanco-humo font-bold py-4 rounded-2xl transition-all duration-300 text-sm flex items-center justify-center">
-                    VOLVER
-                </a>
-                <button type="button" onclick="abrirModal()" class="w-2/3 bg-naranja-fuego hover:bg-orange-700 text-blanco-humo font-bold py-4 rounded-2xl shadow-lg transition-all duration-300 hover:-translate-y-1 tracking-widest text-sm focus:ring-2 focus:ring-amarillo-volt">
+            <!-- Contraseña -->
+            <div>
+                <label class="block text-sm font-bold text-naranja-suave mb-1">Contraseña</label>
+                <input type="password" name="password" id="password" required class="w-full bg-gris-carbon border border-white/10 rounded-xl px-4 py-2.5 text-blanco-humo focus:outline-none focus:border-amarillo-volt transition-colors">
+            </div>
+
+            <div class="flex justify-between items-center mt-8 gap-4">
+                <a href="/" class="text-sm text-gris-claro hover:text-white transition-colors">Volver al Login</a>
+                <!-- Cambiamos type="submit" por button para que primero abra el modal -->
+                <button type="submit" class="bg-naranja-fuego hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg shadow-naranja-fuego/20">
                     CONTINUAR REGISTRO
                 </button>
             </div>
         </form>
     </div>
 
-    <div id="modalConfirmacion" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-        <div class="glass-effect rounded-3xl p-8 max-w-md w-full shadow-2xl border border-amarillo-volt/30 transform scale-100 transition-all">
+    <!-- ========================================== -->
+    <!-- MODAL DE CONFIRMACIÓN DE DATOS -->
+    <!-- ========================================== -->
+    <div id="modalConfirmacion" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <!-- Fondo oscuro (Overlay) -->
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="cerrarModal()"></div>
+        
+        <!-- Tarjeta del Modal -->
+        <div class="bg-gris-carbon border border-white/10 rounded-3xl p-8 w-full max-w-md relative z-10 shadow-2xl">
             <div class="text-center mb-6">
-                <div class="text-4xl mb-2">⚠️</div>
-                <h2 class="text-xl font-black text-blanco-humo">Confirmar Datos</h2>
-                <p class="text-gris-claro text-xs mt-1">Por favor, verifica que tu información y rol sean correctos antes de enviar.</p>
+                <div class="text-4xl mb-2 text-amarillo-volt">⚠️</div>
+                <h3 class="text-xl font-black text-white">Confirmar Datos</h3>
+                <p class="text-xs text-gris-claro mt-2">Por favor, verifica que tu información y rol sean correctos antes de enviar.</p>
             </div>
-            
-            <div class="bg-negro-carbon/50 rounded-2xl p-5 space-y-3 mb-6 text-sm">
+
+            <!-- Lista de datos capturados dinámicamente -->
+            <div class="space-y-3 bg-negro-carbon/80 p-5 rounded-2xl border border-white/5 text-sm">
                 <div class="flex justify-between border-b border-white/5 pb-2">
-                    <span class="text-naranja-suave font-bold">Rol:</span>
-                    <span id="resumenRol" class="text-amarillo-volt font-black"></span>
+                    <span class="font-bold text-gris-claro">Rol:</span>
+                    <span id="modal-rol" class="font-bold text-amarillo-volt text-right"></span>
                 </div>
                 <div class="flex justify-between border-b border-white/5 pb-2">
-                    <span class="text-naranja-suave font-bold">Documento:</span>
-                    <span id="resumenDoc" class="text-blanco-humo"></span>
+                    <span class="font-bold text-gris-claro">Documento:</span>
+                    <span id="modal-doc" class="text-white text-right break-all"></span>
                 </div>
-                <div class="flex justify-between">
-                    <span class="text-naranja-suave font-bold">Nombre:</span>
-                    <span id="resumenNombre" class="text-blanco-humo text-right"></span>
+                <div class="flex justify-between border-b border-white/5 pb-2">
+                    <span class="font-bold text-gris-claro">Nombres:</span>
+                    <span id="modal-nombres" class="text-white text-right uppercase"></span>
+                </div>
+                <div class="flex justify-between border-b border-white/5 pb-2">
+                    <span class="font-bold text-gris-claro">Apellidos:</span>
+                    <span id="modal-apellidos" class="text-white text-right uppercase"></span>
+                </div>
+                <div class="flex justify-between border-b border-white/5 pb-2">
+                    <span class="font-bold text-gris-claro">Teléfono:</span>
+                    <span id="modal-tel" class="text-white text-right"></span>
+                </div>
+                <div class="flex justify-between border-b border-white/5 pb-2">
+                    <span class="font-bold text-gris-claro">Nacimiento:</span>
+                    <span id="modal-fecha" class="text-white text-right"></span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="font-bold text-gris-claro">Correo:</span>
+                    <span id="modal-email" class="text-white text-right text-xs break-all ml-4"></span>
                 </div>
             </div>
 
-            <div class="flex gap-3">
-                <button type="button" onclick="cerrarModal()" class="w-1/2 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold text-gris-claro transition-all">
+            <!-- Botones del modal -->
+            <div class="flex gap-4 mt-8">
+                <button type="button" onclick="cerrarModal()" class="flex-1 py-3 bg-white/5 hover:bg-white/10 text-gris-claro hover:text-white text-xs font-bold rounded-xl transition-all border border-white/10">
                     CORREGIR
                 </button>
-                <button type="button" onclick="enviarFormulario()" class="w-1/2 py-3 bg-amarillo-volt hover:bg-yellow-400 rounded-xl text-xs font-black text-negro-carbon shadow-lg shadow-amarillo-volt/20 transition-all">
+                <button type="button" onclick="enviarFormulario()" class="flex-1 py-3 bg-amarillo-volt hover:bg-[#D4E637] text-negro-carbon text-xs font-black rounded-xl transition-all shadow-lg shadow-amarillo-volt/20">
                     SÍ, REGISTRARME
                 </button>
             </div>
         </div>
     </div>
 
+    <!-- ========================================== -->
+    <!-- LÓGICA JAVASCRIPT DEL MODAL Y VALIDACIÓN   -->
+    <!-- ========================================== -->
     <script>
-        // 1. Lógica de la Alerta Elegante
-        function mostrarToast(mensaje) {
-            document.getElementById('textoToast').innerText = mensaje;
-            const toast = document.getElementById('toastAlerta');
-            toast.classList.remove('translate-x-full', 'opacity-0');
-            // Se oculta automáticamente después de 6 segundos
-            setTimeout(cerrarToast, 6000);
-        }
+        // Clonamos la lista blanca del backend al frontend
+        const DOMINIOS_PERMITIDOS = [
+            'gmail.com', 
+            'outlook.com', 
+            'hotmail.com', 
+            'yahoo.com', 
+            'misena.edu.co', 
+            'sena.edu.co'
+        ];
 
-        function cerrarToast() {
-            const toast = document.getElementById('toastAlerta');
-            toast.classList.add('translate-x-full', 'opacity-0');
-        }
+        function mostrarModal() {
+            const form = document.getElementById('registroForm');
+            const emailInput = document.getElementById('email');
 
-        // 2. Si Python detecta un clon o error de fecha, lo muestra automáticamente
-        {% if error %}
-        window.onload = function() {
-            mostrarToast("{{ error }}");
-        };
-        {% endif %}
+            // 1. Limpiamos alertas personalizadas previas
+            emailInput.setCustomValidity('');
 
-        // 3. Validación ESTRICTA antes de abrir tu modal
-        function abrirModal() { 
-            const rolSelect = document.getElementById('rol');
-            const textoRol = rolSelect.options[rolSelect.selectedIndex] ? rolSelect.options[rolSelect.selectedIndex].text : '';
-            
-            const doc = document.getElementById('documento').value.trim();
-            const nombres = document.getElementById('nombres').value.trim();
-            const apellidos = document.getElementById('apellidos').value.trim();
-            const telefono = document.getElementById('telefono').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value.trim();
-            const fechaNacimiento = document.getElementById('fecha_nacimiento').value.trim();
-
-            if(rolSelect.value === "" || doc === "" || nombres === "" || apellidos === "" || telefono === "" || email === "" || password === "" || fechaNacimiento === "") {
-                mostrarToast("Por favor, llena toda la información. Todos los campos son obligatorios.");
+            // 2. Revisamos si hay campos vacíos o correos sin el arroba (@)
+            if (!form.checkValidity()) {
+                form.reportValidity(); // Esto lanza el letrerito de "Completa este campo"
                 return;
             }
 
-            // LÓGICA DE NEGOCIO: VALIDACIÓN DE EDADES
-            const fechaNac = new Date(fechaNacimiento + 'T00:00:00');
-            const hoy = new Date();
-            let edad = hoy.getFullYear() - fechaNac.getFullYear();
-            const mes = hoy.getMonth() - fechaNac.getMonth();
-            if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
-                edad--; // Resta un año si aún no ha cumplido meses/días en el año actual
-            }
-
-            if (rolSelect.value === "4") { // Si es Jugador
-                if (edad < 10) {
-                    mostrarToast("Aún no tienes la edad mínima (10 años). Te invitamos a inscribirte en nuestra escuela aliada JUNIOR para los más pequeños.");
-                    return;
-                }
-                if (edad > 22) {
-                    mostrarToast("Superaste la edad máxima (22 años). Te invitamos a inscribirte en nuestra escuela aliada MASTER para seguir creciendo.");
-                    return;
-                }
-            } else if (rolSelect.value === "5") { // Si es Acudiente
-                if (edad < 18) {
-                    mostrarToast("Para registrarte como Acudiente o Tutor legal debes ser mayor de edad.");
-                    return;
+            // 3. Validación en tiempo real de la lista blanca (Frontend)
+            const emailValor = emailInput.value.trim().toLowerCase();
+            const partes = emailValor.split('@');
+            
+            if (partes.length === 2) {
+                const dominio = partes[1];
+                if (!DOMINIOS_PERMITIDOS.includes(dominio)) {
+                    // Activamos el "letrerito" nativo de HTML5 con nuestro error
+                    emailInput.setCustomValidity(`El dominio @${dominio} no está permitido. Usa un proveedor real.`);
+                    form.reportValidity(); // Forzamos a que salga la alerta visual
+                    return; // Detenemos el proceso para que NO se borre el formulario
                 }
             }
 
-            // Si todo es correcto, pintamos los datos en el Modal
-            document.getElementById('resumenRol').innerText = textoRol;
-            document.getElementById('resumenDoc').innerText = doc;
-            document.getElementById('resumenNombre').innerText = nombres + " " + apellidos;
+            // 4. Si todo está perfecto, procedemos a llenar y mostrar el modal
+            const rolSelect = document.getElementById('rol');
+            const textoRol = rolSelect.options[rolSelect.selectedIndex].text;
+            
+            document.getElementById('modal-rol').innerText = textoRol;
+            document.getElementById('modal-doc').innerText = document.getElementById('documento').value;
+            document.getElementById('modal-nombres').innerText = document.getElementById('nombres').value;
+            document.getElementById('modal-apellidos').innerText = document.getElementById('apellidos').value;
+            document.getElementById('modal-tel').innerText = document.getElementById('telefono').value;
+            document.getElementById('modal-fecha').innerText = document.getElementById('fecha_nacimiento').value;
+            document.getElementById('modal-email').innerText = emailValor;
 
             document.getElementById('modalConfirmacion').classList.remove('hidden');
         }
-        
 
         function cerrarModal() {
             document.getElementById('modalConfirmacion').classList.add('hidden');
         }
 
         function enviarFormulario() {
-            document.getElementById('formularioRegistro').submit();
+            document.getElementById('modalConfirmacion').classList.add('hidden');
+            document.getElementById('registroForm').submit();
         }
     </script>
-    <script src="{{ url_for('static', filename='js/validacion_campos.js') }}"></script>
 </body>
 </html>
