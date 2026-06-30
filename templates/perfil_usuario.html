@@ -29,13 +29,13 @@
     <main class="flex-1 p-6 md:p-10 flex items-start justify-center overflow-y-auto">
         <div class="glass-effect w-full max-w-md p-8 rounded-3xl shadow-2xl border border-white/5 mt-4 md:mt-10">
             <h1 class="text-blanco-humo text-2xl font-black tracking-tight mb-1">
-                {% if solo_contrasena %}🔐 Cambiar contraseña{% else %}⚙️ Configurar acceso{% endif %}
+                {% if solo_contrasena %}🔐 Cambiar contraseña{% else %}⚙️ Mi acceso y datos{% endif %}
             </h1>
             <p class="text-gris-claro text-xs mb-6">
                 {% if solo_contrasena %}
                     Tu usuario de ingreso es tu <strong class="text-naranja-suave">documento de identidad</strong> y no se puede modificar. Solo actualiza tu contraseña.
                 {% else %}
-                    Modifica tus credenciales de acceso al sistema.
+                    Actualiza tu información de acceso y tus datos personales desde aquí.
                 {% endif %}
             </p>
 
@@ -51,15 +51,27 @@
                     <label class="block text-naranja-suave text-xs font-bold tracking-wider uppercase">Usuario de ingreso</label>
                     <input type="text" value="{{ cuenta.usuario }}" readonly
                            class="w-full bg-negro-carbon/50 text-gris-claro px-4 py-3.5 rounded-2xl border border-white/10 text-sm cursor-not-allowed">
-                    {% if solo_contrasena %}
-                    <p class="text-[10px] text-gris-claro">Este valor es tu documento y permanece fijo.</p>
-                    {% endif %}
+                    <p class="text-[10px] text-gris-claro">Este valor es tu documento y permanece fijo para tu acceso.</p>
                 </div>
 
-                {% if not solo_contrasena %}
+                {% if cuenta.id_rol in [1, 2] %}
                 <div class="space-y-2">
-                    <label for="username" class="block text-naranja-suave text-xs font-bold tracking-wider uppercase">Nuevo nombre de usuario</label>
+                    <label for="username" class="block text-naranja-suave text-xs font-bold tracking-wider uppercase">Nuevo documento/usuario</label>
                     <input inputmode="numeric" pattern="[0-9]+" title="Solo números" type="text" id="username" name="username" required value="{{ cuenta.usuario }}"
+                           class="solo-numeros w-full bg-negro-carbon text-blanco-humo px-4 py-3.5 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt transition-all">
+                </div>
+                {% endif %}
+
+                <div class="space-y-2">
+                    <label for="email" class="block text-naranja-suave text-xs font-bold tracking-wider uppercase">Correo electrónico</label>
+                    <input type="email" id="email" name="email" required value="{{ cuenta.email or '' }}"
+                           class="w-full bg-negro-carbon text-blanco-humo px-4 py-3.5 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt transition-all">
+                </div>
+
+                {% if cuenta.id_rol not in [1, 2] %}
+                <div class="space-y-2">
+                    <label for="telefono" class="block text-naranja-suave text-xs font-bold tracking-wider uppercase">Teléfono</label>
+                    <input inputmode="numeric" pattern="[0-9]{10}" minlength="10" maxlength="10" title="El teléfono debe tener exactamente 10 dígitos" type="text" id="telefono" name="telefono" required value="{{ cuenta.telefono or '' }}"
                            class="solo-numeros w-full bg-negro-carbon text-blanco-humo px-4 py-3.5 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt transition-all">
                 </div>
                 {% endif %}

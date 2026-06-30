@@ -204,6 +204,26 @@ def telefono_ya_registrado(telefono):
     return existe
 
 
+def telefono_ya_registrado_excluyendo(telefono, id_usuario_actual):
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    cursor.execute(
+        """
+        SELECT 1 FROM jugador WHERE telefono = %s AND id_usuario != %s
+        UNION
+        SELECT 1 FROM acudiente WHERE telefono = %s AND id_usuario != %s
+        UNION
+        SELECT 1 FROM entrenador WHERE telefono = %s AND id_usuario != %s
+        LIMIT 1
+        """,
+        (telefono, id_usuario_actual, telefono, id_usuario_actual, telefono, id_usuario_actual)
+    )
+    existe = cursor.fetchone() is not None
+    cursor.close()
+    conexion.close()
+    return existe
+
+
 def email_ya_registrado(email, id_usuario_excluir=None):
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
@@ -660,23 +680,45 @@ def mi_perfil():
     if not usuario_tiene_sesion():
         return redirect('/')
 
-    id_rol = obtener_id_rol_sesion()
     id_usuario_actual = session['id_usuario']
 
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
-    cursor.execute("SELECT usuario FROM usuario WHERE id_usuario = %s", (id_usuario_actual,))
+    cursor.execute("SELECT id_rol, usuario, email FROM usuario WHERE id_usuario = %s", (id_usuario_actual,))
     cuenta = cursor.fetchone()
     cursor.close()
     conexion.close()
 
     if not cuenta:
-        return redirect(panel_por_rol(id_rol))
+        return redirect(panel_por_rol(obtener_id_rol_sesion()))
+
+    datos_perfil = {
+        'id_rol': cuenta['id_rol'],
+        'usuario': cuenta['usuario'],
+        'email': cuenta['email'],
+        'telefono': ''
+    }
+
+    if cuenta['id_rol'] in [3, 4, 5]:
+        conexion = obtener_conexion()
+        cursor = conexion.cursor(dictionary=True)
+        if cuenta['id_rol'] == 3:
+            cursor.execute("SELECT telefono, email FROM entrenador WHERE id_usuario = %s", (id_usuario_actual,))
+        elif cuenta['id_rol'] == 4:
+            cursor.execute("SELECT telefono, email FROM jugador WHERE id_usuario = %s", (id_usuario_actual,))
+        else:
+            cursor.execute("SELECT telefono, email FROM acudiente WHERE id_usuario = %s", (id_usuario_actual,))
+        datos_persona = cursor.fetchone()
+        cursor.close()
+        conexion.close()
+        if datos_persona:
+            datos_perfil['telefono'] = datos_persona.get('telefono') or ''
+            datos_perfil['email'] = datos_persona.get('email') or cuenta['email']
 
     return render_template(
         'perfil_usuario.html',
-        cuenta=cuenta,
-        solo_contrasena=id_rol not in [1, 2],
+        cuenta=datos_perfil,
+        solo_contrasena=False,
         error=request.args.get('error'),
         exito=request.args.get('exito')
     )
@@ -686,29 +728,45 @@ def actualizar_perfil():
     if not usuario_tiene_sesion():
         return redirect('/')
 
-    id_rol = obtener_id_rol_sesion()
-    nueva_contrasena = request.form.get('password', '').strip()
     id_usuario_actual = session['id_usuario']
+    nueva_contrasena = request.form.get('password', '').strip()
+    email_input = request.form.get('email', '').strip()
+    telefono_input = request.form.get('telefono', '').strip()
 
     if not nueva_contrasena or len(nueva_contrasena) < 4:
-        return redirect(f'/mi-perfil?error={quote("La contraseña debe tener al menos 4 caracteres")}')
+        return redirect('/mi-perfil?error=' + quote('La contraseña debe tener al menos 4 caracteres'))
+    if not email_input:
+        return redirect('/mi-perfil?error=' + quote('El correo electrónico es obligatorio'))
+
+    es_correo_valido, msj_correo = validar_correo(email_input)
+    if not es_correo_valido:
+        return redirect('/mi-perfil?error=' + quote(msj_correo))
+    email = msj_correo
 
     conexion = obtener_conexion()
-    cursor = conexion.cursor()
+    cursor = conexion.cursor(dictionary=True)
+    cursor.execute("SELECT id_rol, usuario, email FROM usuario WHERE id_usuario = %s", (id_usuario_actual,))
+    cuenta_actual = cursor.fetchone()
+    cursor.close()
+
+    if not cuenta_actual:
+        conexion.close()
+        return redirect('/mi-perfil?error=' + quote('No se encontró tu cuenta para actualizar'))
+
+    id_rol = cuenta_actual['id_rol']
 
     if id_rol in [1, 2]:
         nuevo_usuario = request.form.get('username', '').strip()
         if not nuevo_usuario:
-            cursor.close()
             conexion.close()
-            return redirect(f'/mi-perfil?error={quote("El nombre de usuario no puede estar vacío")}')
+            return redirect('/mi-perfil?error=' + quote('El nombre de usuario no puede estar vacío'))
         es_valido, mensaje_error = validar_solo_numeros(nuevo_usuario, 'El documento de usuario')
         if not es_valido:
-            cursor.close()
             conexion.close()
-            return redirect(f'/mi-perfil?error={quote(mensaje_error)}')
+            return redirect('/mi-perfil?error=' + quote(mensaje_error))
         nuevo_usuario = mensaje_error
 
+        cursor = conexion.cursor()
         cursor.execute(
             "SELECT 1 FROM usuario WHERE usuario = %s AND id_usuario != %s",
             (nuevo_usuario, id_usuario_actual)
@@ -716,23 +774,58 @@ def actualizar_perfil():
         if cursor.fetchone():
             cursor.close()
             conexion.close()
-            return redirect(f'/mi-perfil?error={quote("Este documento ya está siendo usado por otra cuenta")}')
+            return redirect('/mi-perfil?error=' + quote('Este documento ya está siendo usado por otra cuenta'))
+    else:
+        if not telefono_input:
+            conexion.close()
+            return redirect('/mi-perfil?error=' + quote('El teléfono es obligatorio'))
+        es_valido, mensaje_error, datos_persona = validar_campos_persona(telefono_input)
+        if not es_valido:
+            conexion.close()
+            return redirect('/mi-perfil?error=' + quote(mensaje_error))
+        telefono = datos_persona['telefono']
 
+        if telefono_ya_registrado_excluyendo(telefono, id_usuario_actual):
+            conexion.close()
+            return redirect('/mi-perfil?error=' + quote('Este número de teléfono ya está registrado'))
+
+    if email_ya_registrado(email, id_usuario_actual):
+        conexion.close()
+        return redirect('/mi-perfil?error=' + quote('Este correo ya está registrado en otra cuenta'))
+
+    cursor = conexion.cursor()
+    if id_rol in [1, 2]:
         cursor.execute(
-            "UPDATE usuario SET usuario = %s, contrasena = %s WHERE id_usuario = %s",
-            (nuevo_usuario, nueva_contrasena, id_usuario_actual)
+            "UPDATE usuario SET usuario = %s, email = %s, contrasena = %s WHERE id_usuario = %s",
+            (nuevo_usuario, email, nueva_contrasena, id_usuario_actual)
         )
     else:
         cursor.execute(
-            "UPDATE usuario SET contrasena = %s WHERE id_usuario = %s",
-            (nueva_contrasena, id_usuario_actual)
+            "UPDATE usuario SET email = %s, contrasena = %s WHERE id_usuario = %s",
+            (email, nueva_contrasena, id_usuario_actual)
         )
+
+        if id_rol == 3:
+            cursor.execute(
+                "UPDATE entrenador SET telefono = %s, email = %s WHERE id_usuario = %s",
+                (telefono, email, id_usuario_actual)
+            )
+        elif id_rol == 4:
+            cursor.execute(
+                "UPDATE jugador SET telefono = %s, email = %s WHERE id_usuario = %s",
+                (telefono, email, id_usuario_actual)
+            )
+        else:
+            cursor.execute(
+                "UPDATE acudiente SET telefono = %s, email = %s WHERE id_usuario = %s",
+                (telefono, email, id_usuario_actual)
+            )
 
     conexion.commit()
     cursor.close()
     conexion.close()
 
-    return redirect(f'/mi-perfil?exito={quote("Contraseña actualizada correctamente")}')
+    return redirect('/mi-perfil?exito=' + quote('Tus datos se actualizaron correctamente'))
 
 # ==========================================
 # MÓDULO: GESTIÓN DE JUGADORES (VISTA)
