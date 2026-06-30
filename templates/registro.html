@@ -46,11 +46,12 @@
         </div>
         {% endif %}
 
-        <form id="registroForm" action="/registro" method="POST" class="space-y-5" onsubmit="validarFormulario(event)"></form>
+        <form id="registroForm" action="/registro" method="POST" class="space-y-5">
             <!-- Select Rol -->
             <div>
-                <label class="block text-sm font-bold text-naranja-suave mb-1">¿Qué rol tienes?</label>
-                <select name="rol" id="rol" required class="w-full bg-gris-carbon border border-white/10 rounded-xl px-4 py-2.5 text-blanco-humo focus:outline-none focus:border-amarillo-volt transition-colors">
+                <label class="block text-sm font-bold text-naranja-suave mb-1" for="rol">¿Qué rol tienes?</label>
+                <select name="rol" id="rol" required
+                    class="w-full bg-gris-carbon border border-white/10 rounded-xl px-4 py-2.5 text-blanco-humo focus:outline-none focus:border-amarillo-volt transition-colors">
                     <option value="" disabled selected>Selecciona una opción</option>
                     <option value="4">Soy Jugador (Independiente)</option>
                     <option value="5">Soy Acudiente (Padre/Madre/Tutor)</option>
@@ -60,42 +61,60 @@
             <!-- Grid para campos de dos columnas -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                    <label class="block text-sm font-bold text-naranja-suave mb-1">Documento de Identidad</label>
-                    <input type="text" name="documento" id="documento" required class="w-full bg-gris-carbon border border-white/10 rounded-xl px-4 py-2.5 text-blanco-humo focus:outline-none focus:border-amarillo-volt transition-colors">
+                    <label class="block text-sm font-bold text-naranja-suave mb-1" for="documento">Documento de Identidad</label>
+                    <input type="text" name="documento" id="documento" required
+                        inputmode="numeric" pattern="[0-9]+" minlength="1"
+                        title="El documento solo puede contener números."
+                        class="solo-numeros w-full bg-gris-carbon border border-white/10 rounded-xl px-4 py-2.5 text-blanco-humo focus:outline-none focus:border-amarillo-volt transition-colors">
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-naranja-suave mb-1">Fecha de Nacimiento</label>
-                    <!-- color-scheme: dark asegura que el calendario nativo del navegador se vea oscuro -->
-                    <input type="date" name="fecha_nacimiento" id="fecha_nacimiento" required class="w-full bg-gris-carbon border border-white/10 rounded-xl px-4 py-2.5 text-blanco-humo focus:outline-none focus:border-amarillo-volt transition-colors" style="color-scheme: dark;">
+                    <label class="block text-sm font-bold text-naranja-suave mb-1" for="fecha_nacimiento">Fecha de Nacimiento</label>
+                    <input type="date" name="fecha_nacimiento" id="fecha_nacimiento" required
+                        class="w-full bg-gris-carbon border border-white/10 rounded-xl px-4 py-2.5 text-blanco-humo focus:outline-none focus:border-amarillo-volt transition-colors"
+                        style="color-scheme: dark;">
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-naranja-suave mb-1">Nombres</label>
-                    <input type="text" name="nombres" id="nombres" required class="w-full bg-gris-carbon border border-white/10 rounded-xl px-4 py-2.5 text-blanco-humo focus:outline-none focus:border-amarillo-volt transition-colors">
+                    <label class="block text-sm font-bold text-naranja-suave mb-1" for="nombres">Nombres</label>
+                    <input type="text" name="nombres" id="nombres" required
+                        pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s-]+"
+                        title="Los nombres solo pueden contener letras."
+                        class="solo-letras w-full bg-gris-carbon border border-white/10 rounded-xl px-4 py-2.5 text-blanco-humo focus:outline-none focus:border-amarillo-volt transition-colors">
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-naranja-suave mb-1">Apellidos</label>
-                    <input type="text" name="apellidos" id="apellidos" required class="w-full bg-gris-carbon border border-white/10 rounded-xl px-4 py-2.5 text-blanco-humo focus:outline-none focus:border-amarillo-volt transition-colors">
+                    <label class="block text-sm font-bold text-naranja-suave mb-1" for="apellidos">Apellidos</label>
+                    <input type="text" name="apellidos" id="apellidos" required
+                        pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s-]+"
+                        title="Los apellidos solo pueden contener letras."
+                        class="solo-letras w-full bg-gris-carbon border border-white/10 rounded-xl px-4 py-2.5 text-blanco-humo focus:outline-none focus:border-amarillo-volt transition-colors">
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-naranja-suave mb-1">Teléfono</label>
-                    <input type="text" name="telefono" id="telefono" required class="w-full bg-gris-carbon border border-white/10 rounded-xl px-4 py-2.5 text-blanco-humo focus:outline-none focus:border-amarillo-volt transition-colors">
+                    <label class="block text-sm font-bold text-naranja-suave mb-1" for="telefono">Teléfono</label>
+                    <input type="text" name="telefono" id="telefono" required
+                        inputmode="numeric" pattern="[0-9]{10}" minlength="10" maxlength="10"
+                        title="El teléfono debe tener exactamente 10 dígitos." 
+                        class="solo-numeros w-full bg-gris-carbon border border-white/10 rounded-xl px-4 py-2.5 text-blanco-humo focus:outline-none focus:border-amarillo-volt transition-colors">
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-naranja-suave mb-1">Correo Electrónico</label>
-                    <input type="email" name="email" id="email" required class="w-full bg-gris-carbon border border-white/10 rounded-xl px-4 py-2.5 text-blanco-humo focus:outline-none focus:border-amarillo-volt transition-colors" placeholder="ejemplo@gmail.com">
+                    <label class="block text-sm font-bold text-naranja-suave mb-1" for="email">Correo Electrónico</label>
+                    <input type="email" name="email" id="email" required
+                        title="Ingresa un correo válido (ej: nombre@gmail.com)."
+                        class="w-full bg-gris-carbon border border-white/10 rounded-xl px-4 py-2.5 text-blanco-humo focus:outline-none focus:border-amarillo-volt transition-colors"
+                        placeholder="ejemplo@gmail.com">
                 </div>
             </div>
 
             <!-- Contraseña -->
             <div>
-                <label class="block text-sm font-bold text-naranja-suave mb-1">Contraseña</label>
-                <input type="password" name="password" id="password" required class="w-full bg-gris-carbon border border-white/10 rounded-xl px-4 py-2.5 text-blanco-humo focus:outline-none focus:border-amarillo-volt transition-colors">
+                <label class="block text-sm font-bold text-naranja-suave mb-1" for="password">Contraseña</label>
+                <input type="password" name="password" id="password" required minlength="4"
+                    title="La contraseña debe tener al menos 4 caracteres."
+                    class="w-full bg-gris-carbon border border-white/10 rounded-xl px-4 py-2.5 text-blanco-humo focus:outline-none focus:border-amarillo-volt transition-colors">
             </div>
 
             <div class="flex justify-between items-center mt-8 gap-4">
                 <a href="/" class="text-sm text-gris-claro hover:text-white transition-colors">Volver al Login</a>
-                <!-- Cambiamos type="submit" por button para que primero abra el modal -->
-                <button type="submit" class="bg-naranja-fuego hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg shadow-naranja-fuego/20">
+                <button type="button" id="btnContinuar" onclick="validarFormulario()"
+                    class="bg-naranja-fuego hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg shadow-naranja-fuego/20 disabled:opacity-40 disabled:cursor-not-allowed">
                     CONTINUAR REGISTRO
                 </button>
             </div>
@@ -164,56 +183,99 @@
     <!-- ========================================== -->
     <!-- LÓGICA JAVASCRIPT DEL MODAL Y VALIDACIÓN   -->
     <!-- ========================================== -->
+    <script src="{{ url_for('static', filename='js/validacion_campos.js') }}"></script>
     <script>
-        // Clonamos la lista blanca del backend al frontend
         const DOMINIOS_PERMITIDOS = [
-            'gmail.com', 
-            'outlook.com', 
-            'hotmail.com', 
-            'yahoo.com', 
-            'misena.edu.co', 
+            'gmail.com',
+            'outlook.com',
+            'hotmail.com',
+            'yahoo.com',
+            'misena.edu.co',
             'sena.edu.co'
         ];
 
-        function mostrarModal() {
-            const form = document.getElementById('registroForm');
-            const emailInput = document.getElementById('email');
+        const CAMPOS = ['rol', 'documento', 'fecha_nacimiento', 'nombres', 'apellidos', 'telefono', 'email', 'password'];
 
-            // 1. Limpiamos alertas personalizadas previas
-            emailInput.setCustomValidity('');
+        function limpiarCustomValidity() {
+            CAMPOS.forEach(function (id) {
+                var el = document.getElementById(id);
+                if (el) el.setCustomValidity('');
+            });
+        }
 
-            // 2. Revisamos si hay campos vacíos o correos sin el arroba (@)
+        function calcularEdad(fechaStr) {
+            var nac = new Date(fechaStr + 'T00:00:00');
+            var hoy = new Date();
+            var edad = hoy.getFullYear() - nac.getFullYear();
+            var m = hoy.getMonth() - nac.getMonth();
+            if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) edad--;
+            return edad;
+        }
+
+        function validarEmailDominio() {
+            var emailInput = document.getElementById('email');
+            var valor = emailInput.value.trim().toLowerCase();
+            if (!valor) return;
+
+            var partes = valor.split('@');
+            if (partes.length !== 2) return;
+
+            var dominio = partes[1];
+            if (!DOMINIOS_PERMITIDOS.includes(dominio)) {
+                emailInput.setCustomValidity(
+                    'El dominio @' + dominio + ' no está permitido. Usa un correo real (ej: gmail.com).'
+                );
+            }
+        }
+
+        function validarEdadPorRol() {
+            var rol = document.getElementById('rol').value;
+            var fechaInput = document.getElementById('fecha_nacimiento');
+            var fecha = fechaInput.value;
+            if (!rol || !fecha) return;
+
+            var edad = calcularEdad(fecha);
+            if (rol === '5' && edad < 18) {
+                fechaInput.setCustomValidity('Debes ser mayor de 18 años para registrarte como acudiente.');
+            } else if (rol === '4' && edad < 10) {
+                fechaInput.setCustomValidity('Debes tener al menos 10 años para registrarte como jugador.');
+            } else if (rol === '4' && edad > 22) {
+                fechaInput.setCustomValidity('La edad máxima para jugadores es 22 años.');
+            }
+        }
+
+        function aplicarValidacionesCustom() {
+            limpiarCustomValidity();
+            validarEmailDominio();
+            validarEdadPorRol();
+        }
+
+        function validarFormulario() {
+            var form = document.getElementById('registroForm');
+            aplicarValidacionesCustom();
+
             if (!form.checkValidity()) {
-                form.reportValidity(); // Esto lanza el letrerito de "Completa este campo"
-                return;
+                form.reportValidity();
+                return false;
             }
 
-            // 3. Validación en tiempo real de la lista blanca (Frontend)
-            const emailValor = emailInput.value.trim().toLowerCase();
-            const partes = emailValor.split('@');
-            
-            if (partes.length === 2) {
-                const dominio = partes[1];
-                if (!DOMINIOS_PERMITIDOS.includes(dominio)) {
-                    // Activamos el "letrerito" nativo de HTML5 con nuestro error
-                    emailInput.setCustomValidity(`El dominio @${dominio} no está permitido. Usa un proveedor real.`);
-                    form.reportValidity(); // Forzamos a que salga la alerta visual
-                    return; // Detenemos el proceso para que NO se borre el formulario
-                }
-            }
+            mostrarModal();
+            return false;
+        }
 
-            // 4. Si todo está perfecto, procedemos a llenar y mostrar el modal
-            const rolSelect = document.getElementById('rol');
-            const textoRol = rolSelect.options[rolSelect.selectedIndex].text;
-            
-            document.getElementById('modal-rol').innerText = textoRol;
+        function actualizarEstadoBoton() {
+            aplicarValidacionesCustom();
+        }
+
+        function mostrarModal() {
+            var rolSelect = document.getElementById('rol');
+            document.getElementById('modal-rol').innerText = rolSelect.options[rolSelect.selectedIndex].text;
             document.getElementById('modal-doc').innerText = document.getElementById('documento').value;
             document.getElementById('modal-nombres').innerText = document.getElementById('nombres').value;
             document.getElementById('modal-apellidos').innerText = document.getElementById('apellidos').value;
             document.getElementById('modal-tel').innerText = document.getElementById('telefono').value;
             document.getElementById('modal-fecha').innerText = document.getElementById('fecha_nacimiento').value;
-            document.getElementById('modal-email').innerText = emailValor;
-
+            document.getElementById('modal-email').innerText = document.getElementById('email').value.trim().toLowerCase();
             document.getElementById('modalConfirmacion').classList.remove('hidden');
         }
 
@@ -225,6 +287,18 @@
             document.getElementById('modalConfirmacion').classList.add('hidden');
             document.getElementById('registroForm').submit();
         }
+
+        document.getElementById('registroForm').addEventListener('input', function (e) {
+            if (e.target.setCustomValidity) e.target.setCustomValidity('');
+            actualizarEstadoBoton();
+        });
+
+        document.getElementById('registroForm').addEventListener('change', actualizarEstadoBoton);
+        document.getElementById('registroForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            validarFormulario();
+        });
+        document.addEventListener('DOMContentLoaded', actualizarEstadoBoton);
     </script>
 </body>
 </html>
