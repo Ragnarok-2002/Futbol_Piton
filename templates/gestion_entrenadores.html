@@ -159,7 +159,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="space-y-2">
                         <label class="text-naranja-suave text-xs font-bold uppercase">Teléfono</label>
-                        <input inputmode="numeric" pattern="[0-9]+" title="Solo números" type="text" id="nuevo_telefono" name="telefono" required class="solo-numeros w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                        <input inputmode="numeric" pattern="[0-9]{10}" minlength="10" maxlength="10" title="El teléfono debe tener exactamente 10 dígitos" type="text" id="nuevo_telefono" name="telefono" required class="solo-numeros w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
                     </div>
                     <div class="space-y-2">
                         <label class="text-naranja-suave text-xs font-bold uppercase">Email</label>
@@ -212,7 +212,7 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-2">
                         <label class="text-naranja-suave text-xs font-bold uppercase">Teléfono</label>
-                        <input inputmode="numeric" pattern="[0-9]+" title="Solo números" type="text" name="telefono" id="edit_telefono" class="solo-numeros w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
+                        <input inputmode="numeric" pattern="[0-9]{10}" minlength="10" maxlength="10" title="El teléfono debe tener exactamente 10 dígitos" type="text" name="telefono" id="edit_telefono" class="solo-numeros w-full bg-negro-carbon text-blanco-humo px-4 py-3 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt">
                     </div>
                     <div class="space-y-2">
                         <label class="text-naranja-suave text-xs font-bold uppercase">Email</label>

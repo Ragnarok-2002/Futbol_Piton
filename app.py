@@ -174,6 +174,36 @@ def validar_solo_numeros(valor, nombre_campo='Este campo'):
         return False, f'{nombre_campo} solo puede contener números.'
     return True, valor
 
+def validar_telefono_colombiano(valor):
+    valor = (valor or '').strip()
+    if not valor:
+        return False, 'El teléfono es obligatorio.'
+    if not REGEX_SOLO_NUMEROS.match(valor):
+        return False, 'El teléfono solo puede contener números.'
+    if len(valor) != 10:
+        return False, 'El teléfono debe tener exactamente 10 dígitos.'
+    return True, valor
+
+def telefono_ya_registrado(telefono):
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    cursor.execute(
+        """
+        SELECT 1 FROM jugador WHERE telefono = %s
+        UNION
+        SELECT 1 FROM acudiente WHERE telefono = %s
+        UNION
+        SELECT 1 FROM entrenador WHERE telefono = %s
+        LIMIT 1
+        """,
+        (telefono, telefono, telefono)
+    )
+    existe = cursor.fetchone() is not None
+    cursor.close()
+    conexion.close()
+    return existe
+
+
 def validar_solo_letras(valor, nombre_campo='Este campo'):
     valor = (valor or '').strip()
     if not valor:
@@ -191,7 +221,7 @@ def validar_campos_persona(telefono, documento=None, nombres=None, apellidos=Non
             return False, documento, None
         datos['documento'] = documento
 
-    ok, telefono = validar_solo_numeros(telefono, 'El teléfono')
+    ok, telefono = validar_telefono_colombiano(telefono)
     if not ok:
         return False, telefono, None
     datos['telefono'] = telefono
@@ -481,6 +511,9 @@ def registro_publico():
         nombres = datos_persona['nombres']
         apellidos = datos_persona['apellidos']
 
+        if telefono_ya_registrado(telefono):
+            return render_template('registro.html', error='Este número de teléfono ya está registrado en la escuela.')
+
         cursor.execute("SELECT id_usuario FROM usuario WHERE usuario = %s OR email = %s", (documento, email))
         if cursor.fetchone():
             return render_template('registro.html', error='Estos datos (Documento o Email) ya están registrados en la escuela.')
@@ -660,6 +693,16 @@ def actualizar_perfil():
             conexion.close()
             return redirect(f'/mi-perfil?error={quote(mensaje_error)}')
         nuevo_usuario = mensaje_error
+
+        cursor.execute(
+            "SELECT 1 FROM usuario WHERE usuario = %s AND id_usuario != %s",
+            (nuevo_usuario, id_usuario_actual)
+        )
+        if cursor.fetchone():
+            cursor.close()
+            conexion.close()
+            return redirect(f'/mi-perfil?error={quote("Este documento ya está siendo usado por otra cuenta")}")
+
         cursor.execute(
             "UPDATE usuario SET usuario = %s, contrasena = %s WHERE id_usuario = %s",
             (nuevo_usuario, nueva_contrasena, id_usuario_actual)
@@ -894,8 +937,31 @@ def editar_acudiente_admin():
     apellido = datos_persona['apellido']
 
     conexion = obtener_conexion()
-    cursor = conexion.cursor()
+    cursor = conexion.cursor(dictionary=True)
 
+    cursor.execute("SELECT id_acudiente FROM acudiente WHERE id_acudiente = %s", (id_acudiente,))
+    if not cursor.fetchone():
+        cursor.close()
+        conexion.close()
+        return render_gestion_acudientes(error='No se encontró el acudiente para actualizar.')
+
+    cursor.execute(
+        """
+        SELECT 1 FROM jugador WHERE telefono = %s
+        UNION
+        SELECT 1 FROM entrenador WHERE telefono = %s
+        UNION
+        SELECT 1 FROM acudiente WHERE telefono = %s AND id_acudiente != %s
+        LIMIT 1
+        """,
+        (telefono, telefono, telefono, id_acudiente)
+    )
+    if cursor.fetchone():
+        cursor.close()
+        conexion.close()
+        return render_gestion_acudientes(error='Este número de teléfono ya está registrado.')
+
+    cursor = conexion.cursor()
     cursor.execute("""
         UPDATE acudiente
         SET nombre = %s, apellido = %s, documento = %s, telefono = %s, email = %s
@@ -1035,7 +1101,32 @@ def editar_jugador_admin():
     apellidos = datos_persona['apellidos']
 
     conexion = obtener_conexion()
-    cursor = conexion.cursor()
+    cursor = conexion.cursor(dictionary=True)
+    cursor.execute(
+        "SELECT id_usuario FROM jugador WHERE id_jugador = %s",
+        (id_jugador,)
+    )
+    jugador_existente = cursor.fetchone()
+    if not jugador_existente:
+        cursor.close()
+        conexion.close()
+        return render_gestion_jugadores(error='No se encontró el jugador para actualizar.')
+
+    cursor.execute(
+        """
+        SELECT 1 FROM jugador WHERE telefono = %s AND id_jugador != %s
+        UNION
+        SELECT 1 FROM acudiente WHERE telefono = %s
+        UNION
+        SELECT 1 FROM entrenador WHERE telefono = %s
+        LIMIT 1
+        """,
+        (telefono, id_jugador, telefono, telefono)
+    )
+    if cursor.fetchone():
+        cursor.close()
+        conexion.close()
+        return render_gestion_jugadores(error='Este número de teléfono ya está registrado.')
 
     cursor.execute("""
         UPDATE jugador 
@@ -1197,6 +1288,22 @@ def editar_jugador_acudiente():
         cursor.close()
         conexion.close()
         return redirect('/mis-jugadores')
+
+    cursor.execute(
+        """
+        SELECT 1 FROM jugador WHERE telefono = %s AND id_jugador != %s
+        UNION
+        SELECT 1 FROM acudiente WHERE telefono = %s
+        UNION
+        SELECT 1 FROM entrenador WHERE telefono = %s
+        LIMIT 1
+        """,
+        (telefono, id_jugador, telefono, telefono)
+    )
+    if cursor.fetchone():
+        cursor.close()
+        conexion.close()
+        return redirect(f'/mis-jugadores?error={quote('Este número de teléfono ya está registrado.')}')
 
     cursor.execute("""
         UPDATE jugador
@@ -1581,7 +1688,28 @@ def editar_entrenador_admin():
         return render_gestion_entrenadores(error=mensaje_error)
 
     conexion = obtener_conexion()
-    cursor = conexion.cursor()
+    cursor = conexion.cursor(dictionary=True)
+    cursor.execute("SELECT id_entrenador FROM entrenador WHERE id_entrenador = %s", (id_entrenador,))
+    if not cursor.fetchone():
+        cursor.close()
+        conexion.close()
+        return render_gestion_entrenadores(error='No se encontró el entrenador para actualizar.')
+
+    cursor.execute(
+        """
+        SELECT 1 FROM entrenador WHERE telefono = %s AND id_entrenador != %s
+        UNION
+        SELECT 1 FROM jugador WHERE telefono = %s
+        UNION
+        SELECT 1 FROM acudiente WHERE telefono = %s
+        LIMIT 1
+        """,
+        (telefono, id_entrenador, telefono, telefono)
+    )
+    if cursor.fetchone():
+        cursor.close()
+        conexion.close()
+        return render_gestion_entrenadores(error='Este número de teléfono ya está registrado.')
 
     cursor.execute("""
         UPDATE entrenador
