@@ -716,7 +716,7 @@ def actualizar_perfil():
         if cursor.fetchone():
             cursor.close()
             conexion.close()
-            return redirect(f'/mi-perfil?error={quote("Este documento ya está siendo usado por otra cuenta")}")
+            return redirect(f'/mi-perfil?error={quote("Este documento ya está siendo usado por otra cuenta")}')
 
         cursor.execute(
             "UPDATE usuario SET usuario = %s, contrasena = %s WHERE id_usuario = %s",
