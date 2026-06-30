@@ -204,6 +204,21 @@ def telefono_ya_registrado(telefono):
     return existe
 
 
+def email_ya_registrado(email, id_usuario_excluir=None):
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    consulta = "SELECT 1 FROM usuario WHERE email = %s"
+    parametros = [email]
+    if id_usuario_excluir is not None:
+        consulta += " AND id_usuario != %s"
+        parametros.append(id_usuario_excluir)
+    cursor.execute(consulta, tuple(parametros))
+    existe = cursor.fetchone() is not None
+    cursor.close()
+    conexion.close()
+    return existe
+
+
 def validar_solo_letras(valor, nombre_campo='Este campo'):
     valor = (valor or '').strip()
     if not valor:
@@ -961,6 +976,11 @@ def editar_acudiente_admin():
         conexion.close()
         return render_gestion_acudientes(error='Este número de teléfono ya está registrado.')
 
+    if email_ya_registrado(email, id_usuario):
+        cursor.close()
+        conexion.close()
+        return render_gestion_acudientes(error='Este correo ya está registrado en otra cuenta.')
+
     cursor = conexion.cursor()
     cursor.execute("""
         UPDATE acudiente
@@ -1127,6 +1147,11 @@ def editar_jugador_admin():
         cursor.close()
         conexion.close()
         return render_gestion_jugadores(error='Este número de teléfono ya está registrado.')
+
+    if email_ya_registrado(email, id_usuario):
+        cursor.close()
+        conexion.close()
+        return render_gestion_jugadores(error='Este correo ya está registrado en otra cuenta.')
 
     cursor.execute("""
         UPDATE jugador 
@@ -1304,6 +1329,12 @@ def editar_jugador_acudiente():
         cursor.close()
         conexion.close()
         return redirect(f'/mis-jugadores?error={quote('Este número de teléfono ya está registrado.')}')
+
+    cursor.close()
+    cursor = conexion.cursor()
+    if email_ya_registrado(email, jugador['id_usuario']):
+        conexion.close()
+        return redirect(f'/mis-jugadores?error={quote('Este correo ya está registrado en otra cuenta.')}')
 
     cursor.execute("""
         UPDATE jugador
@@ -1710,6 +1741,11 @@ def editar_entrenador_admin():
         cursor.close()
         conexion.close()
         return render_gestion_entrenadores(error='Este número de teléfono ya está registrado.')
+
+    if email_ya_registrado(email, id_usuario):
+        cursor.close()
+        conexion.close()
+        return render_gestion_entrenadores(error='Este correo ya está registrado en otra cuenta.')
 
     cursor.execute("""
         UPDATE entrenador
