@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 29-06-2026 a las 22:34:20
+-- Tiempo de generación: 30-06-2026 a las 06:01:55
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.0.30
 
@@ -71,7 +71,8 @@ INSERT INTO `acudiente` (`id_acudiente`, `id_usuario`, `id_rol`, `nombre`, `apel
 (25, 58, 5, 'Raúl', 'Zapata', '10234795', '1980-05-15', '3101234025', 'tutor.zapata@gmail.com'),
 (26, 62, 5, 'papa', 'grillo', '', '1980-05-15', '', ''),
 (27, 68, 5, 'padre', 'messi', '852', '1980-05-15', '3332224499', 'padre10@gmail.com'),
-(30, 71, 5, 'andriu', 'zambrano', '123456', '2006-07-12', '123456789', 'andriuZ@gmail.com');
+(30, 71, 5, 'andriu', 'zambrano', '123456', '2006-07-12', '123456789', 'andriuZ@gmail.com'),
+(31, 75, 5, 'pedro', 'pikazo', '2211', '2000-05-28', '3', 'pikazopp@gmail.com');
 
 -- --------------------------------------------------------
 
@@ -463,7 +464,8 @@ INSERT INTO `jugador` (`id_jugador`, `id_acudiente`, `id_usuario`, `id_rol`, `no
 (32, NULL, 66, 4, 'juan', 'lopez', '2004-07-14', '3332224477', 'lopez@gmail.com', '741', '2026-06-13'),
 (33, NULL, 67, 4, 'messi', 'chiquito', '2016-02-10', '3332224488', 'messi10@gmail.com', '963', '2026-06-14'),
 (34, 23, 72, 4, 'luis', 'cabezas', '2009-11-19', '12345678999', 'lucABEZAS@78.COM', '7412', '2026-06-19'),
-(35, NULL, 73, 4, '554542542452', '435442452', '2015-12-31', 'fsfvfvfdff', 'ssvfsfv', '11111111111', '2026-06-24');
+(35, NULL, 73, 4, '554542542452', '435442452', '2015-12-31', 'fsfvfvfdff', 'ssvfsfv', '11111111111', '2026-06-24'),
+(36, 31, 74, 4, 'pablo', 'pikazo', '2016-05-28', '3332224577', 'pikazop@gmail.com', '1122', '2026-06-29');
 
 -- --------------------------------------------------------
 
@@ -718,7 +720,9 @@ INSERT INTO `usuario` (`id_usuario`, `id_rol`, `usuario`, `contrasena`, `email`,
 (68, 5, '852', '258', 'padre10@gmail.com', 'Activo'),
 (71, 5, '123456', '4567', 'andriuZ@gmail.com', 'Activo'),
 (72, 4, '7412', '789654', 'lucABEZAS@78.COM', 'Activo'),
-(73, 4, '11111111111', '010', 'ssvfsfv', 'Activo');
+(73, 4, '11111111111', '010', 'ssvfsfv', 'Activo'),
+(74, 4, '1122', '3333', 'pikazop@gmail.com', 'Activo'),
+(75, 5, '2211', '3333', 'pikazopp@gmail.com', 'Activo');
 
 --
 -- Índices para tablas volcadas
@@ -836,13 +840,13 @@ ALTER TABLE `usuario`
 -- AUTO_INCREMENT de la tabla `acudiente`
 --
 ALTER TABLE `acudiente`
-  MODIFY `id_acudiente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `id_acudiente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT de la tabla `jugador`
 --
 ALTER TABLE `jugador`
-  MODIFY `id_jugador` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+  MODIFY `id_jugador` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 
 --
 -- AUTO_INCREMENT de la tabla `soporte_pago`
@@ -854,7 +858,7 @@ ALTER TABLE `soporte_pago`
 -- AUTO_INCREMENT de la tabla `usuario`
 --
 ALTER TABLE `usuario`
-  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=74;
+  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=76;
 
 --
 -- Restricciones para tablas volcadas
