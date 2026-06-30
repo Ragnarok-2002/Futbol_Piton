@@ -32,11 +32,7 @@
                 {% if solo_contrasena %}🔐 Cambiar contraseña{% else %}⚙️ Mi acceso y datos{% endif %}
             </h1>
             <p class="text-gris-claro text-xs mb-6">
-                {% if solo_contrasena %}
-                    Tu usuario de ingreso es tu <strong class="text-naranja-suave">documento de identidad</strong> y no se puede modificar. Solo actualiza tu contraseña.
-                {% else %}
-                    Actualiza tu información de acceso y tus datos personales desde aquí.
-                {% endif %}
+                Actualiza tu información de acceso y tus datos personales desde aquí.
             </p>
 
             {% if exito %}
@@ -48,19 +44,11 @@
 
             <form action="/actualizar-perfil" method="POST" class="space-y-5">
                 <div class="space-y-2">
-                    <label class="block text-naranja-suave text-xs font-bold tracking-wider uppercase">Usuario de ingreso</label>
-                    <input type="text" value="{{ cuenta.usuario }}" readonly
-                           class="w-full bg-negro-carbon/50 text-gris-claro px-4 py-3.5 rounded-2xl border border-white/10 text-sm cursor-not-allowed">
-                    <p class="text-[10px] text-gris-claro">Este valor es tu documento y permanece fijo para tu acceso.</p>
-                </div>
-
-                {% if cuenta.id_rol in [1, 2] %}
-                <div class="space-y-2">
-                    <label for="username" class="block text-naranja-suave text-xs font-bold tracking-wider uppercase">Nuevo documento/usuario</label>
+                    <label for="username" class="block text-naranja-suave text-xs font-bold tracking-wider uppercase">Documento de Identidad (Usuario)</label>
                     <input inputmode="numeric" pattern="[0-9]+" title="Solo números" type="text" id="username" name="username" required value="{{ cuenta.usuario }}"
                            class="solo-numeros w-full bg-negro-carbon text-blanco-humo px-4 py-3.5 rounded-2xl border border-white/10 text-sm outline-none focus:border-amarillo-volt transition-all">
+                    <p class="text-[10px] text-gris-claro">Atención: Si modificas tu documento, tu usuario para iniciar sesión también cambiará.</p>
                 </div>
-                {% endif %}
 
                 <div class="space-y-2">
                     <label for="email" class="block text-naranja-suave text-xs font-bold tracking-wider uppercase">Correo electrónico</label>

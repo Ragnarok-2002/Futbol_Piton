@@ -203,7 +203,6 @@ def telefono_ya_registrado(telefono):
     conexion.close()
     return existe
 
-
 def telefono_ya_registrado_excluyendo(telefono, id_usuario_actual):
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
@@ -223,7 +222,6 @@ def telefono_ya_registrado_excluyendo(telefono, id_usuario_actual):
     conexion.close()
     return existe
 
-
 def email_ya_registrado(email, id_usuario_excluir=None):
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
@@ -237,7 +235,6 @@ def email_ya_registrado(email, id_usuario_excluir=None):
     cursor.close()
     conexion.close()
     return existe
-
 
 def validar_solo_letras(valor, nombre_campo='Este campo'):
     valor = (valor or '').strip()
@@ -673,7 +670,7 @@ def dashboard_entrenador():
     return render_template('dashboard_entrenador.html', entrenador=datos_entrenador)
 
 # ==========================================
-# 5. MÓDULO: MI PERFIL / ACC পুনরাACTUALIZAR
+# 5. MÓDULO: MI PERFIL / ACTUALIZAR DATOS
 # ==========================================
 @app.route('/mi-perfil')
 def mi_perfil():
@@ -732,94 +729,90 @@ def actualizar_perfil():
     nueva_contrasena = request.form.get('password', '').strip()
     email_input = request.form.get('email', '').strip()
     telefono_input = request.form.get('telefono', '').strip()
+    nuevo_usuario = request.form.get('username', '').strip()
 
     if not nueva_contrasena or len(nueva_contrasena) < 4:
         return redirect('/mi-perfil?error=' + quote('La contraseña debe tener al menos 4 caracteres'))
     if not email_input:
         return redirect('/mi-perfil?error=' + quote('El correo electrónico es obligatorio'))
+    if not nuevo_usuario:
+        return redirect('/mi-perfil?error=' + quote('El documento de identidad no puede estar vacío'))
 
     es_correo_valido, msj_correo = validar_correo(email_input)
     if not es_correo_valido:
         return redirect('/mi-perfil?error=' + quote(msj_correo))
     email = msj_correo
 
+    es_valido, mensaje_error = validar_solo_numeros(nuevo_usuario, 'El documento de identidad')
+    if not es_valido:
+        return redirect('/mi-perfil?error=' + quote(mensaje_error))
+    nuevo_usuario = mensaje_error
+
     conexion = obtener_conexion()
     cursor = conexion.cursor(dictionary=True)
     cursor.execute("SELECT id_rol, usuario, email FROM usuario WHERE id_usuario = %s", (id_usuario_actual,))
     cuenta_actual = cursor.fetchone()
-    cursor.close()
-
+    
     if not cuenta_actual:
+        cursor.close()
         conexion.close()
         return redirect('/mi-perfil?error=' + quote('No se encontró tu cuenta para actualizar'))
 
     id_rol = cuenta_actual['id_rol']
 
-    if id_rol in [1, 2]:
-        nuevo_usuario = request.form.get('username', '').strip()
-        if not nuevo_usuario:
-            conexion.close()
-            return redirect('/mi-perfil?error=' + quote('El nombre de usuario no puede estar vacío'))
-        es_valido, mensaje_error = validar_solo_numeros(nuevo_usuario, 'El documento de usuario')
-        if not es_valido:
-            conexion.close()
-            return redirect('/mi-perfil?error=' + quote(mensaje_error))
-        nuevo_usuario = mensaje_error
+    cursor.execute(
+        "SELECT 1 FROM usuario WHERE usuario = %s AND id_usuario != %s",
+        (nuevo_usuario, id_usuario_actual)
+    )
+    if cursor.fetchone():
+        cursor.close()
+        conexion.close()
+        return redirect('/mi-perfil?error=' + quote('Este documento ya está siendo usado por otra cuenta'))
 
-        cursor = conexion.cursor()
-        cursor.execute(
-            "SELECT 1 FROM usuario WHERE usuario = %s AND id_usuario != %s",
-            (nuevo_usuario, id_usuario_actual)
-        )
-        if cursor.fetchone():
-            cursor.close()
-            conexion.close()
-            return redirect('/mi-perfil?error=' + quote('Este documento ya está siendo usado por otra cuenta'))
-    else:
+    if id_rol not in [1, 2]:
         if not telefono_input:
+            cursor.close()
             conexion.close()
             return redirect('/mi-perfil?error=' + quote('El teléfono es obligatorio'))
         es_valido, mensaje_error, datos_persona = validar_campos_persona(telefono_input)
         if not es_valido:
+            cursor.close()
             conexion.close()
             return redirect('/mi-perfil?error=' + quote(mensaje_error))
         telefono = datos_persona['telefono']
 
         if telefono_ya_registrado_excluyendo(telefono, id_usuario_actual):
+            cursor.close()
             conexion.close()
             return redirect('/mi-perfil?error=' + quote('Este número de teléfono ya está registrado'))
 
     if email_ya_registrado(email, id_usuario_actual):
+        cursor.close()
         conexion.close()
         return redirect('/mi-perfil?error=' + quote('Este correo ya está registrado en otra cuenta'))
 
     cursor = conexion.cursor()
-    if id_rol in [1, 2]:
-        cursor.execute(
-            "UPDATE usuario SET usuario = %s, email = %s, contrasena = %s WHERE id_usuario = %s",
-            (nuevo_usuario, email, nueva_contrasena, id_usuario_actual)
-        )
-    else:
-        cursor.execute(
-            "UPDATE usuario SET email = %s, contrasena = %s WHERE id_usuario = %s",
-            (email, nueva_contrasena, id_usuario_actual)
-        )
+    
+    cursor.execute(
+        "UPDATE usuario SET usuario = %s, email = %s, contrasena = %s WHERE id_usuario = %s",
+        (nuevo_usuario, email, nueva_contrasena, id_usuario_actual)
+    )
 
-        if id_rol == 3:
-            cursor.execute(
-                "UPDATE entrenador SET telefono = %s, email = %s WHERE id_usuario = %s",
-                (telefono, email, id_usuario_actual)
-            )
-        elif id_rol == 4:
-            cursor.execute(
-                "UPDATE jugador SET telefono = %s, email = %s WHERE id_usuario = %s",
-                (telefono, email, id_usuario_actual)
-            )
-        else:
-            cursor.execute(
-                "UPDATE acudiente SET telefono = %s, email = %s WHERE id_usuario = %s",
-                (telefono, email, id_usuario_actual)
-            )
+    if id_rol == 3:
+        cursor.execute(
+            "UPDATE entrenador SET documento = %s, telefono = %s, email = %s WHERE id_usuario = %s",
+            (nuevo_usuario, telefono, email, id_usuario_actual)
+        )
+    elif id_rol == 4:
+        cursor.execute(
+            "UPDATE jugador SET documento = %s, telefono = %s, email = %s WHERE id_usuario = %s",
+            (nuevo_usuario, telefono, email, id_usuario_actual)
+        )
+    elif id_rol == 5:
+        cursor.execute(
+            "UPDATE acudiente SET documento = %s, telefono = %s, email = %s WHERE id_usuario = %s",
+            (nuevo_usuario, telefono, email, id_usuario_actual)
+        )
 
     conexion.commit()
     cursor.close()
@@ -1421,13 +1414,13 @@ def editar_jugador_acudiente():
     if cursor.fetchone():
         cursor.close()
         conexion.close()
-        return redirect(f'/mis-jugadores?error={quote('Este número de teléfono ya está registrado.')}')
+        return redirect(f'/mis-jugadores?error={quote("Este número de teléfono ya está registrado.")}')
 
     cursor.close()
     cursor = conexion.cursor()
     if email_ya_registrado(email, jugador['id_usuario']):
         conexion.close()
-        return redirect(f'/mis-jugadores?error={quote('Este correo ya está registrado en otra cuenta.')}')
+        return redirect(f'/mis-jugadores?error={quote("Este correo ya está registrado en otra cuenta.")}')
 
     cursor.execute("""
         UPDATE jugador
